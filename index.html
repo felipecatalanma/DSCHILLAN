@@ -1,0 +1,2382 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sistema Morosidad · Colegio Alemán de Chillán</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+/* ─── RESET & BASE ─── */
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#F4F1EB;--bg2:#EDEAE0;--bg3:#E4E0D3;
+  --card:#FDFCF8;--card2:#F7F5EE;
+  --ink:#1C1A14;--ink2:#4A4740;--ink3:#7A7670;--ink4:#A8A49E;
+  --border:rgba(28,26,20,0.09);--border2:rgba(28,26,20,0.16);
+  --red:#B5320E;--red-lt:#FBF0EC;--red-bd:rgba(181,50,14,0.2);
+  --amber:#9A5C08;--amber-lt:#FDF5E6;--amber-bd:rgba(154,92,8,0.2);
+  --green:#2A6040;--green-lt:#ECF5EF;--green-bd:rgba(42,96,64,0.2);
+  --blue:#1A4A7A;--blue-lt:#EBF2FB;--blue-bd:rgba(26,74,122,0.2);
+  --gray-lt:#F0EDE4;
+  --shadow:0 1px 3px rgba(0,0,0,0.06),0 1px 2px rgba(0,0,0,0.04);
+}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--ink);font-size:14px;line-height:1.5;min-height:100vh}
+
+/* ─── HEADER ─── */
+.app-header{background:var(--ink);color:#F5F2EC;padding:0 40px;display:flex;align-items:center;justify-content:space-between;height:60px;border-bottom:3px solid var(--red);position:sticky;top:0;z-index:100}
+.app-header h1{font-family:'Playfair Display',serif;font-size:20px;font-weight:700;letter-spacing:-0.01em}
+.app-header h1 span{color:#E8896A}
+.header-right{display:flex;align-items:center;gap:20px}
+.corte-badge{font-family:'DM Mono',monospace;font-size:10px;color:rgba(245,242,236,0.5);letter-spacing:0.1em;text-transform:uppercase}
+.nav-tabs{display:flex;gap:0;background:rgba(255,255,255,0.05);border-radius:6px;padding:3px}
+.nav-tab{padding:5px 14px;border-radius:4px;font-size:12px;font-weight:500;color:rgba(245,242,236,0.6);cursor:pointer;transition:all .15s;border:none;background:none}
+.nav-tab.active,.nav-tab:hover{background:rgba(255,255,255,0.12);color:#F5F2EC}
+.nav-tab.active{background:var(--red);color:#fff}
+
+/* ─── MAIN ─── */
+.main{padding:28px 40px 60px;max-width:1260px;margin:0 auto}
+.view{display:none}.view.active{display:block}
+
+/* ─── IMPORT BANNER ─── */
+.import-banner{background:var(--blue-lt);border:0.5px solid var(--blue-bd);border-radius:10px;padding:14px 20px;display:flex;align-items:center;gap:16px;margin-bottom:24px}
+.import-banner-icon{font-size:20px;flex-shrink:0}
+.import-banner-text{flex:1}
+.import-banner-text strong{font-size:13px;color:var(--blue);display:block;margin-bottom:2px}
+.import-banner-text span{font-size:11px;color:var(--ink3)}
+.import-actions{display:flex;gap:8px;flex-shrink:0}
+.btn-import{padding:7px 14px;border-radius:6px;font-size:12px;font-weight:500;cursor:pointer;border:0.5px solid var(--border2);background:var(--card);color:var(--ink);transition:all .15s}
+.btn-import:hover{background:var(--bg3)}
+.btn-import.primary{background:var(--blue);color:#fff;border-color:transparent}
+.btn-import.primary:hover{background:#143d6b}
+input[type=file]{display:none}
+
+/* ─── KPI GRID ─── */
+.kpi-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:10px;margin-bottom:24px}
+.kpi{background:var(--card);border:0.5px solid var(--border);border-radius:8px;padding:14px 14px 12px;position:relative;overflow:hidden}
+.kpi::before{content:'';position:absolute;top:0;left:0;right:0;height:3px}
+.kpi.r::before{background:var(--red)}
+.kpi.a::before{background:#C07D20}
+.kpi.g::before{background:var(--green)}
+.kpi.b::before{background:var(--blue)}
+.kpi.n::before{background:var(--ink3)}
+.kpi-lbl{font-size:10px;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;color:var(--ink3);margin-bottom:7px}
+.kpi-val{font-family:'Playfair Display',serif;font-size:24px;font-weight:700;line-height:1;color:var(--ink)}
+.kpi-val.red{color:var(--red)}
+.kpi-val.amber{color:var(--amber)}
+.kpi-val.green{color:var(--green)}
+.kpi-sub{font-size:10px;color:var(--ink4);margin-top:4px;line-height:1.3}
+
+/* ─── SECTION HEADER ─── */
+.sec-hdr{display:flex;align-items:baseline;gap:12px;margin:24px 0 12px;border-bottom:1px solid var(--border2);padding-bottom:7px}
+.sec-hdr h2{font-family:'Playfair Display',serif;font-size:15px;font-weight:600}
+.sec-tag{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:0.12em;text-transform:uppercase;color:var(--ink3)}
+
+/* ─── CARD ─── */
+.card{background:var(--card);border:0.5px solid var(--border);border-radius:10px;padding:18px}
+.card-title{font-size:10px;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:var(--ink3);margin-bottom:14px}
+
+/* ─── GRID LAYOUTS ─── */
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px}
+.grid-65{display:grid;grid-template-columns:65fr 35fr;gap:14px}
+
+/* ─── SEMAFORO ─── */
+.semaforo{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.sema{border-radius:8px;padding:14px 12px;text-align:center}
+.sema.critico{background:var(--red-lt);border:1px solid var(--red-bd)}
+.sema.alto{background:var(--amber-lt);border:1px solid var(--amber-bd)}
+.sema.medio{background:var(--blue-lt);border:1px solid var(--blue-bd)}
+.sema.bajo{background:var(--green-lt);border:1px solid var(--green-bd)}
+.sema-dot{width:9px;height:9px;border-radius:50%;margin:0 auto 7px}
+.sema.critico .sema-dot{background:var(--red)}.sema.alto .sema-dot{background:#C07D20}.sema.medio .sema-dot{background:var(--blue)}.sema.bajo .sema-dot{background:var(--green)}
+.sema-lbl{font-size:10px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:6px}
+.sema.critico .sema-lbl{color:var(--red)}.sema.alto .sema-lbl{color:var(--amber)}.sema.medio .sema-lbl{color:var(--blue)}.sema.bajo .sema-lbl{color:var(--green)}
+.sema-n{font-family:'Playfair Display',serif;font-size:30px;font-weight:700;line-height:1;margin-bottom:2px}
+.sema.critico .sema-n{color:var(--red)}.sema.alto .sema-n{color:var(--amber)}.sema.medio .sema-n{color:var(--blue)}.sema.bajo .sema-n{color:var(--green)}
+.sema-m{font-family:'DM Mono',monospace;font-size:11px;color:var(--ink2)}.sema-p{font-size:10px;color:var(--ink3);margin-top:2px}
+
+/* ─── AGING TABLE ─── */
+.aging-table{width:100%;border-collapse:collapse}
+.aging-table th{font-size:10px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:var(--ink3);padding:4px 8px 8px;text-align:left;border-bottom:1px solid var(--border2)}
+.aging-table td{padding:7px 8px;border-bottom:0.5px solid var(--border);font-size:12px}
+.aging-table tr:last-child td{border-bottom:none}
+.aging-table .num{font-family:'DM Mono',monospace;text-align:right}
+.aging-bar-wrap{height:5px;background:var(--bg3);border-radius:3px;overflow:hidden;min-width:80px}
+.aging-bar{height:100%;border-radius:3px}
+
+/* ─── TOP DEUDORES TABLE ─── */
+.top-table{width:100%;border-collapse:collapse}
+.top-table th{font-size:9px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:var(--ink3);padding:4px 6px 8px;text-align:left;border-bottom:1px solid var(--border2)}
+.top-table th.r{text-align:right}
+.top-table td{padding:6px 6px;border-bottom:0.5px solid var(--border);font-size:12px;vertical-align:middle}
+.top-table tr:last-child td{border-bottom:none}
+.top-table tr:hover td{background:var(--bg2)}
+.badge{display:inline-block;font-size:9px;font-weight:600;padding:2px 6px;border-radius:2px;text-transform:uppercase;letter-spacing:0.06em;white-space:nowrap}
+.badge.sinpago{background:var(--gray-lt);color:var(--ink3)}
+.badge.parcial{background:var(--amber-lt);color:var(--amber)}
+.badge.nuevo{background:var(--blue-lt);color:var(--blue)}
+.badge.mejora{background:var(--green-lt);color:var(--green)}
+.badge.critica{background:var(--red-lt);color:var(--red)}
+.badge.alta{background:var(--amber-lt);color:var(--amber)}
+.badge.media{background:var(--blue-lt);color:var(--blue)}
+.trend-bar{height:4px;border-radius:2px;background:var(--red)}
+
+/* ─── BEHAVIOR CHART ─── */
+.beh-rows{display:flex;flex-direction:column;gap:8px}
+.beh-row{display:flex;align-items:center;gap:10px}
+.beh-lbl{font-size:12px;min-width:130px}
+.beh-bar-wrap{flex:1;height:8px;background:var(--bg3);border-radius:3px;overflow:hidden}
+.beh-bar{height:100%;border-radius:3px}
+.beh-n{font-size:11px;color:var(--ink3);min-width:28px;text-align:right;font-family:'DM Mono',monospace}
+.beh-total{font-size:11px;color:var(--ink2);min-width:80px;text-align:right;font-family:'DM Mono',monospace}
+
+/* ─── RECAUDACION SEMANAL ─── */
+.rec-rows{display:flex;flex-direction:column;gap:8px}
+.rec-row{display:flex;align-items:center;gap:10px}
+.rec-lbl{font-size:11px;color:var(--ink2);min-width:140px}
+.rec-bw{flex:1;height:10px;background:var(--bg3);border-radius:3px;overflow:hidden}
+.rec-bar{height:100%;border-radius:3px;background:var(--green)}
+.rec-n{font-size:10px;color:var(--ink3);min-width:44px;text-align:right}
+.rec-total{font-family:'DM Mono',monospace;font-size:11px;color:var(--ink2);min-width:78px;text-align:right}
+.rec-row.highlight{background:var(--green-lt);padding:3px 6px;border-radius:5px;margin:0 -6px}
+
+/* ─── ALERTAS ─── */
+.alertas{display:flex;flex-direction:column;gap:8px}
+.alerta{display:flex;gap:10px;padding:10px 12px;border-radius:7px;align-items:flex-start}
+.alerta.danger{background:var(--red-lt);border-left:3px solid var(--red)}
+.alerta.warn{background:var(--amber-lt);border-left:3px solid #C07D20}
+.alerta.info{background:var(--blue-lt);border-left:3px solid var(--blue)}
+.alerta.ok{background:var(--green-lt);border-left:3px solid var(--green)}
+.alerta-icon{font-size:13px;margin-top:1px;flex-shrink:0}
+.alerta-title{font-size:11px;font-weight:600;color:var(--ink);margin-bottom:2px}
+.alerta.danger .alerta-title{color:var(--red)}.alerta.warn .alerta-title{color:var(--amber)}.alerta.info .alerta-title{color:var(--blue)}.alerta.ok .alerta-title{color:var(--green)}
+.alerta-text{font-size:11px;color:var(--ink2);line-height:1.5}
+
+/* ─── UF NOTE ─── */
+.uf-note{background:var(--blue-lt);border:0.5px solid var(--blue-bd);border-radius:8px;padding:9px 14px;display:flex;align-items:center;gap:8px;margin-bottom:20px;font-size:11px;color:var(--blue)}
+
+/* ─── GESTION SEMANAL ─── */
+.gest-controls{display:flex;gap:10px;align-items:center;margin-bottom:14px}
+.gest-controls select,.gest-controls input{padding:7px 10px;border:0.5px solid var(--border2);border-radius:6px;background:var(--card);color:var(--ink);font-size:12px;font-family:'DM Sans',sans-serif}
+.btn-add{padding:7px 14px;background:var(--green);color:#fff;border:none;border-radius:6px;font-size:12px;font-weight:500;cursor:pointer}
+.btn-add:hover{background:#235234}
+.gest-table{width:100%;border-collapse:collapse}
+.gest-table th{font-size:9px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:var(--ink3);padding:5px 8px 9px;text-align:left;border-bottom:1px solid var(--border2);background:var(--card2)}
+.gest-table td{padding:7px 8px;border-bottom:0.5px solid var(--border);font-size:12px;vertical-align:middle}
+.gest-table tr:hover td{background:var(--bg2)}
+.gest-table input,.gest-table select,.gest-table textarea{width:100%;padding:4px 6px;border:0.5px solid transparent;border-radius:4px;font-size:11px;font-family:'DM Sans',sans-serif;background:transparent;color:var(--ink)}
+.gest-table input:focus,.gest-table select:focus,.gest-table textarea:focus{outline:none;border-color:var(--blue);background:var(--blue-lt)}
+.btn-del{background:none;border:none;cursor:pointer;color:var(--ink4);font-size:14px;padding:2px 4px;border-radius:3px}
+.btn-del:hover{color:var(--red);background:var(--red-lt)}
+.resultado-tag{display:inline-block;padding:2px 6px;border-radius:3px;font-size:10px;font-weight:600}
+.resultado-tag.pagado{background:var(--green-lt);color:var(--green)}
+.resultado-tag.parcial{background:var(--amber-lt);color:var(--amber)}
+.resultado-tag.pendiente{background:var(--gray-lt);color:var(--ink3)}
+.btn-export{padding:7px 14px;background:var(--ink);color:#F5F2EC;border:none;border-radius:6px;font-size:12px;font-weight:500;cursor:pointer;margin-left:auto}
+.btn-export:hover{background:var(--ink2)}
+
+/* ─── COMPARACION CUOTAS ─── */
+.comp-table{width:100%;border-collapse:collapse}
+.comp-table th{font-size:10px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:var(--ink3);padding:5px 10px 9px;text-align:right;border-bottom:1px solid var(--border2)}
+.comp-table th:first-child{text-align:left}
+.comp-table td{padding:7px 10px;border-bottom:0.5px solid var(--border);font-size:12px;text-align:right;font-family:'DM Mono',monospace}
+.comp-table td:first-child{text-align:left;font-family:'DM Sans',sans-serif;font-weight:500;color:var(--ink)}
+.comp-table tr:hover td{background:var(--bg2)}
+.comp-table td.pos{color:var(--red)}.comp-table td.neg{color:var(--green)}.comp-table td.na{color:var(--ink4)}
+.comp-table tr.total td{font-weight:600;border-top:1px solid var(--border2);border-bottom:none}
+
+/* ─── CHART CONTAINERS ─── */
+.chart-wrap{position:relative;width:100%;height:220px;margin-top:8px}
+.chart-wrap.tall{height:280px}
+.chart-legend{display:flex;flex-wrap:wrap;gap:12px;margin-top:10px;font-size:11px}
+.cl-item{display:flex;align-items:center;gap:5px}
+.cl-dot{width:10px;height:10px;border-radius:2px;flex-shrink:0}
+
+/* ─── META ─── */
+.meta-row{display:flex;align-items:center;gap:16px;padding:14px 0;border-bottom:0.5px solid var(--border)}
+.meta-row:last-child{border-bottom:none}
+.meta-lbl{font-size:12px;color:var(--ink2);min-width:140px}
+.meta-bar-wrap{flex:1;height:12px;background:var(--bg3);border-radius:6px;overflow:hidden}
+.meta-bar{height:100%;border-radius:6px;background:var(--green);transition:width .3s}
+.meta-pct{font-family:'DM Mono',monospace;font-size:12px;font-weight:500;min-width:44px;text-align:right}
+
+/* ─── DIRECTORIO (one-pager) ─── */
+.dir-header{background:var(--ink);color:#F5F2EC;padding:20px 28px 16px;border-radius:10px 10px 0 0;border-bottom:3px solid var(--red);margin-bottom:0}
+.dir-header-top{display:flex;justify-content:space-between;align-items:flex-end}
+.dir-school{font-size:10px;letter-spacing:0.15em;text-transform:uppercase;color:rgba(245,242,236,0.4);font-family:'DM Mono',monospace;margin-bottom:5px}
+.dir-title{font-family:'Playfair Display',serif;font-size:22px;font-weight:700}
+.dir-title span{color:#E8896A}
+.dir-date{text-align:right;font-family:'DM Mono',monospace;font-size:10px;color:rgba(245,242,236,0.4)}
+.dir-alert{display:inline-block;background:var(--red);color:#fff;font-size:9px;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;padding:3px 9px;border-radius:2px;margin-top:6px}
+.dir-body{background:var(--card);border:0.5px solid var(--border);border-top:none;border-radius:0 0 10px 10px;padding:20px 28px}
+.dir-kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px}
+.dir-kpi{background:var(--bg2);border-radius:7px;padding:12px 14px}
+.dir-kpi-lbl{font-size:9px;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:var(--ink3);margin-bottom:6px}
+.dir-kpi-val{font-family:'Playfair Display',serif;font-size:22px;font-weight:700;line-height:1}
+.dir-kpi-val.red{color:var(--red)}.dir-kpi-val.amber{color:var(--amber)}.dir-kpi-val.green{color:var(--green)}
+.dir-kpi-sub{font-size:9px;color:var(--ink4);margin-top:3px}
+.dir-section{margin-bottom:16px}
+.dir-section-title{font-size:10px;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:var(--ink3);margin-bottom:10px;padding-bottom:5px;border-bottom:0.5px solid var(--border2)}
+.dir-row{display:flex;justify-content:space-between;align-items:center;padding:4px 0;font-size:11px;border-bottom:0.5px solid var(--border)}
+.dir-row:last-child{border-bottom:none}
+.dir-row-lbl{color:var(--ink2)}
+.dir-row-val{font-family:'DM Mono',monospace;font-weight:500;color:var(--ink)}
+.dir-semaforo{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:16px}
+.dir-sema{border-radius:6px;padding:10px;text-align:center}
+.dir-sema.c{background:var(--red-lt);border:0.5px solid var(--red-bd)}
+.dir-sema.a{background:var(--amber-lt);border:0.5px solid var(--amber-bd)}
+.dir-sema.m{background:var(--blue-lt);border:0.5px solid var(--blue-bd)}
+.dir-sema.b{background:var(--green-lt);border:0.5px solid var(--green-bd)}
+.dir-sema-n{font-family:'Playfair Display',serif;font-size:22px;font-weight:700}
+.dir-sema.c .dir-sema-n{color:var(--red)}.dir-sema.a .dir-sema-n{color:var(--amber)}.dir-sema.m .dir-sema-n{color:var(--blue)}.dir-sema.b .dir-sema-n{color:var(--green)}
+.dir-sema-lbl{font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;margin-top:4px}
+.dir-sema.c .dir-sema-lbl{color:var(--red)}.dir-sema.a .dir-sema-lbl{color:var(--amber)}.dir-sema.m .dir-sema-lbl{color:var(--blue)}.dir-sema.b .dir-sema-lbl{color:var(--green)}
+.dir-sema-val{font-family:'DM Mono',monospace;font-size:10px;color:var(--ink2);margin-top:2px}
+.dir-acciones{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.dir-accion{background:var(--bg2);border-radius:6px;padding:10px 12px;display:flex;gap:8px}
+.dir-accion-num{font-family:'Playfair Display',serif;font-size:18px;font-weight:700;color:var(--ink3);opacity:0.35;min-width:18px;line-height:1}
+.dir-accion-title{font-size:11px;font-weight:600;color:var(--ink);margin-bottom:2px}
+.dir-accion-text{font-size:10px;color:var(--ink2);line-height:1.4}
+.dir-accion-plazo{display:inline-block;margin-top:4px;font-family:'DM Mono',monospace;font-size:8px;text-transform:uppercase;letter-spacing:0.1em;padding:2px 6px;border-radius:2px;background:var(--bg3);color:var(--ink3)}
+.print-btn{display:flex;align-items:center;gap:6px;padding:8px 14px;background:var(--ink);color:#F5F2EC;border:none;border-radius:6px;font-size:12px;font-weight:500;cursor:pointer;margin-bottom:16px}
+.print-btn:hover{background:var(--ink2)}
+
+/* ─── WEEK COMPACT ─── */
+.week-card{background:var(--card);border:0.5px solid var(--border);border-radius:10px;padding:16px 20px;display:flex;gap:20px;align-items:center;margin-bottom:12px}
+.week-num{font-family:'Playfair Display',serif;font-size:36px;font-weight:700;color:var(--ink);opacity:0.2;min-width:50px;text-align:center;line-height:1}
+.week-info{flex:1}
+.week-title{font-size:13px;font-weight:500;color:var(--ink);margin-bottom:4px}
+.week-meta{font-size:11px;color:var(--ink3)}
+.week-stats{display:flex;gap:20px;margin-top:8px}
+.week-stat{text-align:center}
+.week-stat-val{font-family:'DM Mono',monospace;font-size:14px;font-weight:500;color:var(--ink)}
+.week-stat-lbl{font-size:9px;color:var(--ink4);text-transform:uppercase;letter-spacing:0.08em}
+.week-actions{display:flex;gap:8px;align-items:center}
+.week-action-btn{padding:6px 12px;border-radius:5px;font-size:11px;font-weight:500;border:0.5px solid var(--border2);background:var(--card2);color:var(--ink);cursor:pointer}
+.week-action-btn:hover{background:var(--bg3)}
+.week-action-btn.primary{background:var(--green);color:#fff;border-color:transparent}
+
+/* ─── SEARCH ─── */
+.search-bar{width:100%;padding:8px 12px;border:0.5px solid var(--border2);border-radius:7px;background:var(--card);font-size:12px;font-family:'DM Sans',sans-serif;margin-bottom:12px}
+.search-bar:focus{outline:none;border-color:var(--blue)}
+
+/* ─── STATUS ─── */
+.status-bar{background:var(--green-lt);border:0.5px solid var(--green-bd);border-radius:7px;padding:8px 14px;font-size:11px;color:var(--green);margin-bottom:12px;display:none}
+.status-bar.error{background:var(--red-lt);border-color:var(--red-bd);color:var(--red)}
+
+/* ─── FOOTER ─── */
+.app-footer{background:var(--bg3);border-top:1px solid var(--border2);padding:12px 40px;display:flex;justify-content:space-between;align-items:center;margin-top:40px}
+.footer-l{font-size:10px;color:var(--ink3)}
+.footer-r{font-family:'DM Mono',monospace;font-size:10px;color:var(--ink3);text-transform:uppercase;letter-spacing:0.08em}
+
+@media print{
+  .app-header,.nav-tabs,.import-banner,.app-footer,.print-btn,#view-dashboard,#view-gestion,#view-comparacion,#view-semanal{display:none!important}
+  #view-directorio{display:block!important}
+  body{background:#fff}
+}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="app-header">
+  <h1>Morosidad <span>CAC</span></h1>
+  <div class="header-right">
+    <span class="corte-badge" id="corte-label">Corte: 31/05/2026</span>
+    <nav class="nav-tabs">
+      <button class="nav-tab active" onclick="showView('dashboard')">Dashboard</button>
+      <button class="nav-tab" onclick="showView('historico')">Histórico Mensual</button>
+      <button class="nav-tab" onclick="showView('gestion')">Gestión Semanal</button>
+      <button class="nav-tab" onclick="showView('comparacion')">Cuotas 2025/2026</button>
+      <button class="nav-tab" onclick="showView('semanal')">Vista Semanal</button>
+      <button class="nav-tab" onclick="showView('directorio')">Directorio</button>
+      <button class="nav-tab" onclick="showView('sostenedores_mod')">Sostenedores</button>
+      <button class="nav-tab" onclick="showView('alumnos_mod')">Alumnos</button>
+    </nav>
+  </div>
+</div>
+
+<div class="main">
+
+<!-- ═══════════════════════════════════════════════ DASHBOARD ═══ -->
+<div id="view-dashboard" class="view active">
+
+  <div class="import-banner">
+    <span class="import-banner-icon">📂</span>
+    <div class="import-banner-text">
+      <strong>Actualizar datos desde Syscol</strong>
+      <span>Exporta el reporte por sostenedor y por alumno desde Syscolnet, luego importa aquí. Los KPIs se actualizan automáticamente.</span>
+    </div>
+    <div class="import-actions">
+      <button class="btn-import" onclick="document.getElementById('file-sos').click()">Importar por sostenedor</button>
+      <button class="btn-import" onclick="document.getElementById('file-alu').click()">Importar por alumno</button>
+      <button class="btn-import primary" onclick="useDefaultData()">↻ Recargar desde Supabase</button>
+    </div>
+    <input type="file" id="file-sos" accept=".xlsx,.xls,.csv" onchange="handleFile(this,'sos')">
+    <input type="file" id="file-alu" accept=".xlsx,.xls,.csv" onchange="handleFile(this,'alu')">
+    <input type="file" id="hist-file-input" accept=".xlsx,.xls,.csv" style="display:none" onchange="handleHistFile(this)">
+  </div>
+
+  <div id="status-bar" class="status-bar"></div>
+
+  <div class="uf-note">
+    ℹ <span><strong>Nota UF:</strong> Los valores en CLP varían diariamente por conversión desde UF. El día 6 de cada mes los saldos aumentan por vencimiento de la nueva cuota mensual.</span>
+  </div>
+
+  <!-- KPIs -->
+  <div class="kpi-grid">
+    <div class="kpi r"><div class="kpi-lbl">Morosidad total</div><div class="kpi-val red" id="kpi-total">$123M</div><div class="kpi-sub" id="kpi-total-sub">CLP al 31/05/2026</div></div>
+    <div class="kpi r"><div class="kpi-lbl">% sobre recaudable</div><div class="kpi-val red" id="kpi-pct">19.4%</div><div class="kpi-sub" id="kpi-pct-sub">Meta: ≤30% en 90 días</div></div>
+    <div class="kpi a"><div class="kpi-lbl">Sostenedores morosos</div><div class="kpi-val amber" id="kpi-sos">177</div><div class="kpi-sub" id="kpi-sos-sub">sobre base activa</div></div>
+    <div class="kpi a"><div class="kpi-lbl">Deuda >30 días</div><div class="kpi-val amber" id="kpi-30">$95.3M</div><div class="kpi-sub">tramos 31-60 y +60</div></div>
+    <div class="kpi g"><div class="kpi-lbl">Recaudado estimado</div><div class="kpi-val green" id="kpi-rec">$74.8M</div><div class="kpi-sub">período abr–may 2026</div></div>
+    <div class="kpi b"><div class="kpi-lbl">Próximo vencimiento</div><div class="kpi-val" style="font-size:18px;color:var(--red)">5 jun 2026</div><div class="kpi-sub">nueva cuota se suma</div></div>
+  </div>
+
+  <!-- SEMÁFORO -->
+  <div class="sec-hdr"><h2>Semáforo de riesgo</h2><span class="sec-tag">Saldo vigente por segmento</span></div>
+  <div class="card" style="margin-bottom:16px">
+    <div class="semaforo" id="semaforo-grid">
+      <div class="sema critico"><div class="sema-dot"></div><div class="sema-lbl">Crítico</div><div class="sema-n" id="s-crit-n">34</div><div class="sema-m" id="s-crit-m">$77.054.036</div><div class="sema-p">>$1.500.000 · 26% del total</div></div>
+      <div class="sema alto"><div class="sema-dot"></div><div class="sema-lbl">Alto</div><div class="sema-n" id="s-alto-n">122</div><div class="sema-m" id="s-alto-m">$126.214.516</div><div class="sema-p">$900K–$1.5M · 43% del total</div></div>
+      <div class="sema medio"><div class="sema-dot"></div><div class="sema-lbl">Medio</div><div class="sema-n" id="s-med-n">193</div><div class="sema-m" id="s-med-m">$91.988.082</div><div class="sema-p">$400K–$900K · 31% del total</div></div>
+      <div class="sema bajo"><div class="sema-dot"></div><div class="sema-lbl">Bajo</div><div class="sema-n" id="s-bajo-n">8</div><div class="sema-m" id="s-bajo-m">$1.200.004</div><div class="sema-p"><$400K · &lt;1% del total</div></div>
+    </div>
+  </div>
+
+  <div class="grid-2">
+    <!-- AGING -->
+    <div class="card">
+      <div class="card-title">Aging por tramo de mora</div>
+      <table class="aging-table" id="aging-table">
+        <thead><tr><th>Tramo</th><th class="r">Saldo CLP</th><th class="r">Casos</th><th class="r">% Deuda</th><th style="min-width:100px">Distribución</th></tr></thead>
+        <tbody>
+          <tr><td>1 – 30 días</td><td class="num">$56.718.849</td><td class="num">123</td><td class="num">46.0%</td><td><div class="aging-bar-wrap"><div class="aging-bar" style="width:46%;background:#378ADD"></div></div></td></tr>
+          <tr><td>31 – 60 días</td><td class="num">$38.419.482</td><td class="num">42</td><td class="num">31.2%</td><td><div class="aging-bar-wrap"><div class="aging-bar" style="width:31%;background:#C07D20"></div></div></td></tr>
+          <tr><td>61 – 90 días</td><td class="num">$28.027.678</td><td class="num">20</td><td class="num">22.7%</td><td><div class="aging-bar-wrap"><div class="aging-bar" style="width:23%;background:#B5320E"></div></div></td></tr>
+          <tr><td>>90 días</td><td class="num">$0</td><td class="num">0</td><td class="num">0.0%</td><td><div class="aging-bar-wrap"><div class="aging-bar" style="width:0%;background:#801f05"></div></div></td></tr>
+        </tbody>
+      </table>
+      <div style="margin-top:14px;padding-top:12px;border-top:0.5px solid var(--border)">
+        <div class="chart-wrap"><canvas id="chart-aging" role="img" aria-label="Distribución de mora por tramo"></canvas></div>
+      </div>
+    </div>
+
+    <!-- FORMAS DE PAGO -->
+    <div class="card">
+      <div class="card-title">Formas de pago de los morosos</div>
+      <div class="chart-wrap tall"><canvas id="chart-formas" role="img" aria-label="Formas de pago de morosos"></canvas></div>
+      <div class="chart-legend" id="legend-formas"></div>
+    </div>
+  </div>
+
+  <!-- TOP DEUDORES -->
+  <div class="sec-hdr"><h2>Listado de sostenedores morosos</h2><span class="sec-tag">Por saldo vigente · Prioridad de gestión</span></div>
+  <div class="card" style="margin-bottom:16px">
+
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap">
+      <input style="padding:7px 10px;border:0.5px solid var(--border2);border-radius:6px;font-size:12px;background:var(--card);color:var(--ink);flex:1;min-width:180px" type="text" id="top-search" placeholder="Buscar por nombre..." oninput="applyTopFilters()">
+      <div style="display:flex;align-items:center;gap:6px;flex-shrink:0;flex-wrap:wrap">
+        <span style="font-size:11px;color:var(--ink3);white-space:nowrap">Cuotas:</span>
+        <div id="cuotas-pills" style="display:flex;gap:4px;flex-wrap:wrap"></div>
+        <button onclick="clearCuotasFilter()" id="btn-clear-cuotas" style="display:none;padding:3px 8px;border-radius:4px;border:0.5px solid var(--border2);background:var(--bg3);font-size:10px;cursor:pointer;color:var(--ink3)">x Limpiar</button>
+      </div>
+      <select id="top-filter-crit" onchange="applyTopFilters()" style="padding:6px 10px;border:0.5px solid var(--border2);border-radius:6px;font-size:12px;background:var(--card);color:var(--ink)">
+        <option value="">Todas las criticidades</option>
+        <option value="Critica">Critica</option>
+        <option value="Alta">Alta</option>
+        <option value="Media">Media</option>
+      </select>
+      <select id="top-filter-tramo" onchange="applyTopFilters()" style="padding:6px 10px;border:0.5px solid var(--border2);border-radius:6px;font-size:12px;background:var(--card);color:var(--ink)">
+        <option value="">Todos los tramos</option>
+        <option value="1-30">1-30 dias</option>
+        <option value="31-60">31-60 dias</option>
+        <option value="61-90">61-90 dias</option>
+        <option value="+90">+90 dias</option>
+      </select>
+      <span id="top-result-count" style="font-size:11px;color:var(--ink3);white-space:nowrap"></span>
+    </div>
+
+    <div id="cuotas-summary" style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap"></div>
+
+    <div style="overflow-x:auto">
+    <table class="top-table">
+      <thead><tr>
+        <th style="width:22px">#</th>
+        <th>Sostenedor</th>
+        <th class="r">Saldo CLP</th>
+        <th class="r" style="cursor:pointer;user-select:none" onclick="sortTop('cuotas')" title="Click para ordenar">Cuotas ↕</th>
+        <th>Tramo</th>
+        <th>Criticidad</th>
+        <th>F. Pago</th>
+        <th>Email</th>
+        <th class="r">Barra</th>
+      </tr></thead>
+      <tbody id="top-deudores-body"></tbody>
+    </table>
+    </div>
+    <div style="margin-top:8px;font-size:10px;color:var(--ink4)">Cuotas estimadas = saldo CLP / valor cuota UF del dia (~$471.280). Click en cabecera "Cuotas" para ordenar.</div>
+  </div>
+
+  <!-- COMPORTAMIENTO + RECAUDACION -->
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-title">Patrón de comportamiento</div>
+      <div class="beh-rows" id="beh-rows">
+        <div class="beh-row"><span class="beh-lbl">Sin movimiento</span><div class="beh-bar-wrap"><div class="beh-bar" style="width:100%;background:var(--red)"></div></div><span class="beh-n">136</span><span class="beh-total">$126.8M</span></div>
+        <div class="beh-row"><span class="beh-lbl">Nuevos (2ª mitad)</span><div class="beh-bar-wrap"><div class="beh-bar" style="width:89%;background:var(--blue)"></div></div><span class="beh-n">121</span><span class="beh-total">$79.9M</span></div>
+        <div class="beh-row"><span class="beh-lbl">Pago parcial</span><div class="beh-bar-wrap"><div class="beh-bar" style="width:70%;background:#C07D20"></div></div><span class="beh-n">95</span><span class="beh-total">$88.2M</span></div>
+        <div class="beh-row"><span class="beh-lbl">Mejorando</span><div class="beh-bar-wrap"><div class="beh-bar" style="width:3%;background:var(--green)"></div></div><span class="beh-n">4</span><span class="beh-total">$1.5M</span></div>
+      </div>
+      <div style="margin-top:12px;padding-top:10px;border-top:0.5px solid var(--border);font-size:10px;color:var(--ink3)">⚠ Solo 1 pago del 100% detectado. El 99% de los pagos son parciales.</div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Recaudación semanal (abr–may 2026)</div>
+      <div class="rec-rows">
+        <div class="rec-row"><span class="rec-lbl">Sem 15 (07–10 abr)</span><div class="rec-bw"><div class="rec-bar" style="width:35%"></div></div><span class="rec-n">14 pagos</span><span class="rec-total">$8.779.110</span></div>
+        <div class="rec-row"><span class="rec-lbl">Sem 16 (13–18 abr)</span><div class="rec-bw"><div class="rec-bar" style="width:54%"></div></div><span class="rec-n">18 pagos</span><span class="rec-total">$13.517.967</span></div>
+        <div class="rec-row"><span class="rec-lbl">Sem 17 (20–26 abr)</span><div class="rec-bw"><div class="rec-bar" style="width:27%"></div></div><span class="rec-n">8 pagos</span><span class="rec-total">$6.659.476</span></div>
+        <div class="rec-row"><span class="rec-lbl">Sem 18 (27 abr–1 may)</span><div class="rec-bw"><div class="rec-bar" style="width:31%"></div></div><span class="rec-n">11 pagos</span><span class="rec-total">$7.754.543</span></div>
+        <div class="rec-row highlight"><span class="rec-lbl" style="color:var(--green);font-weight:600">⭐ Sem 19 (4–10 may)</span><div class="rec-bw"><div class="rec-bar" style="width:100%;background:#1E8449"></div></div><span class="rec-n" style="color:var(--green)">36 pagos</span><span class="rec-total" style="color:var(--green);font-weight:600">$24.855.993</span></div>
+        <div class="rec-row"><span class="rec-lbl">Sem 20 (11–17 may)</span><div class="rec-bw"><div class="rec-bar" style="width:58%"></div></div><span class="rec-n">21 pagos</span><span class="rec-total">$14.325.796</span></div>
+        <div class="rec-row"><span class="rec-lbl">Sem 21 (18–24 may)</span><div class="rec-bw"><div class="rec-bar" style="width:34%"></div></div><span class="rec-n">14 pagos</span><span class="rec-total">$8.360.908</span></div>
+        <div class="rec-row"><span class="rec-lbl">Sem 22 (25–31 may)</span><div class="rec-bw"><div class="rec-bar" style="width:23%"></div></div><span class="rec-n">9 pagos</span><span class="rec-total">$5.634.763</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ALERTAS -->
+  <div class="sec-hdr"><h2>Alertas de gestión</h2><span class="sec-tag">Acciones recomendadas</span></div>
+  <div class="grid-2">
+    <div class="card">
+      <div class="alertas">
+        <div class="alerta danger"><span class="alerta-icon">⚡</span><div><div class="alerta-title">Vencimiento 5 junio — actuar esta semana</div><div class="alerta-text">El 6/06 se sumarán ~$176M–$230M adicionales. Activar campaña preventiva urgente con saldo proyectado incluyendo la nueva cuota.</div></div></div>
+        <div class="alerta danger"><span class="alerta-icon">🔒</span><div><div class="alerta-title">136 sostenedores sin ningún pago</div><div class="alerta-text">$126.8M congelados. Requieren contacto directo, no solo correo. Proponer convenio escrito con plazo firme.</div></div></div>
+        <div class="alerta warn"><span class="alerta-icon">🔁</span><div><div class="alerta-title">99% pagos parciales — no cierran el ciclo</div><div class="alerta-text">95 sostenedores pagan algo pero mantienen saldo creciente. Proponer convenio formal en 3 cuotas con fecha límite.</div></div></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="alertas">
+        <div class="alerta info"><span class="alerta-icon">📅</span><div><div class="alerta-title">Martes y jueves concentran los pagos</div><div class="alerta-text">Enviar recordatorios el lunes y miércoles maximiza la tasa de respuesta. Programar emails con saldo del día más proyección a 30 días.</div></div></div>
+        <div class="alerta ok"><span class="alerta-icon">⭐</span><div><div class="alerta-title">Semana 19 recaudó $24.8M — replicar</div><div class="alerta-text">36 pagos en una semana. Identificar qué acción generó ese pico. Documentar y convertir en protocolo mensual estándar.</div></div></div>
+        <div class="alerta ok"><span class="alerta-icon">📈</span><div><div class="alerta-title">UF genera +1% mensual de crecimiento pasivo</div><div class="alerta-text">Cada mes que pasa sin pago suma ~$1.23M automáticamente sobre $123M de mora. Comunicar este costo a los sostenedores.</div></div></div>
+      </div>
+    </div>
+  </div>
+</div><!-- /dashboard -->
+
+
+<!-- ════════════════════════════════════ HISTÓRICO MENSUAL ═══ -->
+<div id="view-historico" class="view">
+
+  <div class="sec-hdr"><h2>Registro histórico mensual</h2><span class="sec-tag">Un corte por fin de mes · Marzo–Diciembre · 2025 y 2026</span></div>
+
+  <!-- INSTRUCCIONES -->
+  <div style="background:var(--blue-lt);border:0.5px solid var(--blue-bd);border-radius:10px;padding:14px 20px;margin-bottom:20px;display:flex;gap:16px;align-items:flex-start">
+    <span style="font-size:20px;flex-shrink:0">📋</span>
+    <div>
+      <strong style="font-size:12px;color:var(--blue);display:block;margin-bottom:4px">Cómo usar este módulo</strong>
+      <span style="font-size:11px;color:var(--ink2);line-height:1.6">
+        El último día hábil de cada mes, exporta desde Syscol el reporte por sostenedor e impórtalo aquí usando el botón del mes correspondiente.
+        El sistema calcula automáticamente cuántas cuotas acumula cada sostenedor, genera la curva de evolución y compara 2025 vs 2026.
+        <strong>Los datos se guardan en el navegador</strong> — no se pierden al cerrar.
+      </span>
+    </div>
+  </div>
+
+  <!-- GRID DE MESES -->
+  <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:24px" id="month-grid"></div>
+
+  <!-- KPIs HISTÓRICOS -->
+  <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:20px" id="hist-kpi-row"></div>
+
+  <!-- GRÁFICO EVOLUCIÓN TOTAL -->
+  <div class="grid-65" style="margin-bottom:20px">
+    <div class="card">
+      <div class="card-title">Evolución mora total fin de mes</div>
+      <div class="chart-wrap tall"><canvas id="chart-hist-total" role="img" aria-label="Evolución mora total por mes"></canvas></div>
+      <div class="chart-legend">
+        <div class="cl-item"><div class="cl-dot" style="background:#B5320E"></div><span>2025</span></div>
+        <div class="cl-item"><div class="cl-dot" style="background:#1A4A7A"></div><span>2026</span></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">Distribución por cuotas — último corte</div>
+      <div class="chart-wrap tall"><canvas id="chart-hist-cuotas" role="img" aria-label="Distribución de sostenedores por cuotas"></canvas></div>
+    </div>
+  </div>
+
+  <!-- TABLA DE ACUMULACIÓN POR SOSTENEDOR -->
+  <div class="sec-hdr"><h2>Evolución por sostenedor</h2><span class="sec-tag">Cuotas acumuladas mes a mes · Detecta quién no pagó nada</span></div>
+  <div class="card" style="margin-bottom:20px">
+    <div style="display:flex;gap:10px;margin-bottom:12px;flex-wrap:wrap;align-items:center">
+      <input type="text" id="hist-search" placeholder="Buscar sostenedor..." oninput="renderHistoricoTable()"
+        style="padding:7px 10px;border:0.5px solid var(--border2);border-radius:6px;font-size:12px;background:var(--card);color:var(--ink);flex:1;min-width:200px">
+      <select id="hist-filter-ano" onchange="renderHistorico()"
+        style="padding:6px 10px;border:0.5px solid var(--border2);border-radius:6px;font-size:12px;background:var(--card);color:var(--ink)">
+        <option value="2026">2026</option>
+        <option value="2025">2025</option>
+      </select>
+      <select id="hist-filter-cuotas" onchange="renderHistoricoTable()"
+        style="padding:6px 10px;border:0.5px solid var(--border2);border-radius:6px;font-size:12px;background:var(--card);color:var(--ink)">
+        <option value="">Todas las cuotas</option>
+        <option value="1">1 cuota</option>
+        <option value="2">2 cuotas</option>
+        <option value="3">3 cuotas</option>
+        <option value="4">4 cuotas</option>
+        <option value="5">5 cuotas</option>
+        <option value="6">6 cuotas</option>
+        <option value="7">7 cuotas</option>
+        <option value="8">8 cuotas</option>
+        <option value="9">9 cuotas</option>
+        <option value="10">10 cuotas (no pagó nada)</option>
+      </select>
+      <select id="hist-filter-patron" onchange="renderHistoricoTable()"
+        style="padding:6px 10px;border:0.5px solid var(--border2);border-radius:6px;font-size:12px;background:var(--card);color:var(--ink)">
+        <option value="">Todos los patrones</option>
+        <option value="nopago">No pagó nada</option>
+        <option value="empeora">Empeorando</option>
+        <option value="mejora">Mejorando</option>
+        <option value="irregular">Irregular</option>
+      </select>
+      <button onclick="exportHistorico()" style="padding:7px 14px;background:var(--ink);color:#F5F2EC;border:none;border-radius:6px;font-size:12px;font-weight:500;cursor:pointer">↓ Exportar</button>
+      <span id="hist-count" style="font-size:11px;color:var(--ink3)"></span>
+    </div>
+    <div style="overflow-x:auto">
+      <table id="hist-table" style="width:100%;border-collapse:collapse;font-size:11px">
+        <thead id="hist-thead"></thead>
+        <tbody id="hist-tbody"></tbody>
+      </table>
+    </div>
+    <div style="margin-top:8px;font-size:10px;color:var(--ink4)">
+      Escala de color: 
+      <span style="display:inline-flex;align-items:center;gap:3px;margin:0 6px"><span style="width:14px;height:10px;border-radius:2px;display:inline-block;background:#2A6040"></span>1 cuota</span>
+      <span style="display:inline-flex;align-items:center;gap:3px;margin:0 6px"><span style="width:14px;height:10px;border-radius:2px;display:inline-block;background:#1A4A7A"></span>2–3</span>
+      <span style="display:inline-flex;align-items:center;gap:3px;margin:0 6px"><span style="width:14px;height:10px;border-radius:2px;display:inline-block;background:#9A5C08"></span>4–5</span>
+      <span style="display:inline-flex;align-items:center;gap:3px;margin:0 6px"><span style="width:14px;height:10px;border-radius:2px;display:inline-block;background:#B5320E"></span>6–8</span>
+      <span style="display:inline-flex;align-items:center;gap:3px;margin:0 6px"><span style="width:14px;height:10px;border-radius:2px;display:inline-block;background:#5c0b01"></span>9–10</span>
+      · Celda vacía = sin dato ese mes
+    </div>
+  </div>
+
+  <!-- PANEL DE ALERTAS AUTOMÁTICAS -->
+  <div class="sec-hdr"><h2>Alertas automáticas</h2><span class="sec-tag">Generadas desde el histórico</span></div>
+  <div id="hist-alertas" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px"></div>
+
+</div><!-- /historico -->
+
+<!-- ═════════════════════════════════════════ GESTIÓN SEMANAL ═══ -->
+<div id="view-gestion" class="view">
+  <div class="sec-hdr"><h2>Gestión de cobranza semanal</h2><span class="sec-tag">Registro de llamadas, compromisos y resultados</span></div>
+  
+  <div class="card" style="margin-bottom:14px">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap">
+      <select id="gest-semana" style="padding:7px 10px;border:0.5px solid var(--border2);border-radius:6px;font-size:12px;background:var(--card);color:var(--ink)">
+        <option>Semana del 26 may – 1 jun 2026</option>
+        <option>Semana del 2 – 8 jun 2026</option>
+        <option>Semana del 9 – 15 jun 2026</option>
+        <option>Semana del 16 – 22 jun 2026</option>
+      </select>
+      <input type="text" placeholder="Filtrar sostenedor..." style="padding:7px 10px;border:0.5px solid var(--border2);border-radius:6px;font-size:12px;background:var(--card);color:var(--ink);width:200px" oninput="filterTable(this.value,'gest-body')">
+      <select id="gest-filter-crit" style="padding:7px 10px;border:0.5px solid var(--border2);border-radius:6px;font-size:12px;background:var(--card);color:var(--ink)" onchange="filterByCrit()">
+        <option value="">Todas las criticidades</option>
+        <option value="Crítica">Crítica</option>
+        <option value="Alta">Alta</option>
+        <option value="Media">Media</option>
+      </select>
+      <button class="btn-add" onclick="addGestRow()">+ Agregar</button>
+      <button class="btn-export" onclick="exportGestion()">↓ Exportar Excel</button>
+    </div>
+    
+    <div style="overflow-x:auto">
+    <table class="gest-table">
+      <thead><tr>
+        <th>Sostenedor</th>
+        <th>Teléfono</th>
+        <th>Correo</th>
+        <th class="r">Saldo CLP</th>
+        <th>Criticidad</th>
+        <th>Última gestión</th>
+        <th>Próxima acción</th>
+        <th>Responsable</th>
+        <th>Resultado</th>
+        <th style="width:30px"></th>
+      </tr></thead>
+      <tbody id="gest-body"></tbody>
+    </table>
+    </div>
+    <div style="margin-top:10px;font-size:10px;color:var(--ink4)">Los cambios se guardan automáticamente en el navegador. Exporta a Excel para archivar.</div>
+  </div>
+  
+  <!-- Resumen semanal -->
+  <div class="grid-3">
+    <div class="card" style="text-align:center">
+      <div class="card-title">Total gestionado</div>
+      <div style="font-family:'Playfair Display',serif;font-size:28px;font-weight:700;color:var(--ink)" id="gest-total-n">0</div>
+      <div style="font-size:11px;color:var(--ink3);margin-top:4px">sostenedores contactados</div>
+    </div>
+    <div class="card" style="text-align:center">
+      <div class="card-title">Compromisos tomados</div>
+      <div style="font-family:'Playfair Display',serif;font-size:28px;font-weight:700;color:var(--amber)" id="gest-comp-n">0</div>
+      <div style="font-size:11px;color:var(--ink3);margin-top:4px">con fecha de pago acordada</div>
+    </div>
+    <div class="card" style="text-align:center">
+      <div class="card-title">Pagos confirmados</div>
+      <div style="font-family:'Playfair Display',serif;font-size:28px;font-weight:700;color:var(--green)" id="gest-pag-n">0</div>
+      <div style="font-size:11px;color:var(--ink3);margin-top:4px">resultado "PAGADO" registrado</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════ COMPARACIÓN CUOTAS ═══ -->
+<div id="view-comparacion" class="view">
+  <div class="sec-hdr"><h2>Comparación cuotas 2025 vs 2026</h2><span class="sec-tag">Mora inicial al mes de vencimiento · CLP</span></div>
+  
+  <div class="card" style="margin-bottom:16px">
+    <div class="chart-wrap tall"><canvas id="chart-comp" role="img" aria-label="Comparación de mora inicial por mes 2025 vs 2026"></canvas></div>
+    <div class="chart-legend">
+      <div class="cl-item"><div class="cl-dot" style="background:#B5320E"></div><span>2025 (mora al vencer)</span></div>
+      <div class="cl-item"><div class="cl-dot" style="background:#1A4A7A"></div><span>2026 (mora al vencer)</span></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Tabla comparativa — mora el mes del vencimiento</div>
+    <table class="comp-table">
+      <thead><tr>
+        <th>Mes</th>
+        <th>2025 (mora inicial)</th>
+        <th>2026 (mora inicial)</th>
+        <th>Variación $</th>
+        <th>Variación %</th>
+        <th>Estado</th>
+      </tr></thead>
+      <tbody id="comp-body"></tbody>
+      <tfoot><tr class="total" id="comp-total"></tr></tfoot>
+    </table>
+  </div>
+
+  <div class="sec-hdr" style="margin-top:24px"><h2>Velocidad de recuperación por cuota</h2><span class="sec-tag">¿Cuánto queda pendiente meses después del vencimiento?</span></div>
+  <div class="card">
+    <div style="font-size:11px;color:var(--ink3);margin-bottom:12px">Cada fila muestra cuánto de la mora de ese mes aún estaba pendiente en los meses subsiguientes. Datos 2025.</div>
+    <table class="comp-table" id="recovery-table">
+      <thead><tr>
+        <th>Cuota</th>
+        <th>Al vencer</th>
+        <th>1 mes después</th>
+        <th>2 meses</th>
+        <th>3 meses</th>
+        <th>6 meses</th>
+        <th>Al cierre dic</th>
+      </tr></thead>
+      <tbody id="recovery-body"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════ VISTA SEMANAL ═══ -->
+<div id="view-semanal" class="view">
+  <div class="sec-hdr"><h2>Control semanal compacto</h2><span class="sec-tag">Para uso del equipo de administración · Actualizar cada lunes</span></div>
+
+  <div class="grid-2" style="margin-bottom:16px">
+    <div class="card">
+      <div class="card-title">Esta semana (26 may – 1 jun 2026)</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div><div style="font-size:10px;color:var(--ink3);font-weight:600;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:4px">Mora actual</div><div style="font-family:'Playfair Display',serif;font-size:22px;font-weight:700;color:var(--red)">$123M</div></div>
+        <div><div style="font-size:10px;color:var(--ink3);font-weight:600;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:4px">vs semana pasada</div><div style="font-family:'Playfair Display',serif;font-size:22px;font-weight:700;color:var(--amber)">−$8.7M</div></div>
+        <div><div style="font-size:10px;color:var(--ink3);font-weight:600;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:4px">Pagos semana</div><div style="font-family:'Playfair Display',serif;font-size:22px;font-weight:700;color:var(--green)">9</div></div>
+        <div><div style="font-size:10px;color:var(--ink3);font-weight:600;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:4px">Morosos activos</div><div style="font-family:'Playfair Display',serif;font-size:22px;font-weight:700;color:var(--ink)">123</div></div>
+      </div>
+      <div style="margin-top:14px;padding-top:12px;border-top:0.5px solid var(--border)">
+        <div style="font-size:10px;color:var(--ink3);margin-bottom:6px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em">Meta semana (reducir $10M)</div>
+        <div class="meta-bar-wrap"><div class="meta-bar" style="width:87%"></div></div>
+        <div style="font-size:10px;color:var(--ink3);margin-top:4px">$8.7M / $10M objetivo · 87% logrado</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Prioridades de llamada hoy</div>
+      <div id="weekly-priority-list" style="display:flex;flex-direction:column;gap:6px"></div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-bottom:16px">
+    <div class="card-title">Notas de la semana</div>
+    <textarea id="notas-semana" style="width:100%;min-height:120px;padding:10px;border:0.5px solid var(--border2);border-radius:6px;font-size:12px;font-family:'DM Sans',sans-serif;background:var(--bg2);resize:vertical;color:var(--ink)" placeholder="Registra aquí novedades, compromisos tomados por teléfono, situaciones especiales..." oninput="saveNotas()"></textarea>
+  </div>
+
+  <div class="grid-3">
+    <div class="card">
+      <div class="card-title">Vencimiento próximo</div>
+      <div style="text-align:center;padding:10px 0">
+        <div style="font-family:'Playfair Display',serif;font-size:40px;font-weight:700;color:var(--red);line-height:1">5</div>
+        <div style="font-size:13px;font-weight:500;color:var(--ink)">junio 2026</div>
+        <div style="font-size:11px;color:var(--ink3);margin-top:6px">+~$176M–$230M se suman</div>
+        <div style="margin-top:12px;padding:8px 12px;background:var(--red-lt);border-radius:6px;font-size:11px;color:var(--red);font-weight:500">Enviar campaña preventiva<br>antes del 4 de junio</div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">Días hasta vencimiento</div>
+      <div id="countdown" style="text-align:center;padding:10px 0"></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Proyección con nueva cuota</div>
+      <div style="padding:8px 0">
+        <div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:0.5px solid var(--border);font-size:12px"><span style="color:var(--ink2)">Mora actual</span><span style="font-family:'DM Mono',monospace">$123.3M</span></div>
+        <div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:0.5px solid var(--border);font-size:12px"><span style="color:var(--ink2)">+Nueva cuota jun (est.)</span><span style="font-family:'DM Mono',monospace;color:var(--red)">+$85.7M</span></div>
+        <div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:0.5px solid var(--border);font-size:12px"><span style="color:var(--ink2)">+Ajuste UF (est.)</span><span style="font-family:'DM Mono',monospace;color:var(--amber)">+$1.3M</span></div>
+        <div style="display:flex;justify-content:space-between;padding:7px 0;font-size:13px;font-weight:600"><span>Total proyectado 7/06</span><span style="font-family:'DM Mono',monospace;color:var(--red)">~$210.3M</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════ DIRECTORIO ═══ -->
+<div id="view-directorio" class="view">
+  <button class="print-btn" onclick="window.print()">🖨 Imprimir / Exportar PDF</button>
+
+  <div class="dir-header">
+    <div class="dir-header-top">
+      <div>
+        <div class="dir-school">Colegio Alemán de Chillán · Administración</div>
+        <div class="dir-title">Informe de <span>Morosidad</span></div>
+        <div class="dir-alert">⚠ Próximo vencimiento: 5 junio 2026</div>
+      </div>
+      <div class="dir-date">
+        <div>Actualizado al</div>
+        <div style="font-size:13px;color:rgba(245,242,236,0.7);margin-top:2px">31 de mayo de 2026</div>
+        <div style="margin-top:4px">Período: 5 abr → 31 may 2026</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="dir-body">
+    <div class="dir-kpi-grid">
+      <div class="dir-kpi"><div class="dir-kpi-lbl">Morosidad total</div><div class="dir-kpi-val red">$123M</div><div class="dir-kpi-sub">CLP al 31/05/2026</div></div>
+      <div class="dir-kpi"><div class="dir-kpi-lbl">Crecimiento período</div><div class="dir-kpi-val red">+64%</div><div class="dir-kpi-sub">desde $75M al inicio</div></div>
+      <div class="dir-kpi"><div class="dir-kpi-lbl">Sostenedores morosos</div><div class="dir-kpi-val amber">177</div><div class="dir-kpi-sub">con saldo activo</div></div>
+      <div class="dir-kpi"><div class="dir-kpi-lbl">Recaudado estimado</div><div class="dir-kpi-val green">$74.8M</div><div class="dir-kpi-sub">período analizado</div></div>
+    </div>
+
+    <div class="dir-section">
+      <div class="dir-section-title">Semáforo de riesgo</div>
+      <div class="dir-semaforo">
+        <div class="dir-sema c"><div class="dir-sema-n" style="color:var(--red)">34</div><div class="dir-sema-lbl" style="color:var(--red)">Crítico</div><div class="dir-sema-val">&gt;$1.5M · $77.1M</div></div>
+        <div class="dir-sema a"><div class="dir-sema-n" style="color:var(--amber)">122</div><div class="dir-sema-lbl" style="color:var(--amber)">Alto</div><div class="dir-sema-val">$900K–$1.5M · $126.2M</div></div>
+        <div class="dir-sema m"><div class="dir-sema-n" style="color:var(--blue)">193</div><div class="dir-sema-lbl" style="color:var(--blue)">Medio</div><div class="dir-sema-val">$400K–$900K · $92.0M</div></div>
+        <div class="dir-sema b"><div class="dir-sema-n" style="color:var(--green)">8</div><div class="dir-sema-lbl" style="color:var(--green)">Bajo</div><div class="dir-sema-val">&lt;$400K · $1.2M</div></div>
+      </div>
+    </div>
+
+    <div class="dir-section">
+      <div class="dir-section-title">Indicadores KPI</div>
+      <div class="dir-row"><span class="dir-row-lbl">% morosidad sobre recaudable mensual</span><span class="dir-row-val" style="color:var(--red)">19.4%</span></div>
+      <div class="dir-row"><span class="dir-row-lbl">% morosidad >30 días</span><span class="dir-row-val" style="color:var(--amber)">22.7%</span></div>
+      <div class="dir-row"><span class="dir-row-lbl">% morosidad >60 días</span><span class="dir-row-val" style="color:var(--amber)">32.5%</span></div>
+      <div class="dir-row"><span class="dir-row-lbl">Sostenedores sin ningún pago en el período</span><span class="dir-row-val" style="color:var(--red)">136</span></div>
+      <div class="dir-row"><span class="dir-row-lbl">Deuda top 10 sostenedores</span><span class="dir-row-val">$26.3M</span></div>
+      <div class="dir-row"><span class="dir-row-lbl">Semana de mayor recaudación</span><span class="dir-row-val" style="color:var(--green)">Sem 19 · $24.8M</span></div>
+      <div class="dir-row"><span class="dir-row-lbl">Meta morosidad 90 días</span><span class="dir-row-val">≤ 30%</span></div>
+      <div class="dir-row"><span class="dir-row-lbl">Proyección mora post-vencimiento 6 jun</span><span class="dir-row-val" style="color:var(--red)">~$210M</span></div>
+    </div>
+
+    <div class="dir-section">
+      <div class="dir-section-title">Plan de acción recomendado</div>
+      <div class="dir-acciones">
+        <div class="dir-accion"><span class="dir-accion-num">1</span><div><div class="dir-accion-title">Campaña preventiva pre-vencimiento</div><div class="dir-accion-text">Comunicar a todos los morosos el saldo proyectado incluyendo la cuota de junio. Enviar antes del 4 de junio.</div><span class="dir-accion-plazo">Urgente — esta semana</span></div></div>
+        <div class="dir-accion"><span class="dir-accion-num">2</span><div><div class="dir-accion-title">Llamada directa a 34 críticos</div><div class="dir-accion-text">Ofrecer convenio formal en 3 cuotas con fecha límite 30/06. Documentar compromisos por escrito.</div><span class="dir-accion-plazo">Esta semana</span></div></div>
+        <div class="dir-accion"><span class="dir-accion-num">3</span><div><div class="dir-accion-title">Convenio escrito para "sin movimiento"</div><div class="dir-accion-text">Los 136 sin pagos reciben propuesta formal. Fecha límite respuesta: 15/06.</div><span class="dir-accion-plazo">Semana 1–2 jun</span></div></div>
+        <div class="dir-accion"><span class="dir-accion-num">4</span><div><div class="dir-accion-title">Automatizar recordatorios lun/mié</div><div class="dir-accion-text">Envío automático mostrando saldo del día y proyección UF a 30 días. Maximiza días de pago (mar/jue).</div><span class="dir-accion-plazo">Semana 2 jun</span></div></div>
+        <div class="dir-accion"><span class="dir-accion-num">5</span><div><div class="dir-accion-title">Investigar y replicar Semana 19</div><div class="dir-accion-text">$24.8M recaudados en una semana. Identificar la acción específica y convertirla en protocolo mensual.</div><span class="dir-accion-plazo">Semana 2 jun</span></div></div>
+        <div class="dir-accion"><span class="dir-accion-num">6</span><div><div class="dir-accion-title">Meta: &lt;$100M al 31 de julio</div><div class="dir-accion-text">Requiere ~$23M netos adicionales en 60 días. Revisión de avance en directorio del primer martes de julio.</div><span class="dir-accion-plazo">Meta mensual</span></div></div>
+      </div>
+    </div>
+
+    <div style="margin-top:18px;padding-top:12px;border-top:0.5px solid var(--border);display:flex;justify-content:space-between;font-size:10px;color:var(--ink3)">
+      <span>Colegio Alemán de Chillán · Uso interno — Administración y Directorio</span>
+      <span style="font-family:'DM Mono',monospace">Fuente: Syscol · Corte al 31.05.2026</span>
+    </div>
+  </div>
+</div><!-- /directorio -->
+
+
+<!-- ══════════════════════════════════════════ SOSTENEDORES ═══ -->
+<div id="view-sostenedores_mod" class="view">
+  <div class="sec-hdr"><h2>Gestión de sostenedores</h2><span class="sec-tag">Importar · Agregar · Editar · Eliminar</span></div>
+
+  <!-- Import banner -->
+  <div style="background:var(--blue-lt);border:0.5px solid var(--blue-bd);border-radius:10px;padding:14px 20px;display:flex;align-items:center;gap:16px;margin-bottom:20px">
+    <span style="font-size:20px;flex-shrink:0">📂</span>
+    <div style="flex:1">
+      <strong style="font-size:12px;color:var(--blue);display:block;margin-bottom:2px">Importar MOROSOS_SOST.csv desde Syscol</strong>
+      <span style="font-size:11px;color:var(--ink2)">Exporta el reporte de sostenedores morosos desde Syscolnet y súbelo aquí. Actualiza o crea registros automáticamente (upsert por RUT).</span>
+    </div>
+    <div style="display:flex;gap:8px;flex-shrink:0">
+      <button onclick="document.getElementById('file-sost-import').click()" style="padding:7px 14px;border-radius:6px;font-size:12px;font-weight:500;cursor:pointer;border:0.5px solid var(--border2);background:var(--card);color:var(--ink)">📥 Importar CSV</button>
+      <button onclick="addSostenedor()" style="padding:7px 14px;border-radius:6px;font-size:12px;font-weight:500;cursor:pointer;background:var(--green);color:#fff;border:none">+ Nuevo</button>
+      <button onclick="exportSostenedores()" style="padding:7px 14px;border-radius:6px;font-size:12px;font-weight:500;cursor:pointer;background:var(--ink);color:#F5F2EC;border:none">↓ Exportar</button>
+    </div>
+    <input type="file" id="file-sost-import" accept=".csv,.xlsx" style="display:none" onchange="importSostenedores(this)">
+  </div>
+
+  <!-- Stats row -->
+  <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:20px" id="sost-stats-row"></div>
+
+  <!-- Filters -->
+  <div class="card" style="margin-bottom:16px">
+    <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:12px">
+      <input type="text" id="sost-search" placeholder="Buscar nombre, RUT o email..." oninput="renderSostenedoresTable()"
+        style="flex:1;min-width:220px;padding:7px 10px;border:0.5px solid var(--border2);border-radius:6px;font-size:12px;background:var(--card);color:var(--ink)">
+      <select id="sost-filter-fp" onchange="renderSostenedoresTable()"
+        style="padding:6px 10px;border:0.5px solid var(--border2);border-radius:6px;font-size:12px;background:var(--card);color:var(--ink)">
+        <option value="">Todas las formas de pago</option>
+        <option>WEB</option><option>TRA</option><option>PAC</option><option>TCR</option>
+        <option>TDB</option><option>PAT</option><option>CH</option><option>DEP</option><option>DES</option>
+      </select>
+      <select id="sost-filter-beca" onchange="renderSostenedoresTable()"
+        style="padding:6px 10px;border:0.5px solid var(--border2);border-radius:6px;font-size:12px;background:var(--card);color:var(--ink)">
+        <option value="">Con y sin beca</option>
+        <option value="con">Con beca</option>
+        <option value="sin">Sin beca</option>
+      </select>
+      <span id="sost-count" style="font-size:11px;color:var(--ink3)"></span>
+    </div>
+
+    <!-- Table -->
+    <div style="overflow-x:auto">
+    <table style="width:100%;border-collapse:collapse;font-size:11px">
+      <thead id="sost-thead">
+        <tr style="background:var(--card2)">
+          <th style="padding:6px 8px;border-bottom:1px solid var(--border2);text-align:left;font-size:9px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--ink3);white-space:nowrap">RUT</th>
+          <th style="padding:6px 8px;border-bottom:1px solid var(--border2);text-align:left;font-size:9px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--ink3)">Nombre</th>
+          <th style="padding:6px 8px;border-bottom:1px solid var(--border2);text-align:right;font-size:9px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--ink3);white-space:nowrap">Saldo</th>
+          <th style="padding:6px 8px;border-bottom:1px solid var(--border2);text-align:right;font-size:9px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--ink3);white-space:nowrap">Pagado</th>
+          <th style="padding:6px 8px;border-bottom:1px solid var(--border2);font-size:9px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--ink3)">F.Pago</th>
+          <th style="padding:6px 8px;border-bottom:1px solid var(--border2);font-size:9px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--ink3)">Beca</th>
+          <th style="padding:6px 8px;border-bottom:1px solid var(--border2);font-size:9px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--ink3)">Email</th>
+          <th style="padding:6px 8px;border-bottom:1px solid var(--border2);font-size:9px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--ink3)">Móvil</th>
+          <th style="padding:6px 8px;border-bottom:1px solid var(--border2);font-size:9px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--ink3)">Últ. pago</th>
+          <th style="padding:6px 8px;border-bottom:1px solid var(--border2);font-size:9px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--ink3)">Observ.</th>
+          <th style="padding:6px 8px;border-bottom:1px solid var(--border2);width:60px"></th>
+        </tr>
+      </thead>
+      <tbody id="sost-tbody"></tbody>
+    </table>
+    </div>
+    <div style="margin-top:8px;font-size:10px;color:var(--ink4)">Haz clic en cualquier fila para ver el detalle completo y editar.</div>
+  </div>
+
+  <!-- Modal edición sostenedor -->
+  <div id="sost-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:200;align-items:center;justify-content:center">
+    <div style="background:var(--card);border-radius:12px;width:680px;max-width:95vw;max-height:90vh;overflow-y:auto;padding:28px;box-shadow:0 20px 60px rgba(0,0,0,0.2)">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
+        <h3 style="font-family:'Playfair Display',serif;font-size:18px;font-weight:700" id="sost-modal-title">Sostenedor</h3>
+        <button onclick="closeSostModal()" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--ink3)">✕</button>
+      </div>
+      <div id="sost-modal-body"></div>
+      <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:20px;padding-top:16px;border-top:0.5px solid var(--border)">
+        <button onclick="closeSostModal()" style="padding:8px 18px;border-radius:6px;border:0.5px solid var(--border2);background:var(--card2);font-size:12px;cursor:pointer">Cancelar</button>
+        <button onclick="saveSostenedor()" style="padding:8px 18px;border-radius:6px;border:none;background:var(--green);color:#fff;font-size:12px;font-weight:500;cursor:pointer">💾 Guardar</button>
+        <button onclick="deleteSostenedor()" id="btn-del-sost" style="padding:8px 18px;border-radius:6px;border:none;background:var(--red);color:#fff;font-size:12px;font-weight:500;cursor:pointer;display:none">🗑 Eliminar</button>
+      </div>
+    </div>
+  </div>
+</div><!-- /sostenedores_mod -->
+
+<!-- ══════════════════════════════════════════════ ALUMNOS ═══ -->
+<div id="view-alumnos_mod" class="view">
+  <div class="sec-hdr"><h2>Gestión de alumnos</h2><span class="sec-tag">Importar · Agregar · Editar · Eliminar</span></div>
+
+  <div style="background:var(--blue-lt);border:0.5px solid var(--blue-bd);border-radius:10px;padding:14px 20px;display:flex;align-items:center;gap:16px;margin-bottom:20px">
+    <span style="font-size:20px;flex-shrink:0">📂</span>
+    <div style="flex:1">
+      <strong style="font-size:12px;color:var(--blue);display:block;margin-bottom:2px">Importar MOROSOS_ALUMNO.csv desde Syscol</strong>
+      <span style="font-size:11px;color:var(--ink2)">Sube el reporte de alumnos morosos. Upsert por RUT — actualiza si ya existe, crea si es nuevo. Vincula automáticamente con la tabla de sostenedores.</span>
+    </div>
+    <div style="display:flex;gap:8px;flex-shrink:0">
+      <button onclick="document.getElementById('file-alu-import').click()" style="padding:7px 14px;border-radius:6px;font-size:12px;font-weight:500;cursor:pointer;border:0.5px solid var(--border2);background:var(--card);color:var(--ink)">📥 Importar CSV</button>
+      <button onclick="addAlumno()" style="padding:7px 14px;border-radius:6px;font-size:12px;font-weight:500;cursor:pointer;background:var(--green);color:#fff;border:none">+ Nuevo</button>
+      <button onclick="exportAlumnos()" style="padding:7px 14px;border-radius:6px;font-size:12px;font-weight:500;cursor:pointer;background:var(--ink);color:#F5F2EC;border:none">↓ Exportar</button>
+    </div>
+    <input type="file" id="file-alu-import" accept=".csv,.xlsx" style="display:none" onchange="importAlumnos(this)">
+  </div>
+
+  <!-- Stats -->
+  <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:20px" id="alu-stats-row"></div>
+
+  <!-- Filters -->
+  <div class="card" style="margin-bottom:16px">
+    <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:12px">
+      <input type="text" id="alu-search" placeholder="Buscar nombre, RUT o curso..." oninput="renderAlumnosTable()"
+        style="flex:1;min-width:220px;padding:7px 10px;border:0.5px solid var(--border2);border-radius:6px;font-size:12px;background:var(--card);color:var(--ink)">
+      <select id="alu-filter-curso" onchange="renderAlumnosTable()"
+        style="padding:6px 10px;border:0.5px solid var(--border2);border-radius:6px;font-size:12px;background:var(--card);color:var(--ink)" id="alu-filter-curso">
+        <option value="">Todos los cursos</option>
+      </select>
+      <select id="alu-filter-beca" onchange="renderAlumnosTable()"
+        style="padding:6px 10px;border:0.5px solid var(--border2);border-radius:6px;font-size:12px;background:var(--card);color:var(--ink)">
+        <option value="">Con y sin beca</option>
+        <option value="con">Con beca</option>
+        <option value="sin">Sin beca</option>
+      </select>
+      <span id="alu-count" style="font-size:11px;color:var(--ink3)"></span>
+    </div>
+    <div style="overflow-x:auto">
+    <table style="width:100%;border-collapse:collapse;font-size:11px">
+      <thead>
+        <tr style="background:var(--card2)">
+          <th style="padding:6px 8px;border-bottom:1px solid var(--border2);text-align:left;font-size:9px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--ink3);white-space:nowrap">RUT Alumno</th>
+          <th style="padding:6px 8px;border-bottom:1px solid var(--border2);text-align:left;font-size:9px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--ink3)">Nombre</th>
+          <th style="padding:6px 8px;border-bottom:1px solid var(--border2);font-size:9px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--ink3)">Curso</th>
+          <th style="padding:6px 8px;border-bottom:1px solid var(--border2);text-align:right;font-size:9px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--ink3);white-space:nowrap">Saldo</th>
+          <th style="padding:6px 8px;border-bottom:1px solid var(--border2);font-size:9px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--ink3)">Beca</th>
+          <th style="padding:6px 8px;border-bottom:1px solid var(--border2);font-size:9px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--ink3)">Sostenedor</th>
+          <th style="padding:6px 8px;border-bottom:1px solid var(--border2);font-size:9px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--ink3)">Email Soste.</th>
+          <th style="padding:6px 8px;border-bottom:1px solid var(--border2);font-size:9px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--ink3)">Móvil Soste.</th>
+          <th style="padding:6px 8px;border-bottom:1px solid var(--border2);font-size:9px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--ink3);white-space:nowrap">Últ. pago</th>
+          <th style="padding:6px 8px;border-bottom:1px solid var(--border2);width:60px"></th>
+        </tr>
+      </thead>
+      <tbody id="alu-tbody"></tbody>
+    </table>
+    </div>
+    <div style="margin-top:8px;font-size:10px;color:var(--ink4)">Haz clic en una fila para ver detalle completo.</div>
+  </div>
+
+  <!-- Modal alumno -->
+  <div id="alu-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:200;align-items:center;justify-content:center">
+    <div style="background:var(--card);border-radius:12px;width:680px;max-width:95vw;max-height:90vh;overflow-y:auto;padding:28px;box-shadow:0 20px 60px rgba(0,0,0,0.2)">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
+        <h3 style="font-family:'Playfair Display',serif;font-size:18px;font-weight:700" id="alu-modal-title">Alumno</h3>
+        <button onclick="closeAluModal()" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--ink3)">✕</button>
+      </div>
+      <div id="alu-modal-body"></div>
+      <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:20px;padding-top:16px;border-top:0.5px solid var(--border)">
+        <button onclick="closeAluModal()" style="padding:8px 18px;border-radius:6px;border:0.5px solid var(--border2);background:var(--card2);font-size:12px;cursor:pointer">Cancelar</button>
+        <button onclick="saveAlumno()" style="padding:8px 18px;border-radius:6px;border:none;background:var(--green);color:#fff;font-size:12px;font-weight:500;cursor:pointer">💾 Guardar</button>
+        <button onclick="deleteAlumno()" id="btn-del-alu" style="padding:8px 18px;border-radius:6px;border:none;background:var(--red);color:#fff;font-size:12px;font-weight:500;cursor:pointer;display:none">🗑 Eliminar</button>
+      </div>
+    </div>
+  </div>
+</div><!-- /alumnos_mod -->
+</div><!-- /main -->
+
+<div class="app-footer">
+  <div class="footer-l">Colegio Alemán de Chillán · Sistema Morosidad · Datos se actualizan importando desde Syscol</div>
+  <div class="footer-r">v2.0 · Jun 2026</div>
+</div>
+
+<script>
+// ════════════════════════════════════════════════════════════════
+//  SISTEMA MOROSIDAD · COLEGIO ALEMÁN DE CHILLÁN
+//  Capa de datos: Supabase PostgreSQL
+//  v3.0 · Junio 2026
+// ════════════════════════════════════════════════════════════════
+
+// ─── SUPABASE CONFIG ────────────────────────────────────────────
+const SB_URL    = 'https://iwaosynzrbhkwcmhiilx.supabase.co';
+const SB_KEY    = 'sb_publishable_DSESkmJjmHKMzK0VpbJzYA_Pr--xAgT';
+const SB_HEADS  = { 'Content-Type':'application/json', 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY };
+
+// Función genérica REST para Supabase
+async function sbQuery(table, params='', method='GET', body=null){
+  const url = `${SB_URL}/rest/v1/${table}${params}`;
+  const opts = { method, headers: { ...SB_HEADS, 'Prefer': method==='POST'?'return=representation':'return=minimal' } };
+  if(body) opts.body = JSON.stringify(body);
+  const res = await fetch(url, opts);
+  if(!res.ok){ const err = await res.text(); throw new Error(`${res.status}: ${err}`); }
+  return method==='GET' || opts.headers['Prefer']==='return=representation' ? res.json() : null;
+}
+async function sbGet(table, params='')          { return sbQuery(table, params); }
+async function sbPost(table, body)              { return sbQuery(table, '', 'POST', body); }
+async function sbPatch(table, params, body)     { return sbQuery(table, params, 'PATCH', body); }
+async function sbDelete(table, params)          { return sbQuery(table, params, 'DELETE'); }
+async function sbUpsert(table, body, onConflict){ 
+  const url = `${SB_URL}/rest/v1/${table}`;
+  const res = await fetch(url, { method:'POST', headers:{...SB_HEADS,'Prefer':`resolution=merge-duplicates,return=representation`}, body:JSON.stringify(body) });
+  if(!res.ok){ const err=await res.text(); throw new Error(`${res.status}: ${err}`); }
+  return res.json();
+}
+
+// ─── ESTADO GLOBAL ──────────────────────────────────────────────
+let CUOTA_UF       = 471280;
+let topData        = [];
+let gestData       = [];
+let activeCuotasFilter = null;
+let topSortField   = 'saldo';
+let topSortAsc     = false;
+let chartAging, chartFormas, chartComp, chartHistTotal, chartHistCuotas;
+let histData       = { '2025': {}, '2026': {} };   // cache local mientras se carga
+let _configCache   = {};
+let _corteActivo   = null;   // objeto cortes_mensuales del último corte
+
+const MESES_KEY    = ['mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
+const MESES_LABEL  = ['Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+const MESES_NUM    = [1,2,3,4,5,6,7,8,9,10];
+const MESES_NUM_MAP= {3:0,4:1,5:2,6:3,7:4,8:5,9:6,10:7,11:8,12:9};
+
+const COMP_DATA_FALLBACK = {
+  meses: MESES_LABEL,
+  v2025: [77074895,83242828,84154192,89731521,91551630,98478557,99272278,77409562,83463380,66751384],
+  v2026: [84341624,86049117,85746250,null,null,null,null,null,null,null],
+};
+const RECOVERY_2025 = [
+  {mes:'Marzo',    vals:[77074895,31625222,13763342, 8690632,null,2154363]},
+  {mes:'Abril',    vals:[83242828,32025943,15550379, 9212675,null,3201678]},
+  {mes:'Mayo',     vals:[84154192,37772955,15587337, 8192195,null,3201424]},
+  {mes:'Junio',    vals:[89731521,43172588,19897240, 7902387,null,3201424]},
+  {mes:'Julio',    vals:[91551630,39553086,21152977, 9328921,null,3204524]},
+  {mes:'Agosto',   vals:[98478557,53520075,22689492, 8568715,null,3205505]},
+  {mes:'Septiembre',vals:[99272278,41614197,14308924,    null,null,3205505]},
+  {mes:'Octubre',  vals:[77409562,21140691, 3895332,     null,null,   null]},
+];
+
+// ─── BOOT ───────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', async () => {
+  showStatus('Conectando con Supabase...', 'info');
+  try {
+    await bootApp();
+    showStatus('Datos cargados correctamente', 'ok');
+  } catch(e) {
+    showStatus('Error de conexión: ' + e.message + ' — mostrando datos de ejemplo', 'error');
+    bootFallback();
+  }
+});
+
+async function bootApp() {
+  // 1. Cargar configuración
+  const cfg = await sbGet('configuracion');
+  cfg.forEach(r => _configCache[r.clave] = r.valor);
+  CUOTA_UF = parseInt(_configCache.cuota_ref_clp || 471280);
+
+  // Actualizar badge de corte
+  if(_configCache.ultimo_corte){
+    const d = new Date(_configCache.ultimo_corte);
+    document.getElementById('corte-label').textContent = 'Corte: ' + d.toLocaleDateString('es-CL');
+  }
+
+  // 2. Cargar el último corte y su detalle
+  const cortes = await sbGet('cortes_mensuales', '?order=anio.desc,mes_numero.desc&limit=1');
+  if(cortes && cortes.length > 0){
+    _corteActivo = cortes[0];
+    await loadUltimoCorte(_corteActivo.id);
+  } else {
+    bootFallback();
+  }
+
+  // 3. Cargar gestión semanal
+  await loadGestionFromDB();
+
+  // 4. Cargar histórico en cache
+  await loadHistFromDB();
+
+  // 5. Renderizar charts
+  setTimeout(renderCharts, 100);
+}
+
+function bootFallback() {
+  // Sin conexión: usar datos hardcodeados
+  const fallback = [
+    {n:'Carmona Olivarez Rodrigo',saldo:5528118,tramo:'+90',crit:'Crítica',fp:'WEB',email:'carmonaolivarezr@gmail.com',tel:'56932331540',est:'Sin pago',cuotas:12},
+    {n:'Jiménez Salas Mónica',saldo:4146660,tramo:'+90',crit:'Crítica',fp:'PAT',email:'monicajs044@gmail.com',tel:'56932423894',est:'Sin pago',cuotas:9},
+    {n:'Belmar Selman Yessica',saldo:2827680,tramo:'61-90',crit:'Alta',fp:'TRA',email:'yessbel@gmail.com',tel:'56968325430',est:'Sin pago',cuotas:6},
+    {n:'García Candia Francisco',saldo:2827680,tramo:'61-90',crit:'Alta',fp:'WEB',email:'krapel@gmail.com',tel:'56995496102',est:'Sin pago',cuotas:6},
+    {n:'Sepúlveda Navarrete Víctor',saldo:2827678,tramo:'61-90',crit:'Alta',fp:'CH',email:'sepulvedavictor@gmail.com',tel:'56941950360',est:'Sin pago',cuotas:6},
+    {n:'De Oliveira Barrios Camila',saldo:2799404,tramo:'31-60',crit:'Alta',fp:'TRA',email:'cdeoliveirab@gmail.com',tel:'56968440378',est:'Nuevo',cuotas:6},
+    {n:'López Olalde Ignacio',saldo:2778488,tramo:'1-30',crit:'Media',fp:'WEB',email:'lucianolopez@agroharo.cl',tel:'56992521412',est:'Sin pago',cuotas:6},
+    {n:'Palominos Tapia Roberto',saldo:2766741,tramo:'61-90',crit:'Alta',fp:'WEB',email:'roberto.palominos@gmail.com',tel:'56968499024',est:'Nuevo',cuotas:6},
+    {n:'Briones Peña Luis',saldo:2766741,tramo:'61-90',crit:'Alta',fp:'WEB',email:'briones63@hotmail.com',tel:'56944666858',est:'Nuevo',cuotas:6},
+    {n:'Urrestarazú Carrión Carlos',saldo:2759996,tramo:'31-60',crit:'Alta',fp:'WEB',email:'currestarazu@gmail.com',tel:'56994433382',est:'Nuevo',cuotas:6},
+  ];
+  loadTopData(fallback);
+  gestData = [];
+  updateGestStats();
+  setTimeout(renderCharts, 100);
+}
+
+// ─── CARGAR ÚLTIMO CORTE ────────────────────────────────────────
+async function loadUltimoCorte(corteId) {
+  const rows = await sbGet('morosidad_detalle',
+    `?corte_id=eq.${corteId}&order=saldo_clp.desc&limit=500`);
+
+  // KPIs
+  const total = rows.reduce((s,r)=>s+r.saldo_clp, 0);
+  const nMor  = rows.length;
+  document.getElementById('kpi-total').textContent = '$' + fmtM(total);
+  document.getElementById('kpi-sos').textContent   = nMor;
+  document.getElementById('kpi-total-sub').textContent =
+    'CLP al ' + (_corteActivo ? new Date(_corteActivo.fecha_corte).toLocaleDateString('es-CL') : '—');
+
+  // Mora >30 días
+  const m30 = rows.filter(r=>r.tramo_mora==='31-60'||r.tramo_mora==='61-90'||r.tramo_mora==='+90')
+                   .reduce((s,r)=>s+r.saldo_clp,0);
+  document.getElementById('kpi-30').textContent = '$' + fmtM(m30);
+
+  // % sobre recaudable
+  const recaudable = parseInt(_configCache.total_alumnos||634) * CUOTA_UF;
+  const pct = recaudable > 0 ? ((total/recaudable)*100).toFixed(1) : '—';
+  document.getElementById('kpi-pct').textContent = pct + '%';
+
+  // Próximo vencimiento
+  if(_configCache.proximo_vencimiento){
+    const dv = new Date(_configCache.proximo_vencimiento);
+    document.getElementById('kpi-30').previousElementSibling
+      && null; // placeholder
+  }
+
+  // Semáforo
+  const crit = rows.filter(r=>r.saldo_clp>1500000);
+  const alto = rows.filter(r=>r.saldo_clp>900000&&r.saldo_clp<=1500000);
+  const med  = rows.filter(r=>r.saldo_clp>400000&&r.saldo_clp<=900000);
+  const bajo = rows.filter(r=>r.saldo_clp<=400000);
+  const upSema = (id,n,monto) => {
+    const el = document.getElementById(id+'-n'); if(el) el.textContent=n;
+    const em = document.getElementById(id+'-m'); if(em) em.textContent='$'+fmt(monto);
+  };
+  upSema('s-crit', crit.length, crit.reduce((s,r)=>s+r.saldo_clp,0));
+  upSema('s-alto', alto.length, alto.reduce((s,r)=>s+r.saldo_clp,0));
+  upSema('s-med',  med.length,  med.reduce((s,r)=>s+r.saldo_clp,0));
+  upSema('s-bajo', bajo.length, bajo.reduce((s,r)=>s+r.saldo_clp,0));
+
+  // Tabla top deudores
+  const mapped = rows.map(r => ({
+    n:      r.nombre,
+    rut:    r.rut,
+    saldo:  r.saldo_clp,
+    tramo:  r.tramo_mora || '1-30',
+    crit:   r.criticidad || 'Media',
+    fp:     r.forma_pago || '—',
+    email:  '',
+    tel:    '',
+    est:    'Sin pago',
+    cuotas: r.n_cuotas || calcCuotas(r.saldo_clp)
+  }));
+  loadTopData(mapped);
+
+  // Aging chart data (update)
+  const agingData = [
+    rows.filter(r=>r.tramo_mora==='1-30').reduce((s,r)=>s+r.saldo_clp,0),
+    rows.filter(r=>r.tramo_mora==='31-60').reduce((s,r)=>s+r.saldo_clp,0),
+    rows.filter(r=>r.tramo_mora==='61-90').reduce((s,r)=>s+r.saldo_clp,0),
+    rows.filter(r=>r.tramo_mora==='+90').reduce((s,r)=>s+r.saldo_clp,0),
+  ];
+  window._agingData = agingData;
+  window._agingCounts = [
+    rows.filter(r=>r.tramo_mora==='1-30').length,
+    rows.filter(r=>r.tramo_mora==='31-60').length,
+    rows.filter(r=>r.tramo_mora==='61-90').length,
+    rows.filter(r=>r.tramo_mora==='+90').length,
+  ];
+
+  // Formas de pago
+  const fpCount = {};
+  rows.forEach(r=>{ const k=r.forma_pago||'N/A'; fpCount[k]=(fpCount[k]||0)+1; });
+  window._fpData = fpCount;
+  window._totalRows = rows;
+}
+
+// ─── VISTAS ─────────────────────────────────────────────────────
+function showView(name){
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('view-'+name).classList.add('active');
+  event.target.classList.add('active');
+  if(name==='comparacion') renderComparacion();
+  if(name==='gestion')     renderGestion();
+  if(name==='semanal')     renderSemanal();
+  if(name==='historico')   renderHistorico();
+}
+
+// ─── TOP DEUDORES ────────────────────────────────────────────────
+function calcCuotas(saldo){ return Math.max(1, Math.round(saldo / CUOTA_UF)); }
+
+function loadTopData(data){
+  topData = data.map(d => ({ ...d, cuotas: d.cuotas !== undefined ? d.cuotas : calcCuotas(d.saldo) }));
+  buildCuotasPills();
+  buildCuotasSummary();
+  applyTopFilters();
+}
+
+function buildCuotasPills(){
+  const counts = {};
+  topData.forEach(d => { const c=d.cuotas; counts[c]=(counts[c]||0)+1; });
+  const sorted = Object.keys(counts).map(Number).sort((a,b)=>a-b);
+  const colors = {1:'#2A6040',2:'#1A4A7A',3:'#9A5C08',4:'#9A5C08',5:'#9A5C08',6:'#B5320E',7:'#B5320E',8:'#B5320E',9:'#801f05',10:'#801f05'};
+  const container = document.getElementById('cuotas-pills');
+  if(!container) return;
+  container.innerHTML = sorted.map(c => {
+    const col = colors[c]||'#801f05';
+    return `<button data-cuota="${c}" onclick="setCuotasFilter(${c})"
+      style="padding:3px 9px;border-radius:12px;font-size:10px;font-weight:600;cursor:pointer;
+             border:1.5px solid ${col};background:transparent;color:${col};transition:all .12s"
+      title="${counts[c]} sostenedor${counts[c]>1?'es':''} con ${c} cuota${c>1?'s':''}">
+      ${c} cuota${c>1?'s':''} <span style="opacity:.6">(${counts[c]})</span>
+    </button>`;
+  }).join('');
+}
+
+function setCuotasFilter(n){
+  activeCuotasFilter = (activeCuotasFilter===n) ? null : n;
+  document.querySelectorAll('#cuotas-pills button').forEach(btn=>{
+    const isA = Number(btn.dataset.cuota)===activeCuotasFilter;
+    btn.style.background = isA ? btn.style.color : 'transparent';
+    btn.style.color = isA ? '#fff' : btn.style.borderColor;
+  });
+  const bc = document.getElementById('btn-clear-cuotas');
+  if(bc) bc.style.display = activeCuotasFilter!==null?'inline-block':'none';
+  applyTopFilters();
+}
+function clearCuotasFilter(){
+  activeCuotasFilter=null;
+  document.querySelectorAll('#cuotas-pills button').forEach(btn=>{
+    btn.style.background='transparent'; btn.style.color=btn.style.borderColor;
+  });
+  const bc=document.getElementById('btn-clear-cuotas'); if(bc) bc.style.display='none';
+  applyTopFilters();
+}
+
+function buildCuotasSummary(){
+  const counts={},totalSaldo={};
+  topData.forEach(d=>{ const c=d.cuotas; counts[c]=(counts[c]||0)+1; totalSaldo[c]=(totalSaldo[c]||0)+d.saldo; });
+  const sorted=Object.keys(counts).map(Number).sort((a,b)=>a-b);
+  const maxCount=Math.max(...Object.values(counts));
+  const colors={1:'#2A6040',2:'#1A4A7A',3:'#9A5C08',4:'#9A5C08',5:'#9A5C08',6:'#B5320E',7:'#B5320E',8:'#B5320E',9:'#801f05',10:'#801f05'};
+  const el=document.getElementById('cuotas-summary'); if(!el) return;
+  el.innerHTML=sorted.map(c=>{
+    const col=colors[c]||'#801f05'; const barW=Math.round((counts[c]/maxCount)*100);
+    return `<div style="background:var(--card2);border:0.5px solid var(--border);border-radius:7px;padding:8px 12px;min-width:90px;cursor:pointer" onclick="setCuotasFilter(${c})">
+      <div style="font-size:9px;color:var(--ink3);margin-bottom:3px;text-transform:uppercase;letter-spacing:.08em">${c} cuota${c>1?'s':''}</div>
+      <div style="font-size:18px;font-weight:700;font-family:'Playfair Display',serif;color:${col};line-height:1">${counts[c]}</div>
+      <div style="font-size:9px;color:var(--ink4);margin-top:2px">$${fmtM(totalSaldo[c])}</div>
+      <div style="margin-top:5px;height:3px;background:var(--bg3);border-radius:2px;overflow:hidden"><div style="height:100%;width:${barW}%;background:${col};border-radius:2px"></div></div>
+    </div>`;
+  }).join('');
+}
+
+function applyTopFilters(){
+  const q=(document.getElementById('top-search')?.value||'').toLowerCase();
+  const crit=document.getElementById('top-filter-crit')?.value||'';
+  const tramo=document.getElementById('top-filter-tramo')?.value||'';
+  let filtered=topData.filter(d=>{
+    const mQ=!q||d.n.toLowerCase().includes(q);
+    const mC=!crit||d.crit===crit||d.crit.replace('í','i')===crit;
+    const mT=!tramo||d.tramo===tramo;
+    const mCuotas=activeCuotasFilter===null||d.cuotas===activeCuotasFilter;
+    return mQ&&mC&&mT&&mCuotas;
+  });
+  filtered=filtered.sort((a,b)=>{
+    let va=a[topSortField],vb=b[topSortField];
+    if(topSortField==='n'){va=va.toLowerCase();vb=vb.toLowerCase();}
+    return topSortAsc?(va>vb?1:-1):(va<vb?1:-1);
+  });
+  renderTopDeudores(filtered);
+  const rc=document.getElementById('top-result-count');
+  if(rc) rc.textContent=`${filtered.length} sostenedor${filtered.length!==1?'es':''}`;
+}
+function sortTop(field){
+  if(topSortField===field) topSortAsc=!topSortAsc;
+  else { topSortField=field; topSortAsc=false; }
+  applyTopFilters();
+}
+
+function renderTopDeudores(data){
+  const tbody=document.getElementById('top-deudores-body');
+  if(!tbody) return;
+  const maxS=topData.length?Math.max(...topData.map(d=>d.saldo)):1;
+  const cBadge={'Critica':'critica','Crítica':'critica','Alta':'alta','Media':'media','Sin pago':'sinpago','Parcial':'parcial','Nuevo':'nuevo','Mejorando':'mejora'};
+  const cuotaColor=c=>c>=9?'#801f05':c>=6?'#B5320E':c>=4?'#9A5C08':c>=2?'#1A4A7A':'#2A6040';
+  tbody.innerHTML=data.map((d,i)=>{
+    const barW=Math.round((d.saldo/maxS)*100);
+    const cuotas=d.cuotas??calcCuotas(d.saldo);
+    const col=cuotaColor(cuotas);
+    return `<tr>
+      <td style="font-family:'DM Mono',monospace;font-size:10px;color:var(--ink3)">${i+1}</td>
+      <td style="font-weight:500">${d.n}</td>
+      <td style="font-family:'DM Mono',monospace;font-size:12px;text-align:right;color:var(--red)">$${fmtM(d.saldo)}</td>
+      <td style="text-align:right"><span style="display:inline-flex;align-items:center;gap:5px;justify-content:flex-end">
+        <span style="font-family:'DM Mono',monospace;font-size:13px;font-weight:600;color:${col}">${cuotas}</span>
+        <span style="font-size:10px;color:var(--ink4)">cuota${cuotas>1?'s':''}</span>
+      </span></td>
+      <td><span class="badge ${d.tramo==='+90'?'critica':d.tramo==='61-90'?'alta':d.tramo==='31-60'?'alta':'media'}">${d.tramo}</span></td>
+      <td><span class="badge ${cBadge[d.crit]||'media'}">${d.crit}</span></td>
+      <td style="font-family:'DM Mono',monospace;font-size:10px">${d.fp||''}</td>
+      <td style="font-size:10px;color:var(--ink3)">${d.email?'&#9993; '+d.email:''}</td>
+      <td style="text-align:right"><div class="trend-bar" style="width:${barW}%;margin-left:auto;min-width:4px;background:${col}"></div></td>
+    </tr>`;
+  }).join('');
+  if(!data.length) tbody.innerHTML=`<tr><td colspan="9" style="text-align:center;padding:20px;color:var(--ink3);font-size:12px">Sin resultados para los filtros aplicados.</td></tr>`;
+}
+
+// ─── CHARTS ─────────────────────────────────────────────────────
+function renderCharts(){
+  // Aging donut
+  const agingData = window._agingData || [56718849,38419482,28027678,0];
+  const ctxA=document.getElementById('chart-aging')?.getContext('2d');
+  if(ctxA){
+    if(chartAging) chartAging.destroy();
+    chartAging=new Chart(ctxA,{type:'doughnut',
+      data:{labels:['1–30 días','31–60 días','61–90 días','>90 días'],datasets:[{data:agingData,backgroundColor:['#378ADD','#C07D20','#B5320E','#7A0A00'],borderWidth:0,hoverOffset:4}]},
+      options:{responsive:true,maintainAspectRatio:false,cutout:'65%',plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>' $'+fmtM(ctx.parsed)+' CLP'}}}}});
+  }
+  // Formas de pago
+  const fps = window._fpData || {WEB:149,TRA:36,PAC:23,TCR:16,TDB:12,PAT:10,CH:8,DEP:2};
+  const ctxF=document.getElementById('chart-formas')?.getContext('2d');
+  if(ctxF){
+    if(chartFormas) chartFormas.destroy();
+    const fColors=['#1A4A7A','#2A6040','#9A5C08','#B5320E','#7A3580','#4A4740','#1A7A6A','#7A6040','#4A1A7A'];
+    chartFormas=new Chart(ctxF,{type:'bar',
+      data:{labels:Object.keys(fps),datasets:[{data:Object.values(fps),backgroundColor:fColors,borderWidth:0,borderRadius:4}]},
+      options:{responsive:true,maintainAspectRatio:false,indexAxis:'y',plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>` ${ctx.parsed.x} sostenedores`}}},scales:{x:{grid:{display:false},ticks:{font:{size:10}}},y:{grid:{display:false},ticks:{font:{size:11}}}}}});
+    const lg=document.getElementById('legend-formas');
+    if(lg) lg.innerHTML=Object.keys(fps).map((k,i)=>`<div class="cl-item"><div class="cl-dot" style="background:${fColors[i]}"></div><span>${k} (${fps[k]})</span></div>`).join('');
+  }
+}
+
+// ─── COMPARACIÓN CUOTAS ─────────────────────────────────────────
+async function renderComparacion(){
+  let compData = COMP_DATA_FALLBACK;
+  try {
+    const rows = await sbGet('comparacion_anual','?order=anio.asc,mes_numero.asc');
+    if(rows && rows.length>0){
+      const v2025=new Array(10).fill(null), v2026=new Array(10).fill(null);
+      rows.forEach(r=>{
+        const idx=MESES_NUM_MAP[r.mes_numero];
+        if(idx===undefined) return;
+        if(r.anio===2025) v2025[idx]=r.mora_inicial_clp;
+        if(r.anio===2026) v2026[idx]=r.mora_inicial_clp;
+      });
+      compData={meses:MESES_LABEL, v2025, v2026};
+    }
+  } catch(e){ /* usa fallback */ }
+
+  const ctxC=document.getElementById('chart-comp')?.getContext('2d');
+  if(ctxC){
+    if(chartComp) chartComp.destroy();
+    chartComp=new Chart(ctxC,{type:'bar',
+      data:{labels:compData.meses,datasets:[
+        {label:'2025',data:compData.v2025,backgroundColor:'rgba(181,50,14,0.8)',borderRadius:3,barPercentage:0.4},
+        {label:'2026',data:compData.v2026.map(v=>v||0),backgroundColor:'rgba(26,74,122,0.8)',borderRadius:3,barPercentage:0.4}]},
+      options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>` $${fmtM(ctx.parsed.y)} CLP`}}},
+        scales:{x:{grid:{display:false},ticks:{font:{size:11}}},y:{grid:{color:'rgba(0,0,0,0.04)'},ticks:{callback:v=>'$'+fmtM(v),font:{size:10}}}}}});
+  }
+  // Tabla comparativa
+  const tbody=document.getElementById('comp-body'); if(!tbody) return;
+  let tot25=0,tot26=0;
+  tbody.innerHTML=compData.meses.map((m,i)=>{
+    const v25=compData.v2025[i], v26=compData.v2026[i];
+    if(v25) tot25+=v25; if(v26) tot26+=v26;
+    const delta=v25&&v26?v26-v25:null, pct=delta&&v25?((v26/v25-1)*100):null;
+    const cls=delta===null?'na':delta>0?'pos':'neg';
+    return `<tr>
+      <td>${m}</td><td>${v25?'$'+fmt(v25):'—'}</td><td>${v26?'$'+fmt(v26):'—'}</td>
+      <td class="${cls}">${delta!==null?(delta>0?'+':'')+fmt(delta):'—'}</td>
+      <td class="${cls}">${pct!==null?(pct>0?'+':'')+pct.toFixed(1)+'%':'—'}</td>
+      <td>${v26?`<span class="badge ${delta>0?'critica':'mejora'}">${delta>0?'↑ Mayor':'↓ Menor'}</span>`:'<span class="badge sinpago">Pendiente</span>'}</td>
+    </tr>`;
+  }).join('');
+  const ct=document.getElementById('comp-total');
+  if(ct) ct.innerHTML=`<td><strong>Total registrado</strong></td><td><strong>$${fmtM(tot25)}</strong></td><td><strong>$${fmtM(tot26)}</strong></td><td colspan="3"></td>`;
+  // Recovery
+  const rtbody=document.getElementById('recovery-body'); if(!rtbody) return;
+  rtbody.innerHTML=RECOVERY_2025.map(r=>{
+    const base=r.vals[0];
+    return `<tr><td>${r.mes}</td>${r.vals.map((v,i)=>{
+      if(v===null) return '<td class="na">—</td>';
+      if(i===0) return `<td>$${fmtM(v)}</td>`;
+      const p=((v/base)*100).toFixed(0);
+      return `<td class="${p>50?'pos':'neg'}">$${fmtM(v)}<br><span style="font-size:9px;color:var(--ink3)">${p}% resta</span></td>`;
+    }).join('')}</tr>`;
+  }).join('');
+}
+
+// ─── GESTIÓN SEMANAL — SUPABASE ──────────────────────────────────
+async function loadGestionFromDB(){
+  try {
+    const today = new Date();
+    const monday = new Date(today); monday.setDate(today.getDate()-today.getDay()+1);
+    const mondayStr = monday.toISOString().split('T')[0];
+    const rows = await sbGet('gestion_cobranza',
+      `?order=saldo_clp.desc&limit=200`);
+    gestData = (rows||[]).map(r=>({
+      id:    r.id,
+      sos:   r.nombre_sostenedor,
+      rut:   r.rut,
+      tel:   r.telefono_contacto||'',
+      email: r.email_contacto||'',
+      saldo: r.saldo_clp||0,
+      crit:  r.criticidad||'Media',
+      ult:   r.fecha_ultima_gestion ? new Date(r.fecha_ultima_gestion).toLocaleDateString('es-CL') : '',
+      prox:  r.proxima_accion||'',
+      resp:  r.responsable||'',
+      res:   r.resultado||'',
+      estado:r.estado_resultado||'pendiente',
+    }));
+  } catch(e){ gestData=[]; }
+  renderGestion();
+}
+
+function renderGestion(filter='', critFilter=''){
+  const tbody=document.getElementById('gest-body'); if(!tbody) return;
+  const filtered=gestData.filter(d=>{
+    const mF=!filter||d.sos.toLowerCase().includes(filter.toLowerCase());
+    const mC=!critFilter||d.crit===critFilter;
+    return mF&&mC;
+  });
+  tbody.innerHTML=filtered.map((d,i)=>{
+    const origIdx=gestData.indexOf(d);
+    const rCls=d.res.toLowerCase().includes('pagado')?'pagado':d.res.toLowerCase().includes('pagar')||d.res.toLowerCase().includes('queda')?'parcial':'pendiente';
+    return `<tr>
+      <td><input value="${escHtml(d.sos)}" onchange="updateGest(${origIdx},'sos',this.value)" style="min-width:200px"></td>
+      <td><input value="${escHtml(d.tel)}" onchange="updateGest(${origIdx},'tel',this.value)" style="width:110px"></td>
+      <td><input value="${escHtml(d.email)}" onchange="updateGest(${origIdx},'email',this.value)" style="min-width:190px"></td>
+      <td style="font-family:'DM Mono',monospace;text-align:right">$${fmt(d.saldo)}</td>
+      <td><span class="badge ${d.crit==='Crítica'?'critica':d.crit==='Alta'?'alta':'media'}">${d.crit}</span></td>
+      <td><input value="${escHtml(d.ult)}" onchange="updateGest(${origIdx},'ult',this.value)" style="width:90px"></td>
+      <td><input value="${escHtml(d.prox)}" onchange="updateGest(${origIdx},'prox',this.value)" style="min-width:200px"></td>
+      <td><input value="${escHtml(d.resp)}" onchange="updateGest(${origIdx},'resp',this.value)" style="width:120px"></td>
+      <td><input value="${escHtml(d.res)}" onchange="updateGest(${origIdx},'res',this.value)" placeholder="Resultado..." style="min-width:160px"></td>
+      <td><button class="btn-del" onclick="deleteGest(${origIdx})">✕</button></td>
+    </tr>`;
+  }).join('');
+  updateGestStats();
+}
+
+async function updateGest(idx, field, val){
+  gestData[idx][field] = val;
+  updateGestStats();
+  if(!gestData[idx].id) return; // nuevo, aún no guardado
+  // Guardar en Supabase con debounce
+  clearTimeout(gestData[idx]._t);
+  gestData[idx]._t = setTimeout(async ()=>{
+    try {
+      const d = gestData[idx];
+      await sbPatch('gestion_cobranza', `?id=eq.${d.id}`, {
+        nombre_sostenedor: d.sos,
+        telefono_contacto: d.tel,
+        email_contacto:    d.email,
+        proxima_accion:    d.prox,
+        responsable:       d.resp,
+        resultado:         d.res,
+        fecha_ultima_gestion: d.ult ? parseDateCL(d.ult) : null,
+        estado_resultado:  inferEstado(d.res),
+        updated_at:        new Date().toISOString()
+      });
+    } catch(e){ showStatus('Error guardando: '+e.message,'error'); }
+  }, 800);
+}
+
+async function addGestRow(){
+  const today=new Date();
+  const monday=new Date(today); monday.setDate(today.getDate()-today.getDay()+1);
+  const newRow = {
+    rut:'', nombre_sostenedor:'Nuevo sostenedor',
+    saldo_clp:0, criticidad:'Media',
+    semana_inicio: monday.toISOString().split('T')[0],
+    semana_label: 'Semana '+monday.toLocaleDateString('es-CL'),
+    responsable: _configCache.responsable_cobro||'Administración',
+    resultado:'', proxima_accion:'', telefono_contacto:'', email_contacto:'',
+    estado_resultado:'pendiente'
+  };
+  try {
+    const res = await sbPost('gestion_cobranza', newRow);
+    const row = Array.isArray(res)?res[0]:res;
+    gestData.unshift({id:row.id, sos:row.nombre_sostenedor, rut:'', tel:'', email:'', saldo:0, crit:'Media', ult:'', prox:'', resp:row.responsable, res:'', estado:'pendiente'});
+    renderGestion();
+  } catch(e){ showStatus('Error: '+e.message,'error'); }
+}
+
+async function deleteGest(idx){
+  const d = gestData[idx];
+  if(!confirm(`¿Eliminar gestión de "${d.sos}"?`)) return;
+  if(d.id){
+    try { await sbDelete('gestion_cobranza',`?id=eq.${d.id}`); } catch(e){ showStatus('Error al eliminar','error'); return; }
+  }
+  gestData.splice(idx,1);
+  renderGestion();
+}
+
+function filterByCrit(){
+  const f=document.getElementById('gest-filter-crit')?.value||'';
+  renderGestion('',f);
+}
+
+function exportGestion(){
+  const ws=XLSX.utils.json_to_sheet(gestData.map(d=>({'Sostenedor':d.sos,'Teléfono':d.tel,'Correo':d.email,'Saldo CLP':d.saldo,'Criticidad':d.crit,'Última gestión':d.ult,'Próxima acción':d.prox,'Responsable':d.resp,'Resultado':d.res})));
+  const wb=XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb,ws,'Gestión Semanal');
+  XLSX.writeFile(wb,'Gestion_Semanal_CAC.xlsx');
+}
+
+function updateGestStats(){
+  const tn=document.getElementById('gest-total-n'); if(tn) tn.textContent=gestData.length;
+  const cn=document.getElementById('gest-comp-n'); if(cn) cn.textContent=gestData.filter(d=>d.prox&&d.prox.match(/\d+\/\d+/)).length;
+  const pn=document.getElementById('gest-pag-n'); if(pn) pn.textContent=gestData.filter(d=>d.res.toLowerCase().includes('pagado')).length;
+}
+
+// ─── VISTA SEMANAL ───────────────────────────────────────────────
+function renderSemanal(){
+  const venc=new Date('2026-06-05'), today=new Date();
+  const days=Math.max(0,Math.ceil((venc-today)/(1000*60*60*24)));
+  const cd=document.getElementById('countdown');
+  if(cd) cd.innerHTML=`<div style="font-family:'Playfair Display',serif;font-size:52px;font-weight:700;color:var(--red);line-height:1">${days}</div><div style="font-size:13px;color:var(--ink2);margin-top:4px">días</div><div style="font-size:10px;color:var(--ink3);margin-top:4px">hasta el vencimiento</div>`;
+  const pl=document.getElementById('weekly-priority-list');
+  if(pl) pl.innerHTML=topData.filter(d=>d.crit==='Crítica'||d.crit==='Alta').slice(0,6).map(d=>`
+    <div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:0.5px solid var(--border)">
+      <span class="badge critica" style="flex-shrink:0">${d.crit}</span>
+      <span style="flex:1;font-size:12px">${d.n}</span>
+      <span style="font-family:'DM Mono',monospace;font-size:11px;color:var(--red)">$${fmtM(d.saldo)}</span>
+    </div>`).join('');
+  const nn=document.getElementById('notas-semana');
+  if(nn) try{ const n=localStorage.getItem('cac_notas'); if(n) nn.value=n; }catch(e){}
+}
+function saveNotas(){ try{ localStorage.setItem('cac_notas',document.getElementById('notas-semana')?.value||''); }catch(e){} }
+
+// ─── HISTÓRICO — SUPABASE ────────────────────────────────────────
+async function loadHistFromDB(){
+  try {
+    const cortes = await sbGet('cortes_mensuales', '?order=anio.asc,mes_numero.asc');
+    for(const c of (cortes||[])){
+      const ano  = String(c.anio);
+      const midx = MESES_NUM_MAP[c.mes_numero];
+      if(midx===undefined) continue;
+      if(!histData[ano]) histData[ano]={};
+      // Cargar sostenedores del corte
+      const rows = await sbGet('morosidad_detalle',`?corte_id=eq.${c.id}&order=saldo_clp.desc`);
+      histData[ano][midx] = {
+        id:          c.id,
+        total:       c.total_mora_clp,
+        n_morosos:   c.n_morosos,
+        fecha:       c.fecha_corte ? new Date(c.fecha_corte).toLocaleDateString('es-CL') : '—',
+        cuota_ref:   c.cuota_ref_clp || CUOTA_UF,
+        sostenedores:(rows||[]).map(r=>({nombre:r.nombre, rut:r.rut, saldo:r.saldo_clp, cuotas:r.n_cuotas||calcCuotas(r.saldo_clp), crit:r.criticidad||'', fp:r.forma_pago||''}))
+      };
+    }
+  } catch(e){ /* usa cache vacío */ }
+}
+
+function renderHistorico(){ renderMonthGrid(); renderHistKPIs(); renderHistCharts(); renderHistoricoTable(); renderHistAlertas(); }
+
+function renderMonthGrid(){
+  const grid=document.getElementById('month-grid'); if(!grid) return;
+  const ano=document.getElementById('hist-filter-ano')?.value||'2026';
+  grid.innerHTML=MESES_KEY.map((k,i)=>{
+    const d=histData[ano]?.[i]; const hasData=d&&d.total>0; const cuotaNum=MESES_NUM[i];
+    return `<div style="background:var(--card);border:${hasData?'0.5px solid var(--green-bd)':'0.5px solid var(--border)'};border-radius:10px;padding:12px 14px;position:relative;overflow:hidden">
+      <div style="position:absolute;top:0;left:0;right:0;height:3px;background:${hasData?'var(--green)':'var(--border)'}"></div>
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px">
+        <div>
+          <div style="font-size:10px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:${hasData?'var(--green)':'var(--ink3)'}">${MESES_LABEL[i]}</div>
+          <div style="font-size:9px;color:var(--ink4)">Cuota ${cuotaNum}</div>
+        </div>
+        <span style="font-family:'DM Mono',monospace;font-size:9px;padding:2px 6px;border-radius:3px;background:${hasData?'var(--green-lt)':'var(--bg3)'};color:${hasData?'var(--green)':'var(--ink4)'}">${hasData?'✓ Datos':'Sin datos'}</span>
+      </div>
+      ${hasData?`<div style="font-family:'Playfair Display',serif;font-size:18px;font-weight:700;color:var(--ink);line-height:1">$${fmtM(d.total)}</div>
+        <div style="font-size:10px;color:var(--ink3);margin-top:2px">${d.n_morosos} sostenedores</div>
+        <div style="font-size:9px;color:var(--ink4);margin-top:1px">Corte: ${d.fecha||'—'}</div>`
+        :`<div style="font-size:11px;color:var(--ink4);margin-top:4px">Pendiente importar</div>`}
+      <div style="margin-top:8px;display:flex;gap:4px">
+        <button onclick="triggerImportMes(${i},'${ano}')" style="flex:1;padding:5px 0;border-radius:5px;border:0.5px solid var(--border2);background:${hasData?'var(--green-lt)':'var(--blue-lt)'};color:${hasData?'var(--green)':'var(--blue)'};font-size:10px;font-weight:600;cursor:pointer">
+          ${hasData?'↻ Reimportar':'+ Importar'}</button>
+        ${hasData?`<button onclick="clearMesData(${i},'${ano}')" style="padding:5px 8px;border-radius:5px;border:0.5px solid var(--border2);background:var(--bg3);color:var(--ink3);font-size:10px;cursor:pointer" title="Borrar">✕</button>`:''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function triggerImportMes(mesIdx,ano){
+  const inp=document.getElementById('hist-file-input');
+  inp.setAttribute('data-mes',mesIdx); inp.setAttribute('data-ano',ano); inp.click();
+}
+
+async function clearMesData(mesIdx,ano){
+  if(!confirm(`¿Borrar datos de ${MESES_LABEL[mesIdx]} ${ano}?`)) return;
+  const d=histData[ano]?.[mesIdx];
+  if(d?.id){
+    try {
+      await sbDelete('morosidad_detalle',`?corte_id=eq.${d.id}`);
+      await sbDelete('cortes_mensuales',`?id=eq.${d.id}`);
+    } catch(e){ showStatus('Error al borrar: '+e.message,'error'); return; }
+  }
+  if(histData[ano]) delete histData[ano][mesIdx];
+  showStatus(`${MESES_LABEL[mesIdx]} ${ano} eliminado`,'ok');
+  renderHistorico();
+}
+
+async function handleHistFile(input){
+  const mesIdx=parseInt(input.getAttribute('data-mes'));
+  const ano=input.getAttribute('data-ano');
+  const file=input.files[0]; if(!file) return;
+  showStatus(`Procesando ${file.name}...`,'info');
+  const reader=new FileReader();
+  reader.onload=async e=>{
+    try {
+      const wb=XLSX.read(e.target.result,{type:'array'});
+      const ws=wb.Sheets[wb.SheetNames[0]];
+      const data=XLSX.utils.sheet_to_json(ws);
+      const saldoCol=detectCol(data[0],['ValorPendiente','Saldo','saldo','SALDO']);
+      const nomCol=detectCol(data[0],['NombreSostenedor','Nombre','nombre','NOMBRE']);
+      const rutCol=detectCol(data[0],['RutSostenedor','Rut','rut','RUT']);
+      const critCol=detectCol(data[0],['Criticidad','criticidad']);
+      const fpCol=detectCol(data[0],['FormaPago','forma_pago']);
+      const tramoCol=detectCol(data[0],['Tramo','tramo']);
+      const diasCol=detectCol(data[0],['DiasMoroso','DiasVencido','dias_moroso']);
+
+      const posibles=data.map(r=>parseFloat(r[saldoCol])||0).filter(v=>v>380000&&v<620000);
+      let cuotaRef=CUOTA_UF;
+      if(posibles.length>0){ posibles.sort((a,b)=>a-b); cuotaRef=posibles[Math.floor(posibles.length/2)]; CUOTA_UF=cuotaRef; }
+
+      const morosos=data.filter(r=>(parseFloat(r[saldoCol])||0)>0);
+      const total=morosos.reduce((s,r)=>s+(parseFloat(r[saldoCol])||0),0);
+      const mesNum=[3,4,5,6,7,8,9,10,11,12][mesIdx];
+      const fechaCorte=`${ano}-${String(mesNum).padStart(2,'0')}-28`; // aprox fin de mes
+
+      // 1. Crear/actualizar corte mensual
+      const corteBody={
+        anio:parseInt(ano), mes_numero:mesNum, mes_cuota:MESES_NUM[mesIdx],
+        fecha_corte:fechaCorte, total_mora_clp:Math.round(total),
+        n_morosos:morosos.length, cuota_ref_clp:Math.round(cuotaRef),
+        importado_por:_configCache.responsable_cobro||'Sistema'
+      };
+      // Borrar corte existente si lo hay
+      const existente=histData[ano]?.[mesIdx];
+      if(existente?.id){
+        await sbDelete('morosidad_detalle',`?corte_id=eq.${existente.id}`);
+        await sbDelete('cortes_mensuales',`?id=eq.${existente.id}`);
+      }
+      const corteRes=await sbPost('cortes_mensuales',corteBody);
+      const corteId=(Array.isArray(corteRes)?corteRes[0]:corteRes).id;
+
+      // 2. Insertar detalle en lotes de 100
+      const detalleRows=morosos.map(r=>{
+        const saldo=parseFloat(r[saldoCol])||0;
+        return { corte_id:corteId, rut:String(r[rutCol]||'').trim()||'SIN-RUT',
+          nombre:String(r[nomCol]||'—'), saldo_clp:Math.round(saldo),
+          n_cuotas:Math.max(1,Math.round(saldo/cuotaRef)),
+          tramo_mora:r[tramoCol]||tramoPorDias(parseInt(r[diasCol])||0),
+          criticidad:r[critCol]||'Media', forma_pago:r[fpCol]||'', dias_moroso:parseInt(r[diasCol])||null };
+      });
+      for(let i=0;i<detalleRows.length;i+=100){
+        await sbPost('morosidad_detalle',detalleRows.slice(i,i+100));
+      }
+
+      // 3. Actualizar config ultimo_corte
+      await sbPatch('configuracion','?clave=eq.ultimo_corte',{valor:fechaCorte,updated_at:new Date().toISOString()});
+      await sbPatch('configuracion','?clave=eq.cuota_ref_clp',{valor:String(Math.round(cuotaRef)),updated_at:new Date().toISOString()});
+
+      // 4. Actualizar cache local
+      if(!histData[ano]) histData[ano]={};
+      histData[ano][mesIdx]={ id:corteId, total, n_morosos:morosos.length, fecha:new Date(fechaCorte).toLocaleDateString('es-CL'), cuota_ref:cuotaRef,
+        sostenedores:detalleRows.map(r=>({nombre:r.nombre,rut:r.rut,saldo:r.saldo_clp,cuotas:r.n_cuotas,crit:r.criticidad,fp:r.forma_pago})) };
+
+      showStatus(`✓ ${MESES_LABEL[mesIdx]} ${ano}: ${morosos.length} morosos · $${fmtM(total)} CLP · Guardado en Supabase`,'ok');
+      renderHistorico();
+    } catch(err){ showStatus('Error: '+err.message,'error'); }
+    input.value='';
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+function tramoPorDias(d){ if(d<=30) return '1-30'; if(d<=60) return '31-60'; if(d<=90) return '61-90'; return '+90'; }
+function detectCol(row,candidates){ if(!row) return candidates[0]; for(const c of candidates){ if(c in row) return c; } return candidates[0]; }
+
+function renderHistKPIs(){
+  const ano=document.getElementById('hist-filter-ano')?.value||'2026';
+  const entries=Object.entries(histData[ano]||{});
+  const el=document.getElementById('hist-kpi-row'); if(!el) return;
+  if(entries.length===0){ el.innerHTML='<div style="grid-column:1/-1;text-align:center;padding:16px;color:var(--ink3);font-size:12px">Importa al menos un corte mensual para ver estadísticas históricas.</div>'; return; }
+  const totales=entries.map(([,d])=>d.total);
+  const maxT=Math.max(...totales), minT=Math.min(...totales);
+  const last=entries.reduce((a,b)=>parseInt(a[0])>parseInt(b[0])?a:b);
+  const first=entries.reduce((a,b)=>parseInt(a[0])<parseInt(b[0])?a:b);
+  const trend=last[1].total-first[1].total;
+  const tPct=first[1].total>0?((trend/first[1].total)*100).toFixed(1):0;
+  const lastSos=last[1].sostenedores||[];
+  const maxC=lastSos.length?Math.max(...lastSos.map(s=>s.cuotas)):0;
+  const nMaxC=lastSos.filter(s=>s.cuotas===maxC).length;
+  const nopago=detectNoPago(ano);
+  el.innerHTML=`
+    <div class="kpi r"><div class="kpi-lbl">Mora más alta registrada</div><div class="kpi-val red">$${fmtM(maxT)}</div><div class="kpi-sub">${MESES_LABEL[entries.find(([,d])=>d.total===maxT)?.[0]]} ${ano}</div></div>
+    <div class="kpi ${trend>0?'r':'g'}"><div class="kpi-lbl">Evolución período</div><div class="kpi-val ${trend>0?'red':'green'}">${trend>0?'+':''}${tPct}%</div><div class="kpi-sub">${MESES_LABEL[first[0]]} → ${MESES_LABEL[last[0]]}</div></div>
+    <div class="kpi r"><div class="kpi-lbl">Máx. cuotas acumuladas</div><div class="kpi-val red">${maxC}</div><div class="kpi-sub">${nMaxC} sostenedor${nMaxC!==1?'es':''} en último corte</div></div>
+    <div class="kpi a"><div class="kpi-lbl">Sin pago todo el período</div><div class="kpi-val amber">${nopago}</div><div class="kpi-sub">Cuotas solo aumentaron</div></div>`;
+}
+
+function detectNoPago(ano){
+  const entries=Object.entries(histData[ano]||{}).sort((a,b)=>parseInt(a[0])-parseInt(b[0]));
+  if(entries.length<2) return 0;
+  const series={};
+  entries.forEach(([mi,d])=>{ (d.sostenedores||[]).forEach(s=>{ if(!series[s.nombre]) series[s.nombre]=[]; series[s.nombre].push({mes:parseInt(mi),cuotas:s.cuotas}); }); });
+  let count=0;
+  Object.values(series).forEach(serie=>{ if(serie.length<2) return; const sorted=serie.sort((a,b)=>a.mes-b.mes); if(sorted.every((v,i)=>i===0||v.cuotas>=sorted[i-1].cuotas)&&sorted[sorted.length-1].cuotas>1) count++; });
+  return count;
+}
+
+function renderHistCharts(){
+  const anos=['2025','2026']; const colors={'2025':'rgba(181,50,14,0.85)','2026':'rgba(26,74,122,0.85)'};
+  const datasets=anos.map(ano=>({ label:ano, data:MESES_KEY.map((k,i)=>histData[ano]?.[i]?.total||null), backgroundColor:colors[ano], borderColor:colors[ano], borderRadius:3, barPercentage:0.4, borderWidth:0 }));
+  const ctxT=document.getElementById('chart-hist-total')?.getContext('2d');
+  if(ctxT){ if(chartHistTotal) chartHistTotal.destroy();
+    chartHistTotal=new Chart(ctxT,{type:'bar',data:{labels:MESES_LABEL,datasets},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>`${ctx.dataset.label}: $${fmtM(ctx.parsed.y||0)}`}}},scales:{x:{grid:{display:false},ticks:{font:{size:10}}},y:{grid:{color:'rgba(0,0,0,0.04)'},ticks:{callback:v=>'$'+fmtM(v),font:{size:10}}}}}}); }
+  const ano2026=histData['2026']||{};
+  const lastIdx=Object.keys(ano2026).map(Number).sort((a,b)=>b-a)[0];
+  const ctxC=document.getElementById('chart-hist-cuotas')?.getContext('2d');
+  if(ctxC){ if(chartHistCuotas) chartHistCuotas.destroy();
+    if(lastIdx!==undefined&&ano2026[lastIdx]?.sostenedores){
+      const sos=ano2026[lastIdx].sostenedores; const cc={};
+      sos.forEach(s=>{cc[s.cuotas]=(cc[s.cuotas]||0)+1;});
+      const labels=Object.keys(cc).map(Number).sort((a,b)=>a-b);
+      chartHistCuotas=new Chart(ctxC,{type:'bar',data:{labels:labels.map(c=>`${c} cuota${c>1?'s':''}`),datasets:[{data:labels.map(c=>cc[c]),backgroundColor:labels.map(c=>cuotaColorH(c)),borderRadius:4,borderWidth:0}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>`${ctx.parsed.y} sostenedores`}}},scales:{x:{grid:{display:false},ticks:{font:{size:10}}},y:{grid:{color:'rgba(0,0,0,0.04)'},ticks:{stepSize:1,font:{size:10}}}}}}); }
+  }
+}
+function cuotaColorH(c){ return c>=9?'#5c0b01':c>=6?'#B5320E':c>=4?'#9A5C08':c>=2?'#1A4A7A':'#2A6040'; }
+
+function renderHistoricoTable(){
+  const ano=document.getElementById('hist-filter-ano')?.value||'2026';
+  const q=(document.getElementById('hist-search')?.value||'').toLowerCase();
+  const cuotasFiltro=parseInt(document.getElementById('hist-filter-cuotas')?.value)||0;
+  const patronFiltro=document.getElementById('hist-filter-patron')?.value||'';
+  const anoData=histData[ano]||{};
+  const meses=Object.keys(anoData).map(Number).sort((a,b)=>a-b);
+  if(meses.length===0){
+    document.getElementById('hist-thead').innerHTML='';
+    document.getElementById('hist-tbody').innerHTML=`<tr><td colspan="4" style="text-align:center;padding:20px;color:var(--ink3);font-size:12px">No hay datos para ${ano}. Importa el corte de al menos un mes.</td></tr>`;
+    document.getElementById('hist-count').textContent=''; return;
+  }
+  const sosMap={};
+  meses.forEach(mi=>{ (anoData[mi].sostenedores||[]).forEach(s=>{ if(!sosMap[s.nombre]) sosMap[s.nombre]={nombre:s.nombre,crit:s.crit,fp:s.fp,serie:{}}; sosMap[s.nombre].serie[mi]={cuotas:s.cuotas,saldo:s.saldo}; }); });
+  const rows=Object.values(sosMap).map(sos=>{
+    const serie=meses.map(mi=>sos.serie[mi]); const cList=serie.filter(Boolean).map(v=>v.cuotas);
+    const lastC=cList[cList.length-1]||0, firstC=cList[0]||0;
+    let patron='irregular';
+    if(cList.every((v,i)=>i===0||v>=cList[i-1])) patron=cList.every(v=>v===firstC)?'nopago':'empeora';
+    else if(cList.every((v,i)=>i===0||v<=cList[i-1])) patron='mejora';
+    if(cList.length===1) patron='irregular';
+    if(lastC>=meses.length&&patron==='empeora') patron='nopago';
+    return{...sos,lastCuotas:lastC,firstCuotas:firstC,patron,serie};
+  });
+  let filtered=rows.filter(r=>{
+    const mQ=!q||r.nombre.toLowerCase().includes(q);
+    const mC=!cuotasFiltro||r.lastCuotas===cuotasFiltro;
+    const mP=!patronFiltro||r.patron===patronFiltro;
+    return mQ&&mC&&mP;
+  }).sort((a,b)=>b.lastCuotas-a.lastCuotas||a.nombre.localeCompare(b.nombre));
+  const ths='font-size:9px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--ink3);padding:5px 8px 9px;text-align:left;border-bottom:1px solid var(--border2);background:var(--card2);white-space:nowrap';
+  document.getElementById('hist-thead').innerHTML=`<tr><th style="${ths}">Sostenedor</th>${meses.map(mi=>`<th style="${ths};text-align:center">${MESES_LABEL[mi].slice(0,3)}<br><span style="font-size:8px;opacity:.6">C${MESES_NUM[mi]}</span></th>`).join('')}<th style="${ths};text-align:center">Patrón</th><th style="${ths};text-align:center">Ult.</th></tr>`;
+  const pL={nopago:'Sin pago',empeora:'Empeora',mejora:'Mejora',irregular:'Irregular'};
+  const pC={nopago:'critica',empeora:'alta',mejora:'mejora',irregular:'sinpago'};
+  const tds='padding:6px 8px;border-bottom:0.5px solid var(--border);vertical-align:middle;font-size:11px';
+  document.getElementById('hist-tbody').innerHTML=filtered.map(r=>{
+    const cells=meses.map(mi=>{ const v=r.serie[mi]; if(!v) return `<td style="${tds};text-align:center;color:var(--ink4)">—</td>`; const c=v.cuotas; const col=cuotaColorH(c);
+      return `<td style="${tds};text-align:center"><span style="display:inline-block;background:${col}20;color:${col};font-weight:700;font-family:'DM Mono',monospace;font-size:12px;padding:2px 7px;border-radius:4px;border:1px solid ${col}40">${c}</span></td>`; }).join('');
+    return `<tr><td style="${tds};font-weight:500;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${r.nombre}">${r.nombre}</td>${cells}<td style="${tds};text-align:center"><span class="badge ${pC[r.patron]||'sinpago'}">${pL[r.patron]||'—'}</span></td><td style="${tds};text-align:center"><span style="font-family:'DM Mono',monospace;font-size:14px;font-weight:700;color:${cuotaColorH(r.lastCuotas)}">${r.lastCuotas}</span></td></tr>`;
+  }).join('');
+  document.getElementById('hist-count').textContent=`${filtered.length} sostenedor${filtered.length!==1?'es':''}`;
+}
+
+function renderHistAlertas(){
+  const ano=document.getElementById('hist-filter-ano')?.value||'2026';
+  const anoData=histData[ano]||{};
+  const meses=Object.keys(anoData).map(Number).sort((a,b)=>a-b);
+  const el=document.getElementById('hist-alertas'); if(!el) return;
+  if(meses.length===0){ el.innerHTML=`<div style="grid-column:1/-1;background:var(--bg2);border-radius:8px;padding:16px;text-align:center;color:var(--ink3);font-size:12px">Las alertas se generan automáticamente una vez que importes datos históricos.</div>`; return; }
+  const alertas=[];
+  const lastIdx=meses[meses.length-1], lastD=anoData[lastIdx], lastSos=lastD?.sostenedores||[];
+  const maxCuotaMes=MESES_NUM[lastIdx];
+  const nMaxC=lastSos.filter(s=>s.cuotas>=maxCuotaMes).length;
+  if(nMaxC>0) alertas.push({tipo:'danger',icon:'🔴',title:`${nMaxC} sostenedor${nMaxC!==1?'es':''} con ${maxCuotaMes}+ cuotas en ${MESES_LABEL[lastIdx]}`,text:'Llevan todo el período sin pagar. Requieren cobranza extrajudicial o convenio urgente.'});
+  if(meses.length>=2){
+    const prev=anoData[meses[meses.length-2]], curr=lastD;
+    if(prev&&curr){ const delta=curr.total-prev.total, deltaPct=((delta/prev.total)*100).toFixed(1);
+      alertas.push({tipo:delta>0?'warn':'ok',icon:delta>0?'📈':'📉',title:`Mora ${delta>0?'aumentó':'bajó'} ${Math.abs(deltaPct)}% vs ${MESES_LABEL[meses[meses.length-2]]}`,text:`${delta>0?'+':''}$${fmtM(Math.abs(delta))} CLP. ${delta>0?'Revisar nuevos morosos.':'Buena señal de gestión efectiva.'}`}); }
+  }
+  if(meses.length>=2){
+    const prevSos=new Set((anoData[meses[meses.length-2]]?.sostenedores||[]).map(s=>s.nombre));
+    const nuevos=lastSos.filter(s=>!prevSos.has(s.nombre));
+    if(nuevos.length>0) alertas.push({tipo:'info',icon:'🆕',title:`${nuevos.length} nuevo${nuevos.length!==1?'s':''} en mora en ${MESES_LABEL[lastIdx]}`,text:`No aparecían como morosos el mes anterior. Actuar rápido — solo tienen 1 cuota.`});
+    const recuperados=[...prevSos].filter(n=>!lastSos.find(s=>s.nombre===n));
+    if(recuperados.length>0) alertas.push({tipo:'ok',icon:'✅',title:`${recuperados.length} sostenedor${recuperados.length!==1?'es':''} salieron de la mora`,text:'Pagaron su deuda completa. La gestión está dando resultados.'});
+  }
+  el.innerHTML=alertas.length>0?alertas.map(a=>`<div class="alerta ${a.tipo}"><span class="alerta-icon">${a.icon}</span><div><div class="alerta-title">${a.title}</div><div class="alerta-text">${a.text}</div></div></div>`).join(''):
+    `<div style="grid-column:1/-1;background:var(--green-lt);border-radius:8px;padding:14px;text-align:center;color:var(--green);font-size:12px">Sin alertas críticas con los datos disponibles.</div>`;
+}
+
+function exportHistorico(){
+  const ano=document.getElementById('hist-filter-ano')?.value||'2026';
+  const anoData=histData[ano]||{};
+  const meses=Object.keys(anoData).map(Number).sort((a,b)=>a-b);
+  if(meses.length===0){alert('No hay datos para exportar');return;}
+  const sosMap={};
+  meses.forEach(mi=>{(anoData[mi].sostenedores||[]).forEach(s=>{ if(!sosMap[s.nombre]) sosMap[s.nombre]={nombre:s.nombre,serie:{}}; sosMap[s.nombre].serie[mi]=s; });});
+  const rows=Object.values(sosMap).map(sos=>{ const row={'Sostenedor':sos.nombre}; meses.forEach(mi=>{ const v=sos.serie[mi]; row[`${MESES_LABEL[mi]} - Saldo`]=v?.saldo||''; row[`${MESES_LABEL[mi]} - Cuotas`]=v?.cuotas||''; }); return row; });
+  const ws=XLSX.utils.json_to_sheet(rows); const wb=XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb,ws,`Histórico ${ano}`); XLSX.writeFile(wb,`Historico_Morosidad_CAC_${ano}.xlsx`);
+}
+
+// ─── FILE IMPORT (dashboard) ────────────────────────────────────
+function handleFile(input,type){
+  const file=input.files[0]; if(!file) return;
+  showStatus(`Leyendo ${file.name}...`,'info');
+  const reader=new FileReader();
+  reader.onload=e=>{
+    try{ const wb=XLSX.read(e.target.result,{type:'array'}); const ws=wb.Sheets[wb.SheetNames[0]]; const data=XLSX.utils.sheet_to_json(ws); processImport(data,type); }
+    catch(err){ showStatus('Error: '+err.message,'error'); }
+  };
+  reader.readAsArrayBuffer(file);
+}
+function processImport(data,type){
+  if(type==='sos'){
+    const morosos=data.filter(r=>r['ValorPendiente']>0||r['Saldo']>0||r['saldo']>0);
+    const total=morosos.reduce((s,r)=>s+(r['ValorPendiente']||r['Saldo']||r['saldo']||0),0);
+    document.getElementById('kpi-total').textContent='$'+fmtM(total);
+    document.getElementById('kpi-sos').textContent=morosos.length;
+    showStatus(`✓ ${morosos.length} sostenedores · $${fmtM(total)} CLP — Ve a Histórico para guardarlo permanentemente`,'ok');
+    const posibles=morosos.map(d=>d['ValorPendiente']||d['Saldo']||0).filter(v=>v>380000&&v<620000);
+    if(posibles.length>0){posibles.sort((a,b)=>a-b);CUOTA_UF=posibles[Math.floor(posibles.length/2)];}
+    const mapped=morosos.sort((a,b)=>(b['ValorPendiente']||0)-(a['ValorPendiente']||0)).map(d=>({
+      n:d['NombreSostenedor']||d['Nombre']||'—', saldo:d['ValorPendiente']||d['Saldo']||0,
+      tramo:d['Tramo']||'—', crit:d['Criticidad']||'Media', fp:d['FormaPago']||'—',
+      email:d['EmailSostenedor']||d['Email']||'', tel:d['MovilSostenedor']||d['Movil']||'',
+      est:'Sin pago', cuotas:calcCuotas(d['ValorPendiente']||d['Saldo']||0)
+    }));
+    loadTopData(mapped);
+  } else { showStatus(`✓ ${data.length} registros de alumnos cargados`,'ok'); }
+}
+function useDefaultData(){
+  showStatus('Recargando datos desde Supabase...','info');
+  if(_corteActivo) loadUltimoCorte(_corteActivo.id).then(()=>showStatus('Datos actualizados','ok')).catch(e=>showStatus('Error: '+e.message,'error'));
+  else bootApp();
+}
+
+// ─── UTILS ──────────────────────────────────────────────────────
+function fmt(n){ return Math.round(n).toLocaleString('es-CL'); }
+function fmtM(n){ if(n>=1000000) return (n/1000000).toFixed(1)+'M'; if(n>=1000) return (n/1000).toFixed(0)+'K'; return fmt(n); }
+function escHtml(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function parseDateCL(s){ const p=s.split('/'); return p.length===3?`${p[2]}-${p[1].padStart(2,'0')}-${p[0].padStart(2,'0')}`:null; }
+function inferEstado(res){ const r=res.toLowerCase(); if(r.includes('100%')||r.includes('pagado al')) return 'pagado_total'; if(r.includes('parcial')||r.includes('pago parcial')||r.includes('queda')) return 'pagado_parcial'; if(r.includes('pagará')||r.includes('pagara')||r.includes('acuerdo')) return 'compromiso'; if(r.includes('sin respuesta')||r.includes('no responde')) return 'sin_respuesta'; return 'pendiente'; }
+function filterTable(q,tbodyId){ const tbody=document.getElementById(tbodyId); if(!tbody) return; tbody.querySelectorAll('tr').forEach(row=>{ row.style.display=row.textContent.toLowerCase().includes(q.toLowerCase())?'':'none'; }); }
+function showStatus(msg,type){ const el=document.getElementById('status-bar'); if(!el) return; el.textContent=msg; el.className='status-bar'+(type==='error'?' error':''); el.style.display='block'; if(type!=='info') setTimeout(()=>el.style.display='none',6000); }
+
+// ════════════════════════════════════════════════════════════════
+//  MÓDULO SOSTENEDORES
+// ════════════════════════════════════════════════════════════════
+let sostData = [];   // cache local
+let sostEditId = null;
+
+// ── Carga desde Supabase ─────────────────────────────────────────
+async function loadSostenedores() {
+  try {
+    const rows = await sbGet('sostenedores', '?order=valor_pendiente.desc&limit=500');
+    sostData = rows || [];
+  } catch(e) { sostData = []; }
+  renderSostenedoresStats();
+  renderSostenedoresTable();
+  buildCursoFilter();
+}
+
+function renderSostenedoresStats() {
+  const el = document.getElementById('sost-stats-row');
+  if(!el) return;
+  const total   = sostData.reduce((s,r)=>s+(r.valor_pendiente||0),0);
+  const nBeca   = sostData.filter(r=>r.beca).length;
+  const fpMap   = {};
+  sostData.forEach(r=>{ const k=r.forma_pago||'N/A'; fpMap[k]=(fpMap[k]||0)+1; });
+  const topFp   = Object.entries(fpMap).sort((a,b)=>b[1]-a[1])[0];
+  el.innerHTML = `
+    <div class="kpi r"><div class="kpi-lbl">Total sostenedores</div><div class="kpi-val">${sostData.length}</div><div class="kpi-sub">en base de datos</div></div>
+    <div class="kpi r"><div class="kpi-lbl">Mora total</div><div class="kpi-val red">$${fmtM(total)}</div><div class="kpi-sub">CLP vigente</div></div>
+    <div class="kpi a"><div class="kpi-lbl">Con beca</div><div class="kpi-val amber">${nBeca}</div><div class="kpi-sub">${((nBeca/sostData.length||1)*100).toFixed(0)}% del total</div></div>
+    <div class="kpi b"><div class="kpi-lbl">F.Pago más común</div><div class="kpi-val" style="font-size:18px">${topFp?topFp[0]:'—'}</div><div class="kpi-sub">${topFp?topFp[1]+' sostenedores':''}</div></div>`;
+}
+
+function renderSostenedoresTable() {
+  const tbody = document.getElementById('sost-tbody');
+  if(!tbody) return;
+  const q    = (document.getElementById('sost-search')?.value||'').toLowerCase();
+  const fp   = document.getElementById('sost-filter-fp')?.value||'';
+  const beca = document.getElementById('sost-filter-beca')?.value||'';
+
+  const filtered = sostData.filter(r => {
+    const mQ = !q || (r.nombre||'').toLowerCase().includes(q) || (r.rut||'').includes(q) || (r.email||'').toLowerCase().includes(q);
+    const mF = !fp   || r.forma_pago === fp;
+    const mB = !beca || (beca==='con'?!!r.beca:!r.beca);
+    return mQ && mF && mB;
+  });
+
+  const cnt = document.getElementById('sost-count');
+  if(cnt) cnt.textContent = `${filtered.length} sostenedor${filtered.length!==1?'es':''}`;
+
+  const tds = 'padding:6px 8px;border-bottom:0.5px solid var(--border);vertical-align:middle';
+  tbody.innerHTML = filtered.map(r => `
+    <tr style="cursor:pointer" onclick="openSostModal('${r.id}')">
+      <td style="${tds};font-family:'DM Mono',monospace;font-size:10px;white-space:nowrap">${r.rut||'—'}</td>
+      <td style="${tds};font-weight:500;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.nombre||'—'}</td>
+      <td style="${tds};font-family:'DM Mono',monospace;text-align:right;color:var(--red)">${r.valor_pendiente?'$'+fmtM(r.valor_pendiente):'—'}</td>
+      <td style="${tds};font-family:'DM Mono',monospace;text-align:right;color:var(--green)">${r.valor_pagado?'$'+fmtM(r.valor_pagado):'—'}</td>
+      <td style="${tds}"><span class="badge sinpago" style="font-size:9px">${r.forma_pago||'—'}</span></td>
+      <td style="${tds};font-size:10px;color:var(--amber)">${r.beca||''}</td>
+      <td style="${tds};font-size:10px;color:var(--ink3);max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.email||''}</td>
+      <td style="${tds};font-family:'DM Mono',monospace;font-size:10px">${r.telefono||r.movil||''}</td>
+      <td style="${tds};font-family:'DM Mono',monospace;font-size:10px">${r.ultimo_pago?new Date(r.ultimo_pago).toLocaleDateString('es-CL'):''}</td>
+      <td style="${tds};font-size:10px;color:var(--ink3);max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${escHtml(r.men_observ||'')}">${r.men_observ||''}</td>
+      <td style="${tds};text-align:center">
+        <button class="btn-del" onclick="event.stopPropagation();quickDeleteSost('${r.id}')" title="Eliminar">✕</button>
+      </td>
+    </tr>`).join('');
+
+  if(!filtered.length) tbody.innerHTML = `<tr><td colspan="11" style="text-align:center;padding:20px;color:var(--ink3)">Sin resultados.</td></tr>`;
+}
+
+// ── Modal sostenedor ─────────────────────────────────────────────
+function openSostModal(id) {
+  const r = id === 'new' ? {} : sostData.find(s=>s.id===id);
+  if(!r && id!=='new') return;
+  sostEditId = id === 'new' ? null : id;
+  const modal = document.getElementById('sost-modal');
+  document.getElementById('sost-modal-title').textContent = id==='new'?'Nuevo sostenedor':r.nombre||'Sostenedor';
+  const delBtn = document.getElementById('btn-del-sost');
+  if(delBtn) delBtn.style.display = id==='new'?'none':'inline-block';
+
+  const field = (label,key,val,type='text',full=false) =>
+    `<div style="display:flex;flex-direction:column;gap:4px${full?';grid-column:1/-1':''}">
+       <label style="font-size:10px;font-weight:600;color:var(--ink3);text-transform:uppercase;letter-spacing:.08em">${label}</label>
+       <input data-key="${key}" type="${type}" value="${escHtml(String(val||''))}"
+         style="padding:7px 10px;border:0.5px solid var(--border2);border-radius:6px;font-size:12px;background:var(--bg2);color:var(--ink)">
+     </div>`;
+
+  document.getElementById('sost-modal-body').innerHTML = `
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+      ${field('RUT','rut',r.rut)}
+      ${field('Nombre','nombre',r.nombre)}
+      ${field('Email','email',r.email)}
+      ${field('Email institucional','email_institucional',r.email_institucional)}
+      ${field('Móvil','telefono',r.telefono||r.movil)}
+      ${field('Teléfono fijo','fono',r.fono)}
+      ${field('Forma de pago','forma_pago',r.forma_pago)}
+      ${field('Beca','beca',r.beca)}
+      ${field('Dirección','direccion',r.direccion,'text',true)}
+      ${field('Comuna','comuna',r.comuna)}
+      ${field('Saldo pendiente (CLP)','valor_pendiente',r.valor_pendiente,'number')}
+      ${field('Total pagado (CLP)','valor_pagado',r.valor_pagado,'number')}
+      ${field('Último pago','ultimo_pago',r.ultimo_pago?r.ultimo_pago.split('T')[0]:''  ,'date')}
+      ${field('Fecha vence','fecha_vence',r.fecha_vence?r.fecha_vence.split('T')[0]:''   ,'date')}
+      <div style="grid-column:1/-1;display:flex;flex-direction:column;gap:4px">
+        <label style="font-size:10px;font-weight:600;color:var(--ink3);text-transform:uppercase;letter-spacing:.08em">Observación Syscol</label>
+        <textarea data-key="men_observ" rows="2" style="padding:7px 10px;border:0.5px solid var(--border2);border-radius:6px;font-size:12px;background:var(--bg2);color:var(--ink);resize:vertical">${escHtml(r.men_observ||'')}</textarea>
+      </div>
+    </div>`;
+
+  modal.style.display = 'flex';
+}
+function closeSostModal(){ document.getElementById('sost-modal').style.display='none'; sostEditId=null; }
+
+async function saveSostenedor(){
+  const inputs = document.querySelectorAll('#sost-modal-body [data-key]');
+  const body = {};
+  inputs.forEach(inp => { const v=inp.value.trim(); if(v) body[inp.dataset.key]=isNaN(v)||inp.type==='text'||inp.tagName==='TEXTAREA'?v:Number(v); });
+  body.updated_at = new Date().toISOString();
+
+  try {
+    if(sostEditId) {
+      await sbPatch('sostenedores', `?id=eq.${sostEditId}`, body);
+      const idx = sostData.findIndex(s=>s.id===sostEditId);
+      if(idx>=0) sostData[idx] = {...sostData[idx], ...body};
+      showStatus('Sostenedor actualizado','ok');
+    } else {
+      body.activo = true; body.created_at = new Date().toISOString();
+      const res = await sbPost('sostenedores', body);
+      const newRow = Array.isArray(res)?res[0]:res;
+      sostData.unshift(newRow);
+      showStatus('Sostenedor creado','ok');
+    }
+    closeSostModal();
+    renderSostenedoresStats();
+    renderSostenedoresTable();
+  } catch(e){ showStatus('Error: '+e.message,'error'); }
+}
+
+async function deleteSostenedor(){
+  if(!sostEditId || !confirm('¿Eliminar este sostenedor? Esta acción no se puede deshacer.')) return;
+  try {
+    await sbDelete('sostenedores',`?id=eq.${sostEditId}`);
+    sostData = sostData.filter(s=>s.id!==sostEditId);
+    closeSostModal(); renderSostenedoresStats(); renderSostenedoresTable();
+    showStatus('Sostenedor eliminado','ok');
+  } catch(e){ showStatus('Error: '+e.message,'error'); }
+}
+
+async function quickDeleteSost(id){
+  if(!confirm('¿Eliminar sostenedor?')) return;
+  try {
+    await sbDelete('sostenedores',`?id=eq.${id}`);
+    sostData = sostData.filter(s=>s.id!==id);
+    renderSostenedoresStats(); renderSostenedoresTable();
+    showStatus('Eliminado','ok');
+  } catch(e){ showStatus('Error: '+e.message,'error'); }
+}
+
+function addSostenedor(){ openSostModal('new'); }
+
+// ── Importar MOROSOS_SOST.csv ─────────────────────────────────────
+async function importSostenedores(input){
+  const file = input.files[0]; if(!file) return;
+  showStatus('Procesando '+file.name+'...','info');
+  const reader = new FileReader();
+  reader.onload = async e => {
+    try {
+      let rows;
+      if(file.name.endsWith('.csv')){
+        const text = new TextDecoder('latin-1').decode(e.target.result);
+        rows = csvToObjects(text);
+      } else {
+        const wb = XLSX.read(e.target.result,{type:'array'});
+        rows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]);
+      }
+      await upsertSostenedores(rows);
+    } catch(err){ showStatus('Error: '+err.message,'error'); }
+    input.value='';
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+async function upsertSostenedores(rows){
+  const mapped = rows.map(r => ({
+    syscol_id:           parseInt(r.id)||null,
+    rut:                 String(r.Rut||r.rut||'').trim(),
+    nombre:              String(r.Nombre||r.nombre||'—'),
+    nc_curso:            r.NCCurso||r.nc_curso||null,
+    fecha_vence:         parseDateDDMM(r.FechaVence||r.fecha_vence),
+    valor_pendiente:     parseInt(r.ValorPendiente||r.valor_pendiente)||0,
+    valor_pagado:        parseInt(r.ValorPagado||r.valor_pagado)||0,
+    beca:                r.Beca||r.beca||null,
+    cantidad:            parseInt(r.Cantidad)||1,
+    row_text_color:      r.RowTextColor||null,
+    com_fecha:           parseDateDDMM(r.ComFecha||r.com_fecha),
+    com_ent:             parseInt(r.ComEnt)||0,
+    com_vis:             parseInt(r.ComVis)||0,
+    men_codigo:          r.MenCodigo?String(r.MenCodigo):null,
+    men_observ:          r.MenObserv||null,
+    direccion:           r.Direccion||null,
+    fono:                r.Fono?String(r.Fono):null,
+    email:               r.Email||null,
+    email_institucional: r.EmailInstitucional||null,
+    telefono:            r.Movil?String(r.Movil):null,
+    forma_pago:          r.FormaPago||null,
+    comuna:              r.Comuna||null,
+    ultimo_pago:         parseDateDDMM(r.UltimoPago||r.ultimo_pago),
+    activo:              true,
+    updated_at:          new Date().toISOString()
+  })).filter(r => r.rut);
+
+  // Upsert por syscol_id en lotes de 50
+  let ok=0, err=0;
+  for(let i=0;i<mapped.length;i+=50){
+    const batch = mapped.slice(i,i+50);
+    try {
+      const url = `${SB_URL}/rest/v1/sostenedores`;
+      const res = await fetch(url, { method:'POST',
+        headers:{...SB_HEADS,'Prefer':'resolution=merge-duplicates,return=minimal'},
+        body: JSON.stringify(batch)});
+      if(!res.ok) throw new Error(await res.text());
+      ok += batch.length;
+    } catch(e){ err += batch.length; }
+  }
+  showStatus(`✓ ${ok} sostenedores importados/actualizados${err?` · ${err} errores`:''}`, err?'error':'ok');
+  await loadSostenedores();
+}
+
+function exportSostenedores(){
+  const ws = XLSX.utils.json_to_sheet(sostData.map(r=>({
+    RUT:r.rut, Nombre:r.nombre, Email:r.email, Movil:r.telefono,
+    FormaPago:r.forma_pago, Beca:r.beca||'', SaldoCLP:r.valor_pendiente||0,
+    TotalPagado:r.valor_pagado||0, UltimoPago:r.ultimo_pago||'',
+    Direccion:r.direccion||'', Comuna:r.comuna||'', Observacion:r.men_observ||''
+  })));
+  const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb,ws,'Sostenedores');
+  XLSX.writeFile(wb,'Sostenedores_CAC.xlsx');
+}
+
+// ════════════════════════════════════════════════════════════════
+//  MÓDULO ALUMNOS
+// ════════════════════════════════════════════════════════════════
+let aluData = [];
+let aluEditId = null;
+
+async function loadAlumnos(){
+  try {
+    const rows = await sbGet('alumnos', '?order=valor_pendiente.desc&limit=600');
+    aluData = rows || [];
+  } catch(e){ aluData = []; }
+  renderAlumnosStats();
+  renderAlumnosTable();
+  buildCursoFilter();
+}
+
+function renderAlumnosStats(){
+  const el = document.getElementById('alu-stats-row');
+  if(!el) return;
+  const total  = aluData.reduce((s,r)=>s+(r.valor_pendiente||0),0);
+  const nBeca  = aluData.filter(r=>r.beca).length;
+  const cursos = new Set(aluData.map(r=>r.nc_curso).filter(Boolean));
+  const maxSos = aluData.reduce((max,r)=>((r.valor_pendiente||0)>max.v?{n:r.soste_nombre,v:r.valor_pendiente||0}:max),{n:'—',v:0});
+  el.innerHTML = `
+    <div class="kpi r"><div class="kpi-lbl">Total alumnos</div><div class="kpi-val">${aluData.length}</div><div class="kpi-sub">en base de datos</div></div>
+    <div class="kpi r"><div class="kpi-lbl">Mora total</div><div class="kpi-val red">$${fmtM(total)}</div><div class="kpi-sub">CLP vigente</div></div>
+    <div class="kpi b"><div class="kpi-lbl">Cursos con mora</div><div class="kpi-val">${cursos.size}</div><div class="kpi-sub">cursos afectados</div></div>
+    <div class="kpi a"><div class="kpi-lbl">Con beca</div><div class="kpi-val amber">${nBeca}</div><div class="kpi-sub">${((nBeca/(aluData.length||1))*100).toFixed(0)}% del total</div></div>`;
+}
+
+function buildCursoFilter(){
+  const sel = document.getElementById('alu-filter-curso');
+  if(!sel) return;
+  const cursos = [...new Set(aluData.map(r=>r.nc_curso).filter(Boolean))].sort();
+  sel.innerHTML = '<option value="">Todos los cursos</option>' +
+    cursos.map(c=>`<option value="${c}">${c}</option>`).join('');
+}
+
+function renderAlumnosTable(){
+  const tbody = document.getElementById('alu-tbody');
+  if(!tbody) return;
+  const q    = (document.getElementById('alu-search')?.value||'').toLowerCase();
+  const cur  = document.getElementById('alu-filter-curso')?.value||'';
+  const beca = document.getElementById('alu-filter-beca')?.value||'';
+
+  const filtered = aluData.filter(r=>{
+    const mQ = !q || (r.nombre||'').toLowerCase().includes(q)||(r.rut||'').includes(q)||(r.n_curso||'').toLowerCase().includes(q)||(r.soste_nombre||'').toLowerCase().includes(q);
+    const mC = !cur  || r.nc_curso===cur;
+    const mB = !beca || (beca==='con'?!!r.beca:!r.beca);
+    return mQ&&mC&&mB;
+  });
+
+  const cnt = document.getElementById('alu-count');
+  if(cnt) cnt.textContent = `${filtered.length} alumno${filtered.length!==1?'s':''}`;
+
+  const tds='padding:6px 8px;border-bottom:0.5px solid var(--border);vertical-align:middle';
+  tbody.innerHTML = filtered.map(r=>`
+    <tr style="cursor:pointer" onclick="openAluModal('${r.id}')">
+      <td style="${tds};font-family:'DM Mono',monospace;font-size:10px;white-space:nowrap">${r.rut||'—'}</td>
+      <td style="${tds};font-weight:500;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.nombre||'—'}</td>
+      <td style="${tds}"><span class="badge sinpago" style="font-size:9px">${r.nc_curso||'—'}</span></td>
+      <td style="${tds};font-family:'DM Mono',monospace;text-align:right;color:var(--red)">${r.valor_pendiente?'$'+fmtM(r.valor_pendiente):'—'}</td>
+      <td style="${tds};font-size:10px;color:var(--amber)">${r.beca||''}</td>
+      <td style="${tds};max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:11px">${r.soste_nombre||'—'}</td>
+      <td style="${tds};font-size:10px;color:var(--ink3);max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.soste_email||''}</td>
+      <td style="${tds};font-family:'DM Mono',monospace;font-size:10px">${r.soste_movil||''}</td>
+      <td style="${tds};font-family:'DM Mono',monospace;font-size:10px">${r.ultimo_pago?new Date(r.ultimo_pago).toLocaleDateString('es-CL'):''}</td>
+      <td style="${tds};text-align:center">
+        <button class="btn-del" onclick="event.stopPropagation();quickDeleteAlu('${r.id}')" title="Eliminar">✕</button>
+      </td>
+    </tr>`).join('');
+
+  if(!filtered.length) tbody.innerHTML=`<tr><td colspan="10" style="text-align:center;padding:20px;color:var(--ink3)">Sin resultados.</td></tr>`;
+}
+
+function openAluModal(id){
+  const r = id==='new'?{}:aluData.find(a=>a.id===id);
+  if(!r&&id!=='new') return;
+  aluEditId = id==='new'?null:id;
+  document.getElementById('alu-modal-title').textContent = id==='new'?'Nuevo alumno':r.nombre||'Alumno';
+  const delBtn = document.getElementById('btn-del-alu');
+  if(delBtn) delBtn.style.display = id==='new'?'none':'inline-block';
+
+  const field = (label,key,val,type='text',full=false) =>
+    `<div style="display:flex;flex-direction:column;gap:4px${full?';grid-column:1/-1':''}">
+       <label style="font-size:10px;font-weight:600;color:var(--ink3);text-transform:uppercase;letter-spacing:.08em">${label}</label>
+       <input data-key="${key}" type="${type}" value="${escHtml(String(val||''))}"
+         style="padding:7px 10px;border:0.5px solid var(--border2);border-radius:6px;font-size:12px;background:var(--bg2);color:var(--ink)">
+     </div>`;
+
+  document.getElementById('alu-modal-body').innerHTML = `
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+      ${field('RUT Alumno','rut',r.rut)}
+      ${field('Nombre','nombre',r.nombre)}
+      ${field('Código curso','nc_curso',r.nc_curso)}
+      ${field('Nombre curso','n_curso',r.n_curso,'text',false)}
+      ${field('Saldo pendiente (CLP)','valor_pendiente',r.valor_pendiente,'number')}
+      ${field('Total pagado (CLP)','valor_pagado',r.valor_pagado,'number')}
+      ${field('Beca','beca',r.beca)}
+      ${field('Forma de pago','forma_pago',r.forma_pago)}
+      ${field('Último pago','ultimo_pago',r.ultimo_pago?r.ultimo_pago.split('T')[0]:''  ,'date')}
+      ${field('Fecha vence','fecha_vence',r.fecha_vence?r.fecha_vence.split('T')[0]:''   ,'date')}
+      <div style="grid-column:1/-1;margin-top:4px;padding-top:10px;border-top:0.5px solid var(--border)">
+        <div style="font-size:10px;font-weight:600;color:var(--blue);text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px">Datos del sostenedor</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+          ${field('RUT Sostenedor','soste_rut',r.soste_rut)}
+          ${field('Nombre sostenedor','soste_nombre',r.soste_nombre)}
+          ${field('Email sostenedor','soste_email',r.soste_email)}
+          ${field('Móvil sostenedor','soste_movil',r.soste_movil)}
+          ${field('F.Pago sostenedor','soste_forma_pago',r.soste_forma_pago)}
+          ${field('Dirección sostenedor','soste_direccion',r.soste_direccion)}
+        </div>
+      </div>
+    </div>`;
+
+  document.getElementById('alu-modal').style.display='flex';
+}
+function closeAluModal(){ document.getElementById('alu-modal').style.display='none'; aluEditId=null; }
+
+async function saveAlumno(){
+  const inputs = document.querySelectorAll('#alu-modal-body [data-key]');
+  const body = {};
+  inputs.forEach(inp=>{ const v=inp.value.trim(); if(v) body[inp.dataset.key]=isNaN(v)||inp.type==='text'?v:Number(v); });
+  body.updated_at = new Date().toISOString();
+  try {
+    if(aluEditId){
+      await sbPatch('alumnos',`?id=eq.${aluEditId}`,body);
+      const idx=aluData.findIndex(a=>a.id===aluEditId); if(idx>=0) aluData[idx]={...aluData[idx],...body};
+      showStatus('Alumno actualizado','ok');
+    } else {
+      body.activo=true; body.created_at=new Date().toISOString();
+      const res=await sbPost('alumnos',body);
+      aluData.unshift(Array.isArray(res)?res[0]:res);
+      showStatus('Alumno creado','ok');
+    }
+    closeAluModal(); renderAlumnosStats(); renderAlumnosTable();
+  } catch(e){ showStatus('Error: '+e.message,'error'); }
+}
+
+async function deleteAlumno(){
+  if(!aluEditId||!confirm('¿Eliminar este alumno?')) return;
+  try {
+    await sbDelete('alumnos',`?id=eq.${aluEditId}`);
+    aluData=aluData.filter(a=>a.id!==aluEditId);
+    closeAluModal(); renderAlumnosStats(); renderAlumnosTable();
+    showStatus('Alumno eliminado','ok');
+  } catch(e){ showStatus('Error: '+e.message,'error'); }
+}
+
+async function quickDeleteAlu(id){
+  if(!confirm('¿Eliminar alumno?')) return;
+  try {
+    await sbDelete('alumnos',`?id=eq.${id}`);
+    aluData=aluData.filter(a=>a.id!==id);
+    renderAlumnosStats(); renderAlumnosTable();
+    showStatus('Eliminado','ok');
+  } catch(e){ showStatus('Error: '+e.message,'error'); }
+}
+
+function addAlumno(){ openAluModal('new'); }
+
+// ── Importar MOROSOS_ALUMNO.csv ───────────────────────────────────
+async function importAlumnos(input){
+  const file=input.files[0]; if(!file) return;
+  showStatus('Procesando '+file.name+'...','info');
+  const reader=new FileReader();
+  reader.onload=async e=>{
+    try{
+      let rows;
+      if(file.name.endsWith('.csv')){
+        const text=new TextDecoder('latin-1').decode(e.target.result);
+        rows=csvToObjects(text);
+      } else {
+        const wb=XLSX.read(e.target.result,{type:'array'});
+        rows=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]);
+      }
+      await upsertAlumnos(rows);
+    } catch(err){ showStatus('Error: '+err.message,'error'); }
+    input.value='';
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+async function upsertAlumnos(rows){
+  // Resolve sostenedor FK
+  const sostByRut={};
+  sostData.forEach(s=>{ sostByRut[normRut(s.rut)]=s.id; });
+
+  const mapped=rows.map(r=>({
+    syscol_id:       parseInt(r.id)||null,
+    rut:             String(r.Rut||r.rut||'').trim(),
+    nombre:          String(r.Nombre||r.nombre||'—'),
+    nc_curso:        r.NCCurso||r.nc_curso||null,
+    n_curso:         r.NCurso||r.n_curso||null,
+    fecha_vence:     parseDateDDMM(r.FechaVence||r.fecha_vence),
+    valor_pendiente: parseInt(r.ValorPendiente)||0,
+    valor_pagado:    parseInt(r.ValorPagado)||0,
+    beca:            r.Beca||null,
+    cantidad:        parseInt(r.Cantidad)||1,
+    row_text_color:  r.RowTextColor||null,
+    com_ent:         parseInt(r.ComEnt)||0,
+    com_vis:         parseInt(r.ComVis)||0,
+    men_codigo:      r.MenCodigo?String(r.MenCodigo):null,
+    direccion:       r.Direccion||null,
+    fono:            r.Fono?String(r.Fono):null,
+    email:           r.Email||null,
+    email_institucional:r.EmailInstitucional||null,
+    movil:           r.Movil?String(r.Movil):null,
+    forma_pago:      r.FormaPago||null,
+    comuna:          r.Comuna||null,
+    ultimo_pago:     parseDateDDMM(r.UltimoPago||r.ultimo_pago),
+    soste_rut:       String(r.SosteRut||r.soste_rut||'').trim()||null,
+    soste_nombre:    r.SosteNombre||r.soste_nombre||null,
+    soste_direccion: r.SosteDireccion||r.soste_direccion||null,
+    soste_email:     r.SosteEmail||r.soste_email||null,
+    soste_movil:     r.SosteMovil?String(r.SosteMovil):null,
+    soste_forma_pago:r.SosteFormaPago||null,
+    sostenedor_id:   r.SosteRut?sostByRut[normRut(String(r.SosteRut))]||null:null,
+    activo:          true,
+    updated_at:      new Date().toISOString()
+  })).filter(r=>r.rut);
+
+  let ok=0,err=0;
+  for(let i=0;i<mapped.length;i+=50){
+    const batch=mapped.slice(i,i+50);
+    try{
+      const res=await fetch(`${SB_URL}/rest/v1/alumnos`,{method:'POST',
+        headers:{...SB_HEADS,'Prefer':'resolution=merge-duplicates,return=minimal'},
+        body:JSON.stringify(batch)});
+      if(!res.ok) throw new Error(await res.text());
+      ok+=batch.length;
+    } catch(e){ err+=batch.length; }
+  }
+  showStatus(`✓ ${ok} alumnos importados/actualizados${err?` · ${err} errores`:''}`,err?'error':'ok');
+  await loadAlumnos();
+}
+
+function exportAlumnos(){
+  const ws=XLSX.utils.json_to_sheet(aluData.map(r=>({
+    RUT:r.rut, Nombre:r.nombre, Curso:r.n_curso||r.nc_curso,
+    SaldoCLP:r.valor_pendiente||0, TotalPagado:r.valor_pagado||0,
+    Beca:r.beca||'', FormaPago:r.forma_pago||'', UltimoPago:r.ultimo_pago||'',
+    SosteNombre:r.soste_nombre||'', SosteRut:r.soste_rut||'',
+    SosteEmail:r.soste_email||'', SosteMovil:r.soste_movil||''
+  })));
+  const wb=XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb,ws,'Alumnos');
+  XLSX.writeFile(wb,'Alumnos_CAC.xlsx');
+}
+
+// ── Trigger showView ──────────────────────────────────────────────
+const _origShowView = showView;
+// Patch showView to load modules on first open
+const _sostLoaded={v:false}, _aluLoaded={v:false};
+window.showView = function(name){
+  _origShowView.call(this,...arguments);
+  if(name==='sostenedores_mod' && !_sostLoaded.v){ _sostLoaded.v=true; loadSostenedores(); }
+  if(name==='alumnos_mod' && !_aluLoaded.v){ _aluLoaded.v=true; loadAlumnos(); }
+};
+
+// ── Helpers ───────────────────────────────────────────────────────
+function csvToObjects(text){
+  const lines = text.split(/\r?\n/);
+  const headers = lines[0].split(';').map(h=>h.trim().replace(/^"|"$/g,''));
+  return lines.slice(1).filter(l=>l.trim()).map(line=>{
+    const vals = line.split(';').map(v=>v.trim().replace(/^"|"$/g,''));
+    const obj={};
+    headers.forEach((h,i)=>{ obj[h]=vals[i]??''; });
+    return obj;
+  });
+}
+
+function parseDateDDMM(s){
+  if(!s||s==='NULL'||s==='null'||s==='') return null;
+  if(String(s).match(/^\d{4}-\d{2}-\d{2}/)) return String(s).split('T')[0];
+  const p=String(s).split('/');
+  if(p.length===3) return `${p[2]}-${p[1].padStart(2,'0')}-${p[0].padStart(2,'0')}`;
+  return null;
+}
+
+function normRut(r){ return String(r||'').replace(/\.|-/g,'').toLowerCase(); }
+</script>
+
+</body>
+</html>
