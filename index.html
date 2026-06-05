@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sistema CAC · Colegio Alemán de Chillán</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#F4F1EB;--bg2:#EDEAE0;
+  --card:#FDFCF8;
+  --ink:#1C1A14;--ink3:#7A7670;--ink4:#A8A49E;
+  --border2:rgba(28,26,20,0.16);
+  --red:#B5320E;--red-lt:#FBF0EC;--red-bd:rgba(181,50,14,0.2);
+  --blue:#1A4A7A;
+}
+body{font-family:'DM Sans',sans-serif;background:var(--ink);color:var(--ink);font-size:14px;min-height:100vh;display:flex;align-items:center;justify-content:center}
+
+.login-box{background:var(--card);border-radius:16px;width:420px;max-width:95vw;padding:40px;box-shadow:0 32px 80px rgba(0,0,0,0.4)}
+.login-logo{text-align:center;margin-bottom:28px}
+.login-logo h1{font-family:'Playfair Display',serif;font-size:26px;font-weight:700;color:var(--ink)}
+.login-logo h1 span{color:var(--red)}
+.login-logo p{font-size:11px;color:var(--ink3);margin-top:4px;letter-spacing:.08em;text-transform:uppercase}
+
+.login-field{margin-bottom:16px}
+.login-field label{display:block;font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--ink3);margin-bottom:6px}
+.login-field input{width:100%;padding:10px 14px;border:0.5px solid var(--border2);border-radius:8px;background:var(--bg2);color:var(--ink);font-size:14px;font-family:'DM Sans',sans-serif;transition:border-color .15s;outline:none}
+.login-field input:focus{border-color:var(--blue)}
+
+.login-err{background:var(--red-lt);border:0.5px solid var(--red-bd);border-radius:7px;padding:9px 14px;font-size:12px;color:var(--red);margin-bottom:14px;display:none}
+.login-err.show{display:block}
+
+.btn-login{width:100%;padding:11px;background:var(--red);color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;margin-top:4px;transition:background .15s;font-family:'DM Sans',sans-serif}
+.btn-login:hover{background:#9a280b}
+.btn-login:disabled{opacity:.6;cursor:not-allowed}
+.login-footer{text-align:center;margin-top:20px;font-size:10px;color:var(--ink4)}
+
+/* Spinner de carga */
+.loading{display:none;text-align:center;padding:40px 0;color:var(--ink3)}
+.loading.show{display:block}
+.spinner{width:32px;height:32px;border:3px solid var(--bg2);border-top-color:var(--red);border-radius:50%;animation:spin .7s linear infinite;margin:0 auto 12px}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+@media(max-width:480px){.login-box{padding:28px 20px}.login-logo h1{font-size:22px}}
+</style>
+</head>
+<body>
+
+<div class="login-box" id="login-box">
+  <div class="login-logo">
+    <h1>Sistema <span>CAC</span></h1>
+    <p>Colegio Alemán de Chillán · Administración</p>
+  </div>
+
+  <div class="login-err" id="login-err"></div>
+
+  <div class="login-field">
+    <label>Correo electrónico</label>
+    <input type="email" id="login-email" placeholder="correo@dschillan.cl"
+           autocomplete="email"
+           onkeydown="if(event.key==='Enter')document.getElementById('login-pass').focus()">
+  </div>
+  <div class="login-field">
+    <label>Contraseña</label>
+    <input type="password" id="login-pass" placeholder="••••••••"
+           autocomplete="current-password"
+           onkeydown="if(event.key==='Enter')doLogin()">
+  </div>
+
+  <button class="btn-login" id="btn-login" onclick="doLogin()">Ingresar</button>
+  <div class="login-footer">Sistema de administración interna · v2.0</div>
+
+  <div class="loading" id="loading">
+    <div class="spinner"></div>
+    <div style="font-size:12px">Verificando acceso...</div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════
+//  SUPABASE CONFIG
+// ═══════════════════════════════════════════════════════
+const SB_URL  = 'https://iwaosynzrbhkwcmhiilx.supabase.co';
+const SB_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml3YW9zeW56cmJoa3djbWhpaWx4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA0MTU4NzUsImV4cCI6MjA5NTk5MTg3NX0.LwOaFc7vObJlR3Muer7uZxCYSphe2EbYjPTkZ6lGrXQ';
+
+// ═══════════════════════════════════════════════════════
+//  LOGIN
+// ═══════════════════════════════════════════════════════
+async function doLogin() {
+  const email = document.getElementById('login-email').value.trim();
+  const pass  = document.getElementById('login-pass').value;
+  const err   = document.getElementById('login-err');
+  const btn   = document.getElementById('btn-login');
+
+  if (!email || !pass) {
+    err.textContent = 'Completa correo y contraseña.';
+    err.classList.add('show');
+    return;
+  }
+
+  btn.disabled = true;
+  btn.textContent = 'Ingresando...';
+  err.classList.remove('show');
+
+  try {
+    const res = await fetch(`${SB_URL}/auth/v1/token?grant_type=password`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'apikey': SB_ANON },
+      body: JSON.stringify({ email, password: pass })
+    });
+    const data = await res.json();
+
+    if (!res.ok) {
+      const msg = data.error_description || data.message || data.error || 'Error de autenticación';
+      throw new Error(msg);
+    }
+
+    // Guardar sesión
+    sessionStorage.setItem('sb_token', data.access_token);
+    sessionStorage.setItem('sb_uid',   data.user.id);
+    sessionStorage.setItem('sb_email', data.user.email);
+
+    // Ir al dashboard
+    window.location.href = 'dashboard.html';
+
+  } catch(e) {
+    err.textContent = e.message;
+    err.classList.add('show');
+    btn.disabled = false;
+    btn.textContent = 'Ingresar';
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+//  Si ya hay sesión activa → ir directo al dashboard
+// ═══════════════════════════════════════════════════════
+document.addEventListener('DOMContentLoaded', async () => {
+  const token = sessionStorage.getItem('sb_token');
+  if (!token) return;
+
+  // Verificar que el token sigue válido
+  document.getElementById('loading').classList.add('show');
+  document.getElementById('btn-login').style.display = 'none';
+
+  try {
+    const res = await fetch(`${SB_URL}/auth/v1/user`, {
+      headers: { 'apikey': SB_ANON, 'Authorization': 'Bearer ' + token }
+    });
+    if (res.ok) {
+      window.location.href = 'dashboard.html';
+    } else {
+      // Token expirado
+      sessionStorage.clear();
+      document.getElementById('loading').classList.remove('show');
+      document.getElementById('btn-login').style.display = '';
+    }
+  } catch(e) {
+    sessionStorage.clear();
+    document.getElementById('loading').classList.remove('show');
+    document.getElementById('btn-login').style.display = '';
+  }
+});
+</script>
+</body>
+</html>
