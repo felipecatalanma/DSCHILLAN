@@ -135,11 +135,30 @@ async function doLogin() {
 // ═══════════════════════════════════════════════════════
 //  Si ya hay sesión activa → ir directo al dashboard
 // ═══════════════════════════════════════════════════════
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
   const token = sessionStorage.getItem('sb_token');
-  // Si hay token redirigir inmediatamente — la verificación real la hace el dashboard
-  if (token) {
-    window.location.replace('dashboard.html');
+  if (!token) return;
+
+  // Verificar que el token sigue válido
+  document.getElementById('loading').classList.add('show');
+  document.getElementById('btn-login').style.display = 'none';
+
+  try {
+    const res = await fetch(`${SB_URL}/auth/v1/user`, {
+      headers: { 'apikey': SB_ANON, 'Authorization': 'Bearer ' + token }
+    });
+    if (res.ok) {
+      window.location.href = 'dashboard.html';
+    } else {
+      // Token expirado
+      sessionStorage.clear();
+      document.getElementById('loading').classList.remove('show');
+      document.getElementById('btn-login').style.display = '';
+    }
+  } catch(e) {
+    sessionStorage.clear();
+    document.getElementById('loading').classList.remove('show');
+    document.getElementById('btn-login').style.display = '';
   }
 });
 </script>
