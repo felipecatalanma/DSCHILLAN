@@ -291,7 +291,7 @@ const SB_URL  = 'https://iwaosynzrbhkwcmhiilx.supabase.co';
 const SB_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml3YW9zeW56cmJoa3djbWhpaWx4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA0MTU4NzUsImV4cCI6MjA5NTk5MTg3NX0.LwOaFc7vObJlR3Muer7uZxCYSphe2EbYjPTkZ6lGrXQ';
 // SERVICE ROLE KEY — solo para operaciones admin (crear usuarios).
 // IMPORTANTE: Felipe debe reemplazar esto con la service_role key real desde Supabase > Settings > API
-const SB_SERVICE = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndxcXptZHpmZHhqYnphemJ1YWVlIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3OTczMDc5OCwiZXhwIjoyMDk1MzA2Nzk4fQ.ODVso1RdXORH2MTDSyDphKq16v1Ic1Mcc5E5PBD7Hlw';
+const SB_SERVICE = 'REEMPLAZAR_CON_SERVICE_ROLE_KEY';
 
 let SB_TOKEN = null;
 let _currentUser = null;
@@ -400,7 +400,7 @@ const MODULES = [
     icon:'💰',
     color:'red',
     href:'recaudaciones.html',
-    roles:['superusuario','recaudaciones'],
+    roles:['superusuario','recaudaciones','admin','directorio'],
     status:'active'
   },
   {
@@ -414,23 +414,23 @@ const MODULES = [
     status:'active'
   },
   {
-    id:'inventario',
-    name:'Inventario',
-    desc:'Control de activos, stock por bodega y registro de consumo para imputación contable.',
-    icon:'📦',
+    id:'repositorio',
+    name:'Repositorio',
+    desc:'Repositorio de documentos institucionales, circulares y archivos del colegio.',
+    icon:'🗂',
     color:'green',
-    href:'inventario.html',
-    roles:['superusuario'],
-    status:'active'
+    href:'#',
+    roles:['superusuario','presupuesto','recaudaciones'],
+    status:'soon'
   },
   {
-    id:'reportes',
-    name:'Reportes',
-    desc:'Informes consolidados para dirección y contabilidad. Exportación a Excel y PDF.',
-    icon:'📋',
+    id:'planificaciones',
+    name:'Planificaciones',
+    desc:'Gestión de planificaciones académicas y curriculares por departamento.',
+    icon:'📅',
     color:'amber',
     href:'#',
-    roles:['superusuario'],
+    roles:['superusuario','presupuesto','recaudaciones'],
     status:'soon'
   }
 ];
@@ -564,7 +564,7 @@ async function guardarUsuario(){
     if(!authRes.ok) throw new Error(authData.message||authData.error||'Error al crear en Auth');
 
     // 2. Insertar en app_usuarios
-    const modulos=rol==='superusuario'?['recaudaciones','presupuesto','inventario']:
+    const modulos=rol==='superusuario'?['recaudaciones','presupuesto']:
                   rol==='presupuesto'?['presupuesto']:
                   rol==='recaudaciones'?['recaudaciones']:[];
     await sbPost('app_usuarios',{id:authData.id,nombre,email,rol,departamento:depto,modulos});
@@ -583,7 +583,7 @@ async function actualizarUsuario(id){
   const rol=document.getElementById('u-rol').value;
   const depto=document.getElementById('u-departamento').value;
   const st=document.getElementById('modal-status');
-  const modulos=rol==='superusuario'?['recaudaciones','presupuesto','inventario']:
+  const modulos=rol==='superusuario'?['recaudaciones','presupuesto']:
                 rol==='presupuesto'?['presupuesto']:
                 rol==='recaudaciones'?['recaudaciones']:[];
   try{
