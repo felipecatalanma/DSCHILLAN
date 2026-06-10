@@ -459,42 +459,13 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--ink);font
           </div>
         </div>
 
-        <!-- Configuración recaudable mensual -->
-        <div class="card" style="margin-bottom:14px;display:flex;align-items:center;gap:10px;flex-wrap:wrap">
-          <div style="font-size:11px;color:var(--ink3)"><strong>Recaudable por mes</strong> (monto $ esperado de colegiatura mensual, todo el colegio):</div>
-          <input type="number" id="cfg-recaudable-mensual" placeholder="Ej: 45000000" style="width:160px;padding:6px 10px;border:0.5px solid var(--border2);border-radius:6px;font-size:12px;background:var(--bg2);color:var(--ink);font-family:'DM Mono',monospace">
-          <button onclick="saveRecaudableMensual()" style="padding:6px 14px;background:var(--ink);color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer">Guardar</button>
-          <span id="recaudable-status" style="font-size:11px;color:var(--green);display:none">✓ Guardado</span>
-          <span style="font-size:10px;color:var(--ink4)">Se usa para calcular el % de morosidad por mes en la matriz.</span>
-        </div>
-
-        <!-- Matriz morosidad: Y=meses de colegiatura, X=cuotas adeudadas, valor=N° sostenedores -->
+        <!-- Matriz morosidad: Y=meses, X=cuotas, valor=sostenedores -->
         <div class="card" style="margin-bottom:14px;overflow-x:auto">
           <div class="card-title">Matriz de morosidad
-            <span style="font-weight:400;color:var(--ink4);font-size:9px">· Eje Y: mes de colegiatura · Eje X: cuotas adeudadas por mes · Valor: N° de cuotas adeudadas · Clic en una celda o total para ver el desglose</span>
+            <span style="font-weight:400;color:var(--ink4);font-size:9px">· Eje Y: mes de colegiatura · Eje X: cuotas adeudadas · Valor: N° sostenedores</span>
           </div>
           <div id="matriz-container">
             <div style="text-align:center;padding:16px;color:var(--ink4);font-size:12px">Carga un archivo para ver la matriz</div>
-          </div>
-        </div>
-
-        <!-- Gráficos: Forma de pago y Cuotas por mes, uno al lado del otro -->
-        <div class="g2">
-          <div class="card">
-            <div class="card-title">Forma de pago <span style="font-weight:400;color:var(--ink4);font-size:9px">· Clic en barra para ver detalle</span></div>
-            <div class="chart-wrap h200"><canvas id="chart-fp" style="cursor:pointer"></canvas></div>
-          </div>
-          <div class="card">
-            <div class="card-title" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px">
-              <span>Cuotas por mes de colegiatura <span style="font-weight:400;color:var(--ink4);font-size:9px">· Clic en sector para ver detalle</span></span>
-              <div style="display:flex;background:var(--bg3);border-radius:6px;padding:2px;gap:2px">
-                <button id="btn-meses-cuotas" onclick="setMesesView('cuotas')"
-                  style="padding:3px 10px;border-radius:4px;border:none;font-size:10px;font-weight:600;cursor:pointer;background:var(--ink);color:#fff">Cuotas</button>
-                <button id="btn-meses-pesos" onclick="setMesesView('pesos')"
-                  style="padding:3px 10px;border-radius:4px;border:none;font-size:10px;font-weight:600;cursor:pointer;background:transparent;color:var(--ink3)">$</button>
-              </div>
-            </div>
-            <div class="chart-wrap h200"><canvas id="chart-meses" style="cursor:pointer"></canvas></div>
           </div>
         </div>
 
@@ -517,7 +488,6 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--ink);font
                   <th onclick="sortSost('nombre_sostenedor')">Sostenedor &#8597;</th>
                   <th class="r" onclick="sortSost('saldo_total')">Saldo &#8597;</th>
                   <th class="r" onclick="sortSost('n_cuotas')">Cuotas &#8597;</th>
-                  <th class="r" title="Meses de colegiatura adeudados (marzo-diciembre)">Meses</th>
                   <th class="r hide-mobile" onclick="sortSost('n_alumnos')">Alumnos &#8597;</th>
                   <th class="hide-mobile">F.Pago</th>
                   <th class="hide-mobile" onclick="sortSost('ultimo_pago')">Últ.pago &#8597;</th>
@@ -541,9 +511,17 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--ink);font
             </div>
           </div>
 
-          <!-- Panel derecho: paneles de detalle -->
+          <!-- Panel derecho: gráficos + detalle sostenedor -->
           <div class="lay-charts">
-            <!-- Panel drill-down para forma de pago, mes colegiatura y matriz de morosidad -->
+            <div class="card">
+              <div class="card-title">Forma de pago <span style="font-weight:400;color:var(--ink4);font-size:9px">· Clic en barra para ver detalle</span></div>
+              <div class="chart-wrap h200"><canvas id="chart-fp" style="cursor:pointer"></canvas></div>
+            </div>
+            <div class="card">
+              <div class="card-title">Cuotas por mes de colegiatura <span style="font-weight:400;color:var(--ink4);font-size:9px">· Clic en sector para ver detalle</span></div>
+              <div class="chart-wrap h200"><canvas id="chart-meses" style="cursor:pointer"></canvas></div>
+            </div>
+            <!-- Panel drill-down para forma de pago y mes colegiatura -->
             <div class="detail-panel" id="chart-drill-panel">
               <div class="detail-header">
                 <div>
@@ -789,18 +767,6 @@ Deutsche Schule Chillán / Colegio Alemán de Chillán</textarea>
   </div>
 </div><!-- /app-wrap -->
 
-<!-- MODAL: DESGLOSE MATRIZ DE MOROSIDAD -->
-<div class="modal-overlay" id="modal-matriz">
-  <div class="modal-box" style="width:680px">
-    <div class="modal-title" id="matriz-modal-title">Desglose</div>
-    <div class="modal-sub" id="matriz-modal-sub">—</div>
-    <div id="matriz-modal-body" style="max-height:420px;overflow-y:auto"></div>
-    <div class="modal-actions">
-      <button class="btn-cancel" onclick="closeModal('modal-matriz')">Cerrar</button>
-    </div>
-  </div>
-</div>
-
 <script>
 // ═══════════════════════════════════════════════════════════
 //  CONFIG SUPABASE
@@ -902,38 +868,6 @@ function fmtCurrencyFull(clp, uf){
   return '$'+fmt(clp);
 }
 const MES_CUOTA={3:1,4:2,5:3,6:4,7:5,8:6,9:7,10:8,11:9,12:10};
-const PERIODO_LECTIVO=[3,4,5,6,7,8,9,10,11,12]; // marzo a diciembre
-
-// ─── MESES ADEUDADOS (acotado al periodo lectivo marzo-diciembre) ───
-// Para una fila del CSV: f.mes = mes "base" de la cuota, f.cantidad = cuántas
-// mensualidades acumuladas representa esa fila (1 = solo ese mes, 2 = ese
-// mes + el anterior, etc). Expandimos retrocediendo desde f.mes pero SOLO
-// dentro del periodo lectivo (marzo-diciembre); no envolvemos a meses fuera
-// de ese rango (enero/febrero/años distintos).
-function expandirMesesFila(f){
-  const meses=[];
-  let m=f.mes;
-  for(let i=0;i<(f.cantidad||1);i++){
-    if(PERIODO_LECTIVO.includes(m)) meses.push(m);
-    m=m-1;
-    if(m<3) break; // no retroceder antes de marzo
-  }
-  return meses.sort((a,b)=>a-b);
-}
-// Conjunto de meses únicos (1-12) que adeuda un alumno
-function mesesAdeudadosAlumno(alumno){
-  const set=new Set();
-  (alumno.filas||[]).forEach(f=>expandirMesesFila(f).forEach(m=>set.add(m)));
-  return [...set].sort((a,b)=>a-b);
-}
-// Conjunto de meses únicos que adeuda un sostenedor (unión de todos sus alumnos)
-function mesesAdeudadosSostenedor(rutSostenedor){
-  const alus=(_currentSnap?.alu||[]).filter(a=>a.rut_sostenedor===rutSostenedor);
-  const set=new Set();
-  alus.forEach(a=>mesesAdeudadosAlumno(a).forEach(m=>set.add(m)));
-  return [...set].sort((a,b)=>a-b);
-}
-
 
 let _importFile=null,_allDates=[],_calYear=new Date().getFullYear(),_calMonth=new Date().getMonth();
 let _selectedDate=null,_snapCache={},_moraDiaria=[],_logImport=[];
@@ -955,33 +889,13 @@ document.addEventListener('DOMContentLoaded',async()=>{
 async function bootDashboard(){
   showStatus('Conectando con Supabase...','info');
   try{
-    await Promise.all([loadMoraDiaria(),loadLogImportaciones(),loadCfgFromSupabase(),loadUFOficial()]);
+    await Promise.all([loadMoraDiaria(),loadLogImportaciones(),loadCfgFromSupabase()]);
     if(_moraDiaria.length>0){
       await loadSnapshot(_moraDiaria[_moraDiaria.length-1].fecha_dato);
       hideStatus();
     } else { hideStatus(); renderEmpty(); }
     renderEvolucion(); renderCalendar(); renderLogList();
   }catch(e){ showStatus('Error de conexión: '+e.message,'error'); renderEmpty(); }
-}
-
-// ─── UF OFICIAL DEL DÍA (mindicador.cl, fuente: Banco Central de Chile) ───
-window._ufDiaOficial = 0; // valor real publicado por el Banco Central
-async function loadUFOficial(){
-  try{
-    const res=await fetch('https://mindicador.cl/api/uf');
-    if(!res.ok) return;
-    const data=await res.json();
-    const valor=data?.serie?.[0]?.valor;
-    const fechaUF=data?.serie?.[0]?.fecha;
-    if(valor>0){
-      window._ufDiaOficial=valor;
-      window._ufDia=valor; // usar siempre la UF oficial como valor de conversión
-      const ev=document.getElementById('uf-dia-val');
-      if(ev) ev.textContent='$'+fmt(valor)+(fechaUF?' ('+fmtDate(fechaUF.split('T')[0])+')':'');
-    }
-  }catch(e){
-    // Si falla, se mantiene el valor derivado del CSV (fallback) o 0
-  }
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -1056,11 +970,11 @@ function renderDashboard(snap,fechaDato){
 
   const log=_logImport.find(r=>r.fecha_dato===fechaDato);
 
-  // UF total del día (from snapshot raw) — solo como fallback si no tenemos UF oficial
+  // UF total del día (from snapshot raw)
   const moraUFTotal = raw.reduce((s,r)=>s+(r.pendiente_uf||0),0);
-  if(!window._ufDiaOficial && moraUFTotal>0 && raw.length>0){
+  if(moraUFTotal>0 && raw.length>0){
     window._ufDia = Math.round((moraTotal/moraUFTotal)*100)/100;
-    const ev=document.getElementById('uf-dia-val');if(ev)ev.textContent='$'+fmt(window._ufDia)+' (estimado)';
+    const ev=document.getElementById('uf-dia-val');if(ev)ev.textContent='$'+fmt(window._ufDia);
   }
   const moraMostrar = _moneda==='UF' && moraUFTotal>0 ? fmtUF(moraUFTotal) : '$'+fmtM(moraTotal);
   const subMora = _moneda==='UF' ? 'UF · '+fmtDate(fechaDato) : 'CLP · '+fmtDate(fechaDato);
@@ -1133,18 +1047,16 @@ function renderSostPage(){
   const tds='padding:7px 8px;border-bottom:0.5px solid var(--border);vertical-align:middle';
   tbody.innerHTML=pageRows.map(r=>{
     const isSelected=_selectedSost&&_selectedSost.rut_sostenedor===r.rut_sostenedor;
-    const nMeses=mesesAdeudadosSostenedor(r.rut_sostenedor).length;
     return`<tr class="clickable${isSelected?' selected':''}" onclick="selectSostenedor('${r.rut_sostenedor}')">
       <td style="${tds};font-weight:500;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.nombre_sostenedor}</td>
       <td style="${tds};font-family:'DM Mono',monospace;text-align:right;color:var(--red)">${_moneda==='UF'&&r.n_cuotas>0?(r.saldo_uf>0?fmtUF(r.saldo_uf):(_ufDia>0?fmtUF(r.saldo_total/window._ufDia):'$'+fmtM(r.saldo_total))):'$'+fmtM(r.saldo_total)}</td>
       <td style="${tds};text-align:right"><span class="badge ${r.n_cuotas>=6?'red':r.n_cuotas>=3?'amber':'blue'}">${r.n_cuotas}</span></td>
-      <td style="${tds};text-align:right"><span class="badge ${nMeses>=6?'red':nMeses>=3?'amber':'blue'}" title="${mesesAdeudadosSostenedor(r.rut_sostenedor).map(m=>MESES[m]).join(', ')}">${nMeses}</span></td>
       <td style="${tds};text-align:right" class="hide-mobile">${r.n_alumnos}</td>
       <td style="${tds}" class="hide-mobile"><span class="badge gray">${r.forma_pago_soste||'—'}</span></td>
       <td style="${tds};font-family:'DM Mono',monospace;font-size:11px" class="hide-mobile">${r.ultimo_pago?fmtDate(r.ultimo_pago):'—'}</td>
     </tr>`;
   }).join('');
-  if(!pageRows.length) tbody.innerHTML=`<tr><td colspan="7" style="text-align:center;padding:20px;color:var(--ink3)">Sin resultados</td></tr>`;
+  if(!pageRows.length) tbody.innerHTML=`<tr><td colspan="6" style="text-align:center;padding:20px;color:var(--ink3)">Sin resultados</td></tr>`;
 
   // Paginación
   const pi=document.getElementById('sost-pag-info');if(pi&&_sostFiltered.length)pi.textContent=`${start+1}–${end} de ${_sostFiltered.length}`;
@@ -1176,13 +1088,11 @@ function openDetailPanel(sost){
   // Totales reales del sostenedor (suma de sus alumnos)
   const totalSaldo  = alus.reduce((s,a)=>s+(a.saldo_total||0),0);
   const totalCuotas = alus.reduce((s,a)=>s+(a.n_cuotas||0),0);
-  const mesesSost   = mesesAdeudadosSostenedor(sost.rut_sostenedor);
 
   document.getElementById('detail-sost-name').textContent=sost.nombre_sostenedor||'—';
   document.getElementById('detail-sost-sub').textContent=
     '$'+fmt(totalSaldo)+
     ' · '+totalCuotas+' cuota'+(totalCuotas!==1?'s':'')+
-    ' · '+mesesSost.length+' mes'+(mesesSost.length!==1?'es':'')+' adeudado'+(mesesSost.length!==1?'s':'')+' ('+mesesSost.map(m=>MESES[m]).join(', ')+')'+
     ' · '+alus.length+' alumno'+(alus.length!==1?'s':'')+
     (sost.email_sostenedor?' · '+sost.email_sostenedor:'');
 
@@ -1200,7 +1110,17 @@ function openDetailPanel(sost){
       </tr></thead>
       <tbody>
         ${alus.map(a=>{
-          const mesesTexto = mesesAdeudadosAlumno(a).map(m=>MESES[m]).join(', ');
+          // Construir texto de meses expandido según cantidad de cuotas por fila
+          const mesesTexto = a.filas.map(f=>{
+            if(f.cantidad<=1) return MESES[f.mes]||f.mes;
+            // Si debe X cuotas, mostrar desde el mes base hacia atrás
+            const names=[];
+            for(let i=0;i<f.cantidad;i++){
+              const m=((f.mes-1-i+12)%12)+1;
+              names.push(MESES[m]||m);
+            }
+            return names.reverse().join(', ');
+          }).join(' / ');
           return `<tr>
             <td style="${tds};font-weight:500">${a.nombre_alumno}</td>
             <td style="${tds}"><span class="badge blue">${a.nc_curso||'—'}</span></td>
@@ -1364,30 +1284,14 @@ function renderChartFP(raw){
   });
 }
 
-let _mesesView='cuotas'; // 'cuotas' o 'pesos'
-let _lastRawForMeses=null;
-
-function setMesesView(v){
-  _mesesView=v;
-  const bC=document.getElementById('btn-meses-cuotas'), bP=document.getElementById('btn-meses-pesos');
-  if(bC){bC.style.background=v==='cuotas'?'var(--ink)':'transparent';bC.style.color=v==='cuotas'?'#fff':'var(--ink3)';}
-  if(bP){bP.style.background=v==='pesos'?'var(--ink)':'transparent';bP.style.color=v==='pesos'?'#fff':'var(--ink3)';}
-  if(_lastRawForMeses) renderChartMeses(_lastRawForMeses);
-}
-
 function renderChartMeses(raw){
   dc('meses');
-  _lastRawForMeses=raw;
   // Filtrar solo meses válidos (marzo=3 a diciembre=12)
-  const map={}, rawFiltrado=raw.filter(r=>PERIODO_LECTIVO.includes(r.mes_colegiatura));
-  rawFiltrado.forEach(r=>{
-    const k=MESES[r.mes_colegiatura]||'?';
-    if(_mesesView==='pesos') map[k]=(map[k]||0)+(r.valor_pendiente||0);
-    else map[k]=(map[k]||0)+(r.cantidad_cuotas||1);
-  });
+  const MESES_VALIDOS=[3,4,5,6,7,8,9,10,11,12];
+  const map={}, rawFiltrado=raw.filter(r=>MESES_VALIDOS.includes(r.mes_colegiatura));
+  rawFiltrado.forEach(r=>{const k=MESES[r.mes_colegiatura]||'?';map[k]=(map[k]||0)+(r.cantidad_cuotas||1);});
   const labels=Object.keys(map);
   const ctx=document.getElementById('chart-meses')?.getContext('2d');if(!ctx)return;
-  const unidad=_mesesView==='pesos'?'$':'cuotas';
   _charts['meses']=new Chart(ctx,{
     type:'doughnut',
     data:{labels,datasets:[{data:labels.map(k=>map[k]),backgroundColor:['#B5320E','#C07D20','#1A4A7A','#2A6040','#7A3580'],borderWidth:0,hoverOffset:6}]},
@@ -1395,14 +1299,15 @@ function renderChartMeses(raw){
       responsive:true,maintainAspectRatio:false,cutout:'60%',
       plugins:{
         legend:{position:'bottom',labels:{font:{size:10}}},
-        tooltip:{callbacks:{label:c=>_mesesView==='pesos'?` $${fmtM(c.parsed)}`:` ${c.parsed} cuotas`}}
+        tooltip:{callbacks:{label:c=>` ${c.parsed} cuotas`}}
       },
       onClick:(evt,elements)=>{
         if(!elements.length) return;
         const mesNombre=labels[elements[0].index];
+        const mesNum=MESES.indexOf(mesNombre); // 1-based index
         // Buscar sostenedores con deuda en ese mes
         const rawMes=(_currentSnap?.raw||[]).filter(r=>
-          PERIODO_LECTIVO.includes(r.mes_colegiatura) && MESES[r.mes_colegiatura]===mesNombre
+          MESES_VALIDOS.includes(r.mes_colegiatura) && MESES[r.mes_colegiatura]===mesNombre
         );
         // Agrupar por sostenedor
         const sostMap={};
@@ -1717,7 +1622,7 @@ async function doImport(rows,fd,usr){
   const nAlu=new Set(snapRows.map(r=>r.rut_alumno)).size;
   const moraUF=snapRows.reduce((s,r)=>s+(r.pendiente_uf||0),0);
   const ufDia = moraUF > 0 ? Math.round((mora/moraUF)*100)/100 : 0;
-  if(!window._ufDiaOficial && ufDia>0){ window._ufDia=ufDia; const el=document.getElementById('uf-dia-val'); if(el) el.textContent='$'+fmt(ufDia)+' (estimado)'; }
+  if(ufDia>0){ window._ufDia=ufDia; const el=document.getElementById('uf-dia-val'); if(el) el.textContent='$'+fmt(ufDia); }
   const log={fecha_dato:fd,importado_por:usr,n_filas_csv:rows.length,n_alumnos:nAlu,n_sostenedores:nSost,mora_total_clp:mora,fecha_importacion:new Date().toISOString()};
   await fetch(`${SB_URL}/rest/v1/log_importaciones`,{method:'POST',headers:{...sbH(),'Prefer':'resolution=merge-duplicates,return=minimal'},body:JSON.stringify(log)});
 }
@@ -1844,7 +1749,11 @@ function buildMensaje(sost, plantilla){
   const alus=(_currentSnap?.alu||[]).filter(a=>a.rut_sostenedor===sost.rut_sostenedor);
   // Por alumno: nombre (curso) - meses adeudados: Marzo, Abril...
   const alumDetalle=alus.map(a=>{
-    const mesesStr=mesesAdeudadosAlumno(a).map(m=>MESES[m]).join(', ');
+    const mesesStr=a.filas.map(f=>{
+      const names=[];
+      for(let i=0;i<f.cantidad;i++){const m=((f.mes-1-i+12)%12)+1;names.push(MESES[m]||m);}
+      return names.reverse().join(', ');
+    }).join(', ');
     const ufAlu = a.saldo_uf > 0 ? a.saldo_uf.toFixed(4) : (window._ufDia>0?(a.saldo_total/window._ufDia).toFixed(4):'—');
     const clpAlu = fmt(a.saldo_total);
     return `  • ${a.nombre_alumno} (${a.nc_curso||'—'}): ${ufAlu} UF ($${clpAlu} CLP)
@@ -2009,34 +1918,15 @@ const CFG_EMAIL_DEFAULTS = {from:'',clientId:'',clientSecret:'',tenantId:''};
 async function loadCfgFromSupabase(){
   try{
     const rows=await sbGet('configuracion',
-      '?clave=in.(email_from,email_client_id,email_client_secret,email_tenant_id,recaudable_mensual)');
+      '?clave=in.(email_from,email_client_id,email_client_secret,email_tenant_id)');
     const map={};(rows||[]).forEach(r=>{map[r.clave]=r.valor;});
     if(map.email_from)          CFG_EMAIL_DEFAULTS.from         =map.email_from;
     if(map.email_client_id)     CFG_EMAIL_DEFAULTS.clientId     =map.email_client_id;
     if(map.email_client_secret) CFG_EMAIL_DEFAULTS.clientSecret =map.email_client_secret;
     if(map.email_tenant_id)     CFG_EMAIL_DEFAULTS.tenantId     =map.email_tenant_id;
-    if(map.recaudable_mensual)  window._recaudableMensual = parseFloat(map.recaudable_mensual)||0;
-    const ri=document.getElementById('cfg-recaudable-mensual'); if(ri && window._recaudableMensual) ri.value=window._recaudableMensual;
     // Poblar formulario si está abierto
     loadCfgEmail();
   }catch(e){}
-}
-
-window._recaudableMensual = 0; // monto $ recaudable por mes (colegiatura mensual total esperada)
-
-async function saveRecaudableMensual(){
-  const input=document.getElementById('cfg-recaudable-mensual');
-  const val=parseFloat(input?.value)||0;
-  window._recaudableMensual=val;
-  try{
-    await fetch(`${SB_URL}/rest/v1/configuracion`,{method:'POST',
-      headers:{...sbH(),'Prefer':'resolution=merge-duplicates,return=minimal'},
-      body:JSON.stringify({clave:'recaudable_mensual',valor:String(val),descripcion:'Monto $ recaudable por mes de colegiatura (todo el colegio)'})});
-  }catch(e){}
-  const s=document.getElementById('recaudable-status');
-  if(s){s.style.display='inline';setTimeout(()=>s.style.display='none',3000);}
-  // Re-render matriz con el nuevo valor
-  if(_currentSnap?.raw) renderMatriz(_currentSnap.raw);
 }
 
 function saveCfgEmail(){
@@ -2075,8 +1965,7 @@ function loadCfgEmail(){
 
 
 // ─── MATRIZ MOROSIDAD ────────────────────────────────────────────
-// Y = mes de colegiatura, X = cuotas adeudadas (por alumno/fila), valor = N° de cuotas adeudadas
-// Además: columna "Recaudable" (config) y "% Morosidad" = monto adeudado del mes / recaudable
+// Y = mes de colegiatura, X = cuotas adeudadas, valor = N° sostenedores
 function renderMatriz(raw){
   const el=document.getElementById('matriz-container');
   if(!el) return;
@@ -2084,32 +1973,37 @@ function renderMatriz(raw){
     el.innerHTML='<div style="text-align:center;padding:16px;color:var(--ink4);font-size:12px">Sin datos disponibles</div>';
     return;
   }
-  const rawV=raw.filter(r=>PERIODO_LECTIVO.includes(r.mes_colegiatura));
+  const MESES_VALIDOS=[3,4,5,6,7,8,9,10,11,12];
+  const rawV=raw.filter(r=>MESES_VALIDOS.includes(r.mes_colegiatura));
   if(!rawV.length){
     el.innerHTML='<div style="text-align:center;padding:16px;color:var(--ink4);font-size:12px">Sin datos de meses de colegiatura válidos</div>';
     return;
   }
+  // Agrupar por sostenedor: {mes → cuotas}
+  const sostMap={};
+  rawV.forEach(r=>{
+    if(!sostMap[r.rut_sostenedor]) sostMap[r.rut_sostenedor]={};
+    const m=r.mes_colegiatura;
+    sostMap[r.rut_sostenedor][m]=(sostMap[r.rut_sostenedor][m]||0)+(r.cantidad_cuotas||1);
+  });
   // Ejes
   const meses=[...new Set(rawV.map(r=>r.mes_colegiatura))].sort((a,b)=>a-b);
-  const cuotasMax=Math.max(...rawV.map(r=>r.cantidad_cuotas||1),1);
+  const cuotasMax=Math.max(...Object.values(sostMap).flatMap(m=>Object.values(m)),1);
   const cuotas=Array.from({length:cuotasMax},(_,i)=>i+1);
-  // Construir matriz: matrix[mes][cuotas] = suma de cantidad_cuotas de filas con ese mes y ese n° de cuotas
+  // Construir matriz
   const matrix={};
   meses.forEach(m=>{ matrix[m]={}; cuotas.forEach(c=>{matrix[m][c]=0;}); });
-  rawV.forEach(r=>{
-    const m=r.mes_colegiatura, c=r.cantidad_cuotas||1;
-    if(matrix[m]) matrix[m][c]=(matrix[m][c]||0)+c;
+  Object.values(sostMap).forEach(mesMap=>{
+    Object.entries(mesMap).forEach(([m,cant])=>{
+      const mi=parseInt(m);
+      if(matrix[mi]) matrix[mi][cant]=(matrix[mi][cant]||0)+1;
+    });
   });
-  // Totales por mes (cuotas) y monto adeudado por mes ($)
-  const totMes={}, montoMes={};
-  meses.forEach(m=>{
-    totMes[m]=cuotas.reduce((s,c)=>s+(matrix[m][c]||0),0);
-    montoMes[m]=rawV.filter(r=>r.mes_colegiatura===m).reduce((s,r)=>s+(r.valor_pendiente||0),0);
-  });
-  const totCuota={};
+  // Totales
+  const totMes={}, totCuota={};
+  meses.forEach(m=>{ totMes[m]=cuotas.reduce((s,c)=>s+(matrix[m][c]||0),0); });
   cuotas.forEach(c=>{ totCuota[c]=meses.reduce((s,m)=>s+(matrix[m][c]||0),0); });
   const total=Object.values(totCuota).reduce((s,v)=>s+v,0);
-  const montoTotal=Object.values(montoMes).reduce((s,v)=>s+v,0);
   // Color intensidad
   const maxV=Math.max(...meses.flatMap(m=>cuotas.map(c=>matrix[m][c]||0)),1);
   const cellStyle=(v)=>{
@@ -2120,115 +2014,32 @@ function renderMatriz(raw){
     if(p>=0.15)return 'background:var(--amber-lt);color:var(--amber)';
     return 'background:var(--blue-lt);color:var(--blue)';
   };
-  const recaudable=window._recaudableMensual||0;
   const th='padding:7px 10px;font-size:9px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--ink3);border-bottom:1px solid var(--border2);text-align:center;background:var(--card2);white-space:nowrap';
   const tl='padding:7px 12px;font-size:12px;font-weight:500;border-bottom:0.5px solid var(--border);text-align:left;background:var(--card2);white-space:nowrap';
-  const td='padding:7px 10px;font-size:13px;font-weight:700;text-align:center;border-bottom:0.5px solid var(--border);font-family:\'DM Mono\',monospace;min-width:52px;cursor:pointer';
-  const tt='padding:7px 10px;font-size:12px;font-weight:700;text-align:center;border-bottom:0.5px solid var(--border);font-family:\'DM Mono\',monospace;background:var(--card2);cursor:pointer';
-  const tdMonto='padding:7px 10px;font-size:11px;font-weight:600;text-align:right;border-bottom:0.5px solid var(--border);font-family:\'DM Mono\',monospace;color:var(--red)';
-  const tdPct='padding:7px 10px;font-size:12px;font-weight:700;text-align:center;border-bottom:0.5px solid var(--border);font-family:\'DM Mono\',monospace';
+  const td='padding:7px 10px;font-size:13px;font-weight:700;text-align:center;border-bottom:0.5px solid var(--border);font-family:\'DM Mono\',monospace;min-width:52px';
+  const tt='padding:7px 10px;font-size:12px;font-weight:700;text-align:center;border-bottom:0.5px solid var(--border);font-family:\'DM Mono\',monospace;background:var(--card2)';
   el.innerHTML=`<table style="width:100%;border-collapse:collapse">
     <thead><tr>
-      <th style="${th};text-align:left">Mes \\ Cuotas</th>
+      <th style="${th};text-align:left">Mes \ Cuotas</th>
       ${cuotas.map(c=>`<th style="${th}">${c} cuota${c>1?'s':''}</th>`).join('')}
-      <th style="${th};color:var(--ink)">Total cuotas</th>
-      <th style="${th};color:var(--red)">Monto adeudado</th>
-      ${recaudable>0?`<th style="${th};color:var(--blue)">% Morosidad</th>`:''}
+      <th style="${th};color:var(--ink)">Total</th>
     </tr></thead>
     <tbody>
-      ${meses.map(m=>{
-        const pct=recaudable>0?((montoMes[m]/recaudable)*100):null;
-        return `<tr>
+      ${meses.map(m=>`<tr>
         <td style="${tl}"><strong>${MESES[m]}</strong></td>
-        ${cuotas.map(c=>{const v=matrix[m][c]||0;return`<td style="${td};${cellStyle(v)}" title="Clic para ver desglose · ${v} cuotas de ${MESES[m]} en filas con ${c} cuota${c>1?'s':''}" onclick="abrirDesgloseMatriz(${m},${c})">${v||'—'}</td>`;}).join('')}
-        <td style="${tt}" onclick="abrirDesgloseMatriz(${m},null)" title="Clic para ver desglose completo de ${MESES[m]}">${totMes[m]}</td>
-        <td style="${tdMonto}">$${fmtM(montoMes[m])}</td>
-        ${recaudable>0?`<td style="${tdPct};${pct>=15?'color:var(--red)':pct>=7?'color:var(--amber)':'color:var(--green)'}">${pct.toFixed(1)}%</td>`:''}
-      </tr>`;}).join('')}
+        ${cuotas.map(c=>{const v=matrix[m][c]||0;return`<td style="${td};${cellStyle(v)}" title="${v} sost. deben ${c} cuota${c>1?'s':''} de ${MESES[m]}">${v||'—'}</td>`;}).join('')}
+        <td style="${tt}">${totMes[m]}</td>
+      </tr>`).join('')}
     </tbody>
     <tfoot><tr style="border-top:1.5px solid var(--border2)">
-      <td style="${tl};font-weight:700">Total</td>
-      ${cuotas.map(c=>`<td style="${tt}" onclick="abrirDesgloseMatriz(null,${c})" title="Clic para ver desglose de filas con ${c} cuota${c>1?'s':''}">${totCuota[c]||0}</td>`).join('')}
-      <td style="${tt};background:var(--ink);color:#F5F2EC" onclick="abrirDesgloseMatriz(null,null)" title="Clic para ver desglose completo">${total}</td>
-      <td style="${tdMonto};font-weight:700">$${fmtM(montoTotal)}</td>
-      ${recaudable>0?`<td style="${tdPct};font-weight:700">${((montoTotal/(recaudable*meses.length))*100).toFixed(1)}%</td>`:''}
+      <td style="${tl};font-weight:700">Total por cuotas</td>
+      ${cuotas.map(c=>`<td style="${tt}">${totCuota[c]||0}</td>`).join('')}
+      <td style="${tt};background:var(--ink);color:#F5F2EC">${total}</td>
     </tr></tfoot>
   </table>`;
 }
 
-// ─── DESGLOSE MATRIZ (modal) ──────────────────────────────────────
-// mes=null → todos los meses; cuotas=null → todas las cantidades de cuotas
-function abrirDesgloseMatriz(mes,cuotas){
-  const raw=(_currentSnap?.raw||[]).filter(r=>{
-    const okMes=mes==null||r.mes_colegiatura===mes;
-    const okCuotas=cuotas==null||(r.cantidad_cuotas||1)===cuotas;
-    return PERIODO_LECTIVO.includes(r.mes_colegiatura)&&okMes&&okCuotas;
-  });
-  // Agrupar por sostenedor → alumnos
-  const sostMap={};
-  raw.forEach(r=>{
-    if(!sostMap[r.rut_sostenedor]) sostMap[r.rut_sostenedor]={
-      rut:r.rut_sostenedor,nombre:r.nombre_sostenedor,
-      email:r.email_sostenedor,movil:r.movil_sostenedor,
-      saldo:0,cuotas:0,alumnos:{}
-    };
-    const s=sostMap[r.rut_sostenedor];
-    s.saldo+=r.valor_pendiente||0;
-    s.cuotas+=r.cantidad_cuotas||1;
-    if(!s.alumnos[r.rut_alumno]) s.alumnos[r.rut_alumno]={nombre:r.nombre_alumno,curso:r.nc_curso,cuotas:0,saldo:0,meses:new Set()};
-    s.alumnos[r.rut_alumno].cuotas+=r.cantidad_cuotas||1;
-    s.alumnos[r.rut_alumno].saldo+=r.valor_pendiente||0;
-    s.alumnos[r.rut_alumno].meses.add(r.mes_colegiatura);
-  });
-  const sosts=Object.values(sostMap).sort((a,b)=>b.saldo-a.saldo);
-
-  const tituloMes = mes!=null ? MESES[mes] : 'Todos los meses';
-  const tituloCuotas = cuotas!=null ? `${cuotas} cuota${cuotas>1?'s':''}` : 'todas las cuotas';
-  document.getElementById('matriz-modal-title').textContent=`${tituloMes} · ${tituloCuotas}`;
-  document.getElementById('matriz-modal-sub').textContent=
-    `${sosts.length} sostenedor${sosts.length!==1?'es':''} · ${raw.reduce((s,r)=>s+(r.cantidad_cuotas||1),0)} cuotas · $${fmt(raw.reduce((s,r)=>s+(r.valor_pendiente||0),0))} adeudados`;
-
-  const tds='padding:6px 8px;border-bottom:0.5px solid var(--border);font-size:11px';
-  const body=sosts.length?`<div style="overflow-x:auto">
-    <table style="width:100%;border-collapse:collapse">
-      <thead><tr style="background:var(--card2)">
-        <th style="${tds};font-size:9px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--ink3)">Sostenedor / Alumno</th>
-        <th style="${tds};font-size:9px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--ink3)">Curso</th>
-        <th style="${tds};font-size:9px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--ink3);text-align:center">Cuotas</th>
-        <th style="${tds};font-size:9px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--ink3);text-align:right">Saldo</th>
-      </tr></thead>
-      <tbody>
-        ${sosts.map(s=>`
-          <tr style="background:var(--card2)">
-            <td style="${tds};font-weight:600" colspan="2">${s.nombre}</td>
-            <td style="${tds};text-align:center;font-weight:600"><span class="badge ${s.cuotas>=6?'red':s.cuotas>=3?'amber':'blue'}">${s.cuotas}</span></td>
-            <td style="${tds};text-align:right;font-weight:600;font-family:'DM Mono',monospace;color:var(--red)">$${fmt(s.saldo)}</td>
-          </tr>
-          ${Object.values(s.alumnos).map(a=>`
-            <tr>
-              <td style="${tds};padding-left:20px;color:var(--ink2)">${a.nombre}</td>
-              <td style="${tds}"><span class="badge blue">${a.curso||'—'}</span></td>
-              <td style="${tds};text-align:center">${a.cuotas}</td>
-              <td style="${tds};text-align:right;font-family:'DM Mono',monospace">$${fmt(a.saldo)}</td>
-            </tr>
-          `).join('')}
-        `).join('')}
-      </tbody>
-    </table>
-  </div>`:'<div style="text-align:center;padding:14px;color:var(--ink3);font-size:12px">Sin datos para este cruce</div>';
-
-  document.getElementById('matriz-modal-body').innerHTML=body;
-  openModal('modal-matriz');
-}
-
 // ─── UTILS ──────────────────────────────────────────────────────
-function openModal(id){const el=document.getElementById(id);if(el)el.classList.add('open');}
-function closeModal(id){const el=document.getElementById(id);if(el)el.classList.remove('open');}
-document.addEventListener('DOMContentLoaded',()=>{
-  document.querySelectorAll('.modal-overlay').forEach(el=>el.addEventListener('click',e=>{
-    if(e.target===el) el.classList.remove('open');
-  }));
-});
 function fmt(n){return Math.round(n||0).toLocaleString('es-CL');}
 function fmtM(n){n=Math.abs(n||0);if(n>=1000000)return(n/1000000).toFixed(1)+'M';if(n>=1000)return(n/1000).toFixed(0)+'K';return fmt(n);}
 function fmtDate(s){if(!s)return'—';const d=new Date(s+'T12:00:00');return d.toLocaleDateString('es-CL',{day:'2-digit',month:'2-digit',year:'numeric'});}
