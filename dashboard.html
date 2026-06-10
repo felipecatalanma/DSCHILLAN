@@ -1,0 +1,638 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Panel Principal · Sistema CAC</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#F4F1EB;--bg2:#EDEAE0;--bg3:#E4E0D3;
+  --card:#FDFCF8;--card2:#F7F5EE;
+  --ink:#1C1A14;--ink2:#4A4740;--ink3:#7A7670;--ink4:#A8A49E;
+  --border:rgba(28,26,20,0.09);--border2:rgba(28,26,20,0.16);
+  --red:#B5320E;--red-lt:#FBF0EC;--red-bd:rgba(181,50,14,0.2);
+  --green:#2A6040;--green-lt:#ECF5EF;--green-bd:rgba(42,96,64,0.2);
+  --blue:#1A4A7A;--blue-lt:#EBF2FB;--blue-bd:rgba(26,74,122,0.2);
+  --amber:#9A5C08;--amber-lt:#FDF5E6;
+}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--ink);font-size:14px;line-height:1.5;min-height:100vh}
+
+/* LOGIN */
+.login-wrap{display:flex;min-height:100vh;align-items:center;justify-content:center;background:var(--ink)}
+.login-wrap.hidden{display:none}
+.login-box{background:var(--card);border-radius:16px;width:420px;max-width:95vw;padding:40px;box-shadow:0 32px 80px rgba(0,0,0,0.4)}
+.login-logo{text-align:center;margin-bottom:28px}
+.login-logo h1{font-family:'Playfair Display',serif;font-size:26px;font-weight:700}
+.login-logo h1 span{color:var(--red)}
+.login-logo p{font-size:11px;color:var(--ink3);margin-top:4px;letter-spacing:.08em;text-transform:uppercase}
+.login-field{margin-bottom:16px}
+.login-field label{display:block;font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--ink3);margin-bottom:6px}
+.login-field input{width:100%;padding:10px 14px;border:0.5px solid var(--border2);border-radius:8px;background:var(--bg2);color:var(--ink);font-size:14px;font-family:'DM Sans',sans-serif;transition:border-color .15s}
+.login-field input:focus{outline:none;border-color:var(--blue)}
+.login-err{background:var(--red-lt);border:0.5px solid var(--red-bd);border-radius:7px;padding:9px 14px;font-size:12px;color:var(--red);margin-bottom:14px;display:none}
+.login-err.show{display:block}
+.btn-login{width:100%;padding:11px;background:var(--red);color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;margin-top:4px;transition:background .15s}
+.btn-login:hover{background:#9a280b}
+.btn-login:disabled{opacity:.6;cursor:not-allowed}
+
+/* APP */
+.app-wrap{display:none;min-height:100vh;flex-direction:column}
+.app-wrap.active{display:flex}
+
+/* HEADER */
+.hdr{background:var(--ink);color:#F5F2EC;padding:0 36px;display:flex;align-items:center;justify-content:space-between;height:58px;border-bottom:3px solid var(--red);position:sticky;top:0;z-index:100}
+.hdr h1{font-family:'Playfair Display',serif;font-size:19px;font-weight:700}
+.hdr h1 span{color:#E8896A}
+.hdr-meta{display:flex;align-items:center;gap:14px}
+.user-chip{display:flex;align-items:center;gap:8px;font-size:12px;color:rgba(245,242,236,0.7)}
+.user-avatar{width:32px;height:32px;border-radius:50%;background:var(--red);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;color:#fff}
+.rol-badge{font-size:10px;padding:2px 8px;border-radius:10px;background:rgba(255,255,255,0.1);color:rgba(245,242,236,0.6);letter-spacing:.06em;text-transform:uppercase}
+.btn-logout{padding:5px 12px;background:rgba(255,255,255,0.08);color:rgba(245,242,236,0.6);border:0.5px solid rgba(255,255,255,0.1);border-radius:5px;font-size:11px;cursor:pointer;transition:all .15s}
+.btn-logout:hover{background:rgba(255,255,255,0.14);color:#F5F2EC}
+
+/* BIENVENIDA */
+.welcome-band{background:var(--ink);color:#F5F2EC;padding:40px 36px 36px}
+.welcome-band h2{font-family:'Playfair Display',serif;font-size:28px;font-weight:700;margin-bottom:4px}
+.welcome-band h2 span{color:#E8896A}
+.welcome-band p{font-size:13px;color:rgba(245,242,236,0.55);margin-top:6px}
+
+/* MÓDULOS GRID */
+.main{padding:32px 36px 60px;max-width:1200px;margin:0 auto;width:100%}
+.section-label{font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--ink3);margin-bottom:16px}
+.modules-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:40px}
+
+.module-card{background:var(--card);border:0.5px solid var(--border);border-radius:12px;padding:28px 24px;cursor:pointer;transition:all .2s;position:relative;overflow:hidden;text-decoration:none;display:block}
+.module-card:hover{transform:translateY(-2px);box-shadow:0 8px 32px rgba(28,26,20,0.12);border-color:var(--border2)}
+.module-card.disabled{opacity:.45;cursor:not-allowed;pointer-events:none}
+.module-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:var(--red)}
+.module-card.green::before{background:var(--green)}
+.module-card.blue::before{background:var(--blue)}
+.module-card.amber::before{background:var(--amber)}
+.module-card.gray::before{background:var(--ink4)}
+
+.module-icon{font-size:32px;margin-bottom:16px}
+.module-name{font-family:'Playfair Display',serif;font-size:18px;font-weight:700;margin-bottom:6px}
+.module-desc{font-size:12px;color:var(--ink3);line-height:1.6}
+.module-tag{position:absolute;top:16px;right:16px;font-size:9px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:3px 8px;border-radius:10px}
+.tag-active{background:var(--green-lt);color:var(--green)}
+.tag-soon{background:var(--bg3);color:var(--ink4)}
+.tag-new{background:var(--blue-lt);color:var(--blue)}
+
+/* ADMIN PANEL (solo superusuarios) */
+.admin-section{background:var(--card);border:0.5px solid var(--border);border-radius:12px;padding:24px;margin-bottom:32px}
+.admin-section h3{font-size:14px;font-weight:600;margin-bottom:4px}
+.admin-section p{font-size:12px;color:var(--ink3);margin-bottom:18px}
+.users-table{width:100%;border-collapse:collapse}
+.users-table th{text-align:left;font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--ink3);padding:8px 12px;border-bottom:0.5px solid var(--border2)}
+.users-table td{padding:10px 12px;font-size:13px;border-bottom:0.5px solid var(--border);vertical-align:middle}
+.users-table tr:last-child td{border-bottom:none}
+.users-table tr:hover td{background:var(--bg2)}
+.rol-pill{display:inline-block;padding:2px 10px;border-radius:20px;font-size:10px;font-weight:600;letter-spacing:.04em;text-transform:uppercase}
+.rol-super{background:var(--red-lt);color:var(--red)}
+.rol-operador{background:var(--blue-lt);color:var(--blue)}
+.rol-presupuesto{background:var(--amber-lt);color:var(--amber)}
+
+.btn{display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border-radius:7px;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:500;cursor:pointer;border:none;transition:all .15s}
+.btn-primary{background:var(--red);color:#fff}
+.btn-primary:hover{background:#9a280b}
+.btn-secondary{background:var(--card2);color:var(--ink);border:0.5px solid var(--border2)}
+.btn-secondary:hover{background:var(--bg3)}
+.btn-sm{padding:4px 10px;font-size:11px}
+.btn-danger{background:var(--red-lt);color:var(--red);border:0.5px solid var(--red-bd)}
+.btn-danger:hover{background:var(--red);color:#fff}
+
+/* MODAL */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:200;align-items:center;justify-content:center}
+.modal-overlay.open{display:flex}
+.modal-box{background:var(--card);border-radius:14px;width:480px;max-width:95vw;padding:32px;box-shadow:0 24px 80px rgba(0,0,0,0.25);max-height:90vh;overflow-y:auto}
+.modal-title{font-family:'Playfair Display',serif;font-size:20px;font-weight:700;margin-bottom:6px}
+.modal-sub{font-size:12px;color:var(--ink3);margin-bottom:22px;line-height:1.5}
+.modal-field{margin-bottom:16px}
+.modal-field label{display:block;font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--ink3);margin-bottom:6px}
+.modal-field input,.modal-field select{width:100%;padding:9px 12px;border:0.5px solid var(--border2);border-radius:7px;background:var(--bg2);color:var(--ink);font-size:13px;font-family:'DM Sans',sans-serif;outline:none;transition:border-color .15s}
+.modal-field input:focus,.modal-field select:focus{border-color:var(--blue)}
+.modal-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:22px;padding-top:18px;border-top:0.5px solid var(--border)}
+.btn-cancel{padding:9px 20px;border-radius:7px;border:0.5px solid var(--border2);background:var(--card2);font-size:13px;cursor:pointer;color:var(--ink)}
+.btn-confirm{padding:9px 20px;border-radius:7px;border:none;background:var(--red);color:#fff;font-size:13px;font-weight:500;cursor:pointer}
+.btn-confirm:hover{background:#9a280b}
+.status-msg{padding:9px 14px;border-radius:7px;font-size:12px;margin-bottom:14px;display:none}
+.status-msg.ok{display:block;background:var(--green-lt);border:0.5px solid var(--green-bd);color:var(--green)}
+.status-msg.err{display:block;background:var(--red-lt);border:0.5px solid var(--red-bd);color:var(--red)}
+
+@media(max-width:700px){
+  .modules-grid{grid-template-columns:1fr}
+  .hdr,.welcome-band,.main{padding-left:16px;padding-right:16px}
+}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div class="login-wrap" id="login-wrap">
+  <div class="login-box">
+    <div class="login-logo">
+      <h1>Sistema <span>CAC</span></h1>
+      <p>Colegio Alemán de Chillán · Administración</p>
+    </div>
+    <div class="login-err" id="login-err"></div>
+    <div class="login-field">
+      <label>Correo electrónico</label>
+      <input type="email" id="login-email" placeholder="usuario@dschillan.cl" onkeydown="if(event.key==='Enter')doLogin()">
+    </div>
+    <div class="login-field">
+      <label>Contraseña</label>
+      <input type="password" id="login-pass" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()">
+    </div>
+    <button class="btn-login" id="btn-login" onclick="doLogin()">Ingresar</button>
+    <div style="text-align:center;margin-top:16px;font-size:10px;color:#666">Sistema de administración interna · v1.0</div>
+  </div>
+</div>
+
+<!-- APP -->
+<div class="app-wrap" id="app-wrap">
+  <div class="hdr">
+    <h1>Sistema <span>CAC</span></h1>
+    <div class="hdr-meta">
+      <div class="user-chip">
+        <div class="user-avatar" id="user-avatar">?</div>
+        <div>
+          <div id="user-name" style="line-height:1.2">—</div>
+          <div class="rol-badge" id="user-rol-badge">—</div>
+        </div>
+      </div>
+      <button class="btn-logout" onclick="doLogout()">Salir</button>
+    </div>
+  </div>
+
+  <div class="welcome-band">
+    <h2>Bienvenido/a, <span id="welcome-name">—</span></h2>
+    <p id="welcome-sub">Selecciona el módulo con el que deseas trabajar</p>
+  </div>
+
+  <div class="main">
+
+    <!-- MÓDULOS DISPONIBLES -->
+    <div class="section-label">Módulos del sistema</div>
+    <div class="modules-grid" id="modules-grid">
+      <!-- Renderizado por JS según rol -->
+    </div>
+
+    <!-- PANEL ADMINISTRACIÓN (solo superusuarios) -->
+    <div id="admin-section" style="display:none">
+      <div class="section-label">Administración de usuarios</div>
+      <div class="admin-section">
+        <h3>Usuarios del sistema</h3>
+        <p>Crea, edita y administra los accesos de cada colaborador. Solo los superusuarios pueden gestionar usuarios.</p>
+        <div style="display:flex;justify-content:flex-end;gap:8px;margin-bottom:14px">
+          <button class="btn btn-secondary" onclick="loadUsers()">↻ Actualizar</button>
+          <button class="btn btn-primary" onclick="openModalCrearUsuario()">+ Nuevo usuario</button>
+        </div>
+        <table class="users-table">
+          <thead>
+            <tr>
+              <th>Nombre</th>
+              <th>Correo</th>
+              <th>Rol</th>
+              <th>Departamento</th>
+              <th>Módulos</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody id="users-tbody">
+            <tr><td colspan="6" style="text-align:center;color:var(--ink3);padding:20px">Cargando usuarios...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- MODAL: NUEVO USUARIO -->
+<div class="modal-overlay" id="modal-usuario">
+  <div class="modal-box">
+    <div class="modal-title" id="modal-usuario-title">Nuevo usuario</div>
+    <div class="modal-sub">Los datos de acceso serán enviados por correo a través de Supabase.</div>
+    <div class="status-msg" id="modal-status"></div>
+    <div class="modal-field">
+      <label>Nombre completo <span style="color:var(--red)">*</span></label>
+      <input type="text" id="u-nombre" placeholder="Ej: Jorge Álvarez Pérez">
+    </div>
+    <div class="modal-field">
+      <label>Correo electrónico <span style="color:var(--red)">*</span></label>
+      <input type="email" id="u-email" placeholder="jalvarez@dschillan.cl">
+    </div>
+    <div class="modal-field" id="u-pass-field">
+      <label>Contraseña inicial <span style="color:var(--red)">*</span></label>
+      <input type="text" id="u-pass" placeholder="Mínimo 8 caracteres">
+    </div>
+    <div class="modal-field">
+      <label>Rol <span style="color:var(--red)">*</span></label>
+      <select id="u-rol" onchange="onRolChange()">
+        <option value="operador">Operador (solo lectura general)</option>
+        <option value="presupuesto_docente">Jefe Depto. Docente (presupuesto)</option>
+        <option value="presupuesto_rrhh">RRHH (presupuesto + remuneraciones)</option>
+        <option value="presupuesto">Responsable de Presupuesto (administrativo)</option>
+        <option value="recaudaciones">Responsable de Recaudaciones</option>
+        <option value="superusuario">Superusuario (acceso total)</option>
+      </select>
+    </div>
+    <div class="modal-field" id="u-depto-field">
+      <label>Departamento responsable</label>
+      <select id="u-departamento">
+        <option value="">Sin departamento</option>
+        <option value="Dirección">Dirección</option>
+        <option value="Administración">Administración</option>
+        <option value="Alemán">Alemán</option>
+        <option value="Matemáticas">Matemáticas</option>
+        <option value="Lenguaje">Lenguaje</option>
+        <option value="Ciencias">Ciencias</option>
+        <option value="Historia">Historia</option>
+        <option value="Arte">Arte</option>
+        <option value="Educación Física">Educación Física</option>
+        <option value="Tecnología">Tecnología</option>
+        <option value="Biblioteca">Biblioteca</option>
+        <option value="Mantenimiento">Mantenimiento</option>
+      </select>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeModal('modal-usuario')">Cancelar</button>
+      <button class="btn-confirm" id="btn-guardar-usuario" onclick="guardarUsuario()">Crear usuario</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: RESET CONTRASEÑA -->
+<div class="modal-overlay" id="modal-reset">
+  <div class="modal-box" style="width:400px">
+    <div class="modal-title">Resetear contraseña</div>
+    <div class="modal-sub">Envía un correo de recuperación al usuario o establece una contraseña nueva directamente.</div>
+    <div class="status-msg" id="reset-status"></div>
+    <div class="modal-field">
+      <label>Usuario</label>
+      <input type="text" id="reset-nombre-display" readonly style="background:var(--bg3);color:var(--ink3)">
+    </div>
+    <div class="modal-field">
+      <label>Nueva contraseña <span style="color:var(--red)">*</span></label>
+      <input type="text" id="reset-pass" placeholder="Mínimo 8 caracteres">
+    </div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeModal('modal-reset')">Cancelar</button>
+      <button class="btn-confirm" onclick="confirmarReset()">Guardar nueva contraseña</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════
+//  SUPABASE CONFIG (misma instancia que recaudaciones)
+// ═══════════════════════════════════════════════════════
+const SB_URL  = 'https://iwaosynzrbhkwcmhiilx.supabase.co';
+const SB_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml3YW9zeW56cmJoa3djbWhpaWx4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA0MTU4NzUsImV4cCI6MjA5NTk5MTg3NX0.LwOaFc7vObJlR3Muer7uZxCYSphe2EbYjPTkZ6lGrXQ';
+// SERVICE ROLE KEY — solo para operaciones admin (crear usuarios).
+// IMPORTANTE: Felipe debe reemplazar esto con la service_role key real desde Supabase > Settings > API
+const SB_SERVICE = 'REEMPLAZAR_CON_SERVICE_ROLE_KEY';
+
+let SB_TOKEN = null;
+let _currentUser = null;
+let _resetUserId = null;
+
+function sbH(extra={}){
+  const h={'Content-Type':'application/json','apikey':SB_ANON,...extra};
+  if(SB_TOKEN) h['Authorization']='Bearer '+SB_TOKEN;
+  return h;
+}
+function sbHService(){
+  return {'Content-Type':'application/json','apikey':SB_SERVICE,'Authorization':'Bearer '+SB_SERVICE};
+}
+async function sbGet(t,p=''){
+  const r=await fetch(`${SB_URL}/rest/v1/${t}${p}`,{headers:sbH()});
+  if(!r.ok) throw new Error(await r.text());
+  return r.json();
+}
+async function sbPost(t,b){
+  const r=await fetch(`${SB_URL}/rest/v1/${t}`,{method:'POST',headers:{...sbH(),'Prefer':'return=representation'},body:JSON.stringify(b)});
+  if(!r.ok) throw new Error(await r.text());
+  return r.json();
+}
+async function sbPatch(t,p,b){
+  const r=await fetch(`${SB_URL}/rest/v1/${t}${p}`,{method:'PATCH',headers:{...sbH(),'Prefer':'return=representation'},body:JSON.stringify(b)});
+  if(!r.ok) throw new Error(await r.text());
+  return r.json();
+}
+
+// ═══════════════════════════════════════════════════════
+//  AUTH
+// ═══════════════════════════════════════════════════════
+async function doLogin(){
+  const email=document.getElementById('login-email').value.trim();
+  const pass=document.getElementById('login-pass').value;
+  const err=document.getElementById('login-err');
+  const btn=document.getElementById('btn-login');
+  if(!email||!pass){err.textContent='Completa correo y contraseña.';err.classList.add('show');return;}
+  btn.disabled=true;btn.textContent='Ingresando...';err.classList.remove('show');
+  try{
+    const res=await fetch(`${SB_URL}/auth/v1/token?grant_type=password`,{
+      method:'POST',headers:{'Content-Type':'application/json','apikey':SB_ANON},
+      body:JSON.stringify({email,password:pass})
+    });
+    const data=await res.json();
+    if(!res.ok) throw new Error(data.error_description||data.message||'Error de autenticación');
+    SB_TOKEN=data.access_token;
+    sessionStorage.setItem('sb_token',SB_TOKEN);
+    sessionStorage.setItem('sb_uid',data.user.id);
+    sessionStorage.setItem('sb_email',data.user.email);
+    await loadProfile(data.user.id,data.user.email);
+    startApp();
+  }catch(e){err.textContent=e.message;err.classList.add('show');}
+  btn.disabled=false;btn.textContent='Ingresar';
+}
+
+async function checkSession(){
+  const token=sessionStorage.getItem('sb_token');
+  if(!token) return false;
+  SB_TOKEN=token;
+  try{
+    // Verificar token con Supabase y obtener datos frescos
+    const res=await fetch(`${SB_URL}/auth/v1/user`,{headers:{'apikey':SB_ANON,'Authorization':'Bearer '+token}});
+    if(!res.ok){ sessionStorage.clear(); return false; }
+    const data=await res.json();
+    // Actualizar sessionStorage con claves unificadas
+    sessionStorage.setItem('sb_uid',   data.id);
+    sessionStorage.setItem('sb_email', data.email);
+    await loadProfile(data.id, data.email);
+    return true;
+  }catch(e){ return false; }
+}
+
+async function loadProfile(uid,email){
+  try{
+    const rows=await sbGet('app_usuarios',`?id=eq.${uid}&select=nombre,email,rol,departamento`);
+    _currentUser = rows&&rows.length>0 ? rows[0] : {nombre:email.split('@')[0],email,rol:'operador',departamento:''};
+  }catch(e){
+    _currentUser={nombre:email.split('@')[0],email,rol:'operador',departamento:''};
+  }
+}
+
+function startApp(){
+  document.getElementById('login-wrap').classList.add('hidden');
+  document.getElementById('app-wrap').classList.add('active');
+  renderApp();
+}
+
+function doLogout(){
+  SB_TOKEN=null;_currentUser=null;
+  sessionStorage.clear();
+  document.getElementById('app-wrap').classList.remove('active');
+  document.getElementById('login-wrap').classList.remove('hidden');
+  document.getElementById('login-email').value='';
+  document.getElementById('login-pass').value='';
+}
+
+// ═══════════════════════════════════════════════════════
+//  APP RENDER
+// ═══════════════════════════════════════════════════════
+const MODULES = [
+  {
+    id:'recaudaciones',
+    name:'Recaudaciones',
+    desc:'Control de mora, sostenedores, alumnos con deudas pendientes y evolución de cobranza.',
+    icon:'💰',
+    color:'red',
+    href:'recaudaciones.html',
+    roles:['superusuario','recaudaciones','admin','directorio'],
+    status:'active'
+  },
+  {
+    id:'presupuesto',
+    name:'Presupuesto',
+    desc:'Gestión y carga de presupuestos por departamento. Agrupación por cuenta contable.',
+    icon:'📊',
+    color:'blue',
+    href:'presupuesto.html',
+    roles:['superusuario','presupuesto','presupuesto_docente','presupuesto_rrhh'],
+    status:'active'
+  },
+  {
+    id:'repositorio',
+    name:'Repositorio',
+    desc:'Repositorio de documentos institucionales, circulares y archivos del colegio.',
+    icon:'🗂',
+    color:'green',
+    href:'#',
+    roles:['superusuario','presupuesto','recaudaciones'],
+    status:'soon'
+  },
+  {
+    id:'planificaciones',
+    name:'Planificaciones',
+    desc:'Gestión de planificaciones académicas y curriculares por departamento.',
+    icon:'📅',
+    color:'amber',
+    href:'#',
+    roles:['superusuario','presupuesto','recaudaciones'],
+    status:'soon'
+  }
+];
+
+function renderApp(){
+  const u=_currentUser;
+  // Header
+  const initials=(u.nombre||'').split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase()||'?';
+  document.getElementById('user-avatar').textContent=initials;
+  document.getElementById('user-name').textContent=u.nombre||u.email;
+  const rolLabel={superusuario:'Superusuario',recaudaciones:'Recaudaciones',presupuesto:'Presupuesto',operador:'Operador'}[u.rol]||u.rol;
+  document.getElementById('user-rol-badge').textContent=rolLabel;
+  document.getElementById('welcome-name').textContent=(u.nombre||u.email).split(' ')[0];
+  if(u.departamento) document.getElementById('welcome-sub').textContent=`Área: ${u.departamento} · Selecciona el módulo con el que deseas trabajar`;
+
+  // Módulos
+  const grid=document.getElementById('modules-grid');
+  const visibles=MODULES.filter(m=>m.roles.includes(u.rol));
+  if(visibles.length===0){
+    grid.innerHTML=`<div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--ink3)">Tu cuenta no tiene módulos asignados. Contacta a un administrador.</div>`;
+  } else {
+    grid.innerHTML=visibles.map(m=>`
+      <a href="${m.status==='soon'?'javascript:void(0)':m.href}" class="module-card ${m.color} ${m.status==='soon'?'disabled':''}">
+        <span class="module-tag ${m.status==='active'?'tag-active':'tag-soon'}">${m.status==='active'?'Disponible':'Próximamente'}</span>
+        <div class="module-icon">${m.icon}</div>
+        <div class="module-name">${m.name}</div>
+        <div class="module-desc">${m.desc}</div>
+      </a>
+    `).join('');
+  }
+
+  // Admin section
+  if(u.rol==='superusuario'){
+    document.getElementById('admin-section').style.display='block';
+    loadUsers();
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+//  GESTIÓN DE USUARIOS
+// ═══════════════════════════════════════════════════════
+let _users=[];
+
+async function loadUsers(){
+  const tbody=document.getElementById('users-tbody');
+  tbody.innerHTML=`<tr><td colspan="6" style="text-align:center;color:var(--ink3);padding:20px">Cargando...</td></tr>`;
+  try{
+    _users=await sbGet('app_usuarios','?select=id,nombre,email,rol,departamento,modulos&order=nombre');
+    renderUsersTable();
+  }catch(e){
+    tbody.innerHTML=`<tr><td colspan="6" style="color:var(--red);padding:20px;text-align:center">Error: ${e.message}</td></tr>`;
+  }
+}
+
+function renderUsersTable(){
+  const tbody=document.getElementById('users-tbody');
+  if(!_users.length){
+    tbody.innerHTML=`<tr><td colspan="6" style="text-align:center;color:var(--ink3);padding:20px">No hay usuarios registrados</td></tr>`;
+    return;
+  }
+  const rolColors={superusuario:'rol-super',operador:'rol-operador',presupuesto:'rol-presupuesto',presupuesto_docente:'rol-presupuesto',presupuesto_rrhh:'rol-presupuesto',recaudaciones:'rol-operador'};
+  tbody.innerHTML=_users.map(u=>`
+    <tr>
+      <td><strong>${u.nombre||'—'}</strong></td>
+      <td style="font-size:12px;color:var(--ink3)">${u.email}</td>
+      <td><span class="rol-pill ${rolColors[u.rol]||'rol-operador'}">${u.rol||'—'}</span></td>
+      <td>${u.departamento||'—'}</td>
+      <td style="font-size:12px;color:var(--ink3)">${(u.modulos||[]).join(', ')||'—'}</td>
+      <td>
+        <div style="display:flex;gap:6px">
+          <button class="btn btn-sm btn-secondary" onclick="openResetModal('${u.id}','${u.nombre||u.email}')">🔑 Reset</button>
+          <button class="btn btn-sm btn-secondary" onclick="openEditUsuario('${u.id}')">✏ Editar</button>
+        </div>
+      </td>
+    </tr>
+  `).join('');
+}
+
+// ─── Crear usuario ───
+function openModalCrearUsuario(){
+  document.getElementById('modal-usuario-title').textContent='Nuevo usuario';
+  document.getElementById('btn-guardar-usuario').textContent='Crear usuario';
+  document.getElementById('btn-guardar-usuario').onclick=guardarUsuario;
+  ['u-nombre','u-email','u-pass'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('u-rol').value='presupuesto';
+  document.getElementById('u-pass-field').style.display='';
+  document.getElementById('modal-status').className='status-msg';
+  openModal('modal-usuario');
+}
+
+function openEditUsuario(id){
+  const u=_users.find(x=>x.id===id);if(!u)return;
+  document.getElementById('modal-usuario-title').textContent='Editar usuario';
+  document.getElementById('btn-guardar-usuario').textContent='Guardar cambios';
+  document.getElementById('btn-guardar-usuario').onclick=()=>actualizarUsuario(id);
+  document.getElementById('u-nombre').value=u.nombre||'';
+  document.getElementById('u-email').value=u.email;
+  document.getElementById('u-rol').value=u.rol||'operador';
+  document.getElementById('u-departamento').value=u.departamento||'';
+  document.getElementById('u-pass-field').style.display='none';
+  document.getElementById('modal-status').className='status-msg';
+  openModal('modal-usuario');
+}
+
+function onRolChange(){
+  const rol=document.getElementById('u-rol').value;
+  document.getElementById('u-depto-field').style.display=rol==='presupuesto'?'':'';
+}
+
+async function guardarUsuario(){
+  const nombre=document.getElementById('u-nombre').value.trim();
+  const email=document.getElementById('u-email').value.trim();
+  const pass=document.getElementById('u-pass').value;
+  const rol=document.getElementById('u-rol').value;
+  const depto=document.getElementById('u-departamento').value;
+  const st=document.getElementById('modal-status');
+  if(!nombre||!email||!pass){st.textContent='Completa todos los campos obligatorios.';st.className='status-msg err';return;}
+  if(pass.length<8){st.textContent='La contraseña debe tener al menos 8 caracteres.';st.className='status-msg err';return;}
+
+  st.textContent='Creando usuario en Supabase Auth...';st.className='status-msg ok';
+  document.getElementById('btn-guardar-usuario').disabled=true;
+
+  try{
+    // 1. Crear en Supabase Auth via Admin API
+    const authRes=await fetch(`${SB_URL}/auth/v1/admin/users`,{
+      method:'POST',
+      headers:sbHService(),
+      body:JSON.stringify({email,password:pass,email_confirm:true})
+    });
+    const authData=await authRes.json();
+    if(!authRes.ok) throw new Error(authData.message||authData.error||'Error al crear en Auth');
+
+    // 2. Insertar en app_usuarios
+    const modulos=rol==='superusuario'?['recaudaciones','presupuesto']:
+                  rol==='presupuesto'||rol==='presupuesto_docente'||rol==='presupuesto_rrhh'?['presupuesto']:
+                  rol==='recaudaciones'?['recaudaciones']:[];
+    await sbPost('app_usuarios',{id:authData.id,nombre,email,rol,departamento:depto,modulos});
+
+    st.textContent=`✓ Usuario ${nombre} creado correctamente.`;
+    await loadUsers();
+    setTimeout(()=>closeModal('modal-usuario'),1500);
+  }catch(e){
+    st.textContent='Error: '+e.message;st.className='status-msg err';
+  }
+  document.getElementById('btn-guardar-usuario').disabled=false;
+}
+
+async function actualizarUsuario(id){
+  const nombre=document.getElementById('u-nombre').value.trim();
+  const rol=document.getElementById('u-rol').value;
+  const depto=document.getElementById('u-departamento').value;
+  const st=document.getElementById('modal-status');
+  const modulos=rol==='superusuario'?['recaudaciones','presupuesto']:
+                rol==='presupuesto'||rol==='presupuesto_docente'||rol==='presupuesto_rrhh'?['presupuesto']:
+                rol==='recaudaciones'?['recaudaciones']:[];
+  try{
+    await sbPatch('app_usuarios',`?id=eq.${id}`,{nombre,rol,departamento:depto,modulos});
+    st.textContent='✓ Usuario actualizado.';st.className='status-msg ok';
+    await loadUsers();
+    setTimeout(()=>closeModal('modal-usuario'),1200);
+  }catch(e){st.textContent='Error: '+e.message;st.className='status-msg err';}
+}
+
+// ─── Reset contraseña ───
+function openResetModal(id,nombre){
+  _resetUserId=id;
+  document.getElementById('reset-nombre-display').value=nombre;
+  document.getElementById('reset-pass').value='';
+  document.getElementById('reset-status').className='status-msg';
+  openModal('modal-reset');
+}
+
+async function confirmarReset(){
+  const pass=document.getElementById('reset-pass').value;
+  const st=document.getElementById('reset-status');
+  if(!pass||pass.length<8){st.textContent='La contraseña debe tener al menos 8 caracteres.';st.className='status-msg err';return;}
+  try{
+    const res=await fetch(`${SB_URL}/auth/v1/admin/users/${_resetUserId}`,{
+      method:'PUT',
+      headers:sbHService(),
+      body:JSON.stringify({password:pass})
+    });
+    if(!res.ok){const d=await res.json();throw new Error(d.message||'Error');}
+    st.textContent='✓ Contraseña actualizada correctamente.';st.className='status-msg ok';
+    setTimeout(()=>closeModal('modal-reset'),1500);
+  }catch(e){st.textContent='Error: '+e.message;st.className='status-msg err';}
+}
+
+// ═══════════════════════════════════════════════════════
+//  UTILS
+// ═══════════════════════════════════════════════════════
+function openModal(id){document.getElementById(id).classList.add('open');}
+function closeModal(id){document.getElementById(id).classList.remove('open');}
+document.querySelectorAll('.modal-overlay').forEach(el=>el.addEventListener('click',e=>{if(e.target===el)el.classList.remove('open');}));
+
+// ─── INIT ───
+document.addEventListener('DOMContentLoaded',async()=>{
+  const ok=await checkSession();
+  if(ok) startApp();
+});
+</script>
+</body>
+</html>

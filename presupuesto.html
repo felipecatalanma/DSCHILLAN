@@ -1,0 +1,1023 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Presupuesto · Sistema CAC</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#F4F1EB;--bg2:#EDEAE0;--bg3:#E4E0D3;
+  --card:#FDFCF8;--card2:#F7F5EE;
+  --ink:#1C1A14;--ink2:#4A4740;--ink3:#7A7670;--ink4:#A8A49E;
+  --border:rgba(28,26,20,0.09);--border2:rgba(28,26,20,0.16);
+  --red:#B5320E;--red-lt:#FBF0EC;--red-bd:rgba(181,50,14,0.2);
+  --green:#2A6040;--green-lt:#ECF5EF;--green-bd:rgba(42,96,64,0.2);
+  --blue:#1A4A7A;--blue-lt:#EBF2FB;--blue-bd:rgba(26,74,122,0.2);
+  --amber:#9A5C08;--amber-lt:#FDF5E6;--amber-bd:rgba(154,92,8,0.2);
+  --purple:#5B2D8E;--purple-lt:#F3EEF9;--purple-bd:rgba(91,45,142,0.2);
+}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--ink);font-size:14px;min-height:100vh}
+.blocked{display:none;min-height:100vh;align-items:center;justify-content:center;flex-direction:column;gap:16px;color:var(--ink3)}
+.blocked.show{display:flex}
+
+/* HDR */
+.hdr{background:var(--ink);color:#F5F2EC;padding:0 36px;display:flex;align-items:center;justify-content:space-between;height:58px;border-bottom:3px solid var(--blue);position:sticky;top:0;z-index:100}
+.hdr h1{font-family:'Playfair Display',serif;font-size:19px;font-weight:700}
+.hdr h1 span{color:#7aaddd}
+.hdr-meta{display:flex;align-items:center;gap:12px}
+.user-chip{display:flex;align-items:center;gap:8px;font-size:12px;color:rgba(245,242,236,0.7)}
+.user-avatar{width:28px;height:28px;border-radius:50%;background:var(--blue);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;color:#fff}
+.btn-hdr{padding:5px 12px;background:rgba(255,255,255,0.08);color:rgba(245,242,236,0.6);border:0.5px solid rgba(255,255,255,0.1);border-radius:5px;font-size:11px;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;gap:5px;transition:all .15s}
+.btn-hdr:hover{background:rgba(255,255,255,0.16);color:#F5F2EC}
+
+/* TABS */
+.tabs-bar{background:var(--card);border-bottom:0.5px solid var(--border2);padding:0 36px;display:flex;gap:2px;position:sticky;top:58px;z-index:90}
+.tab-btn{padding:13px 20px;font-size:13px;font-weight:500;color:var(--ink3);cursor:pointer;border:none;background:none;border-bottom:2px solid transparent;margin-bottom:-1px;transition:all .15s;font-family:'DM Sans',sans-serif}
+.tab-btn:hover{color:var(--ink)}.tab-btn.active{color:var(--blue);border-bottom-color:var(--blue)}
+
+/* MAIN */
+.main{padding:24px 36px 60px;max-width:1500px;margin:0 auto}
+.tab-content{display:none}.tab-content.active{display:block}
+
+/* TOP BAR */
+.top-bar{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:18px;gap:16px;flex-wrap:wrap}
+.top-bar-left h2{font-family:'Playfair Display',serif;font-size:21px;font-weight:700}
+.top-bar-left p{font-size:12px;color:var(--ink3);margin-top:2px}
+
+/* BTN */
+.btn{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:7px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;cursor:pointer;border:none;transition:all .15s}
+.btn-primary{background:var(--blue);color:#fff}.btn-primary:hover{background:#153d67}
+.btn-secondary{background:var(--card);color:var(--ink);border:0.5px solid var(--border2)}.btn-secondary:hover{background:var(--bg3)}
+.btn-success{background:var(--green);color:#fff}.btn-success:hover{background:#225133}
+.btn-danger{background:var(--red-lt);color:var(--red);border:0.5px solid var(--red-bd)}.btn-danger:hover{background:var(--red);color:#fff}
+.btn-purple{background:var(--purple-lt);color:var(--purple);border:0.5px solid var(--purple-bd)}.btn-purple:hover{background:var(--purple);color:#fff}
+.btn-sm{padding:5px 10px;font-size:12px}
+.btn-group{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+
+/* ANIO */
+.anio-wrap{display:flex;align-items:center;gap:6px}
+.anio-btn{width:26px;height:26px;border-radius:50%;border:0.5px solid var(--border2);background:var(--card2);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:13px;transition:all .15s}
+.anio-btn:hover{background:var(--bg3)}
+.anio-val{font-family:'DM Mono',monospace;font-weight:600;font-size:14px;min-width:46px;text-align:center}
+
+/* FILTERS ROW */
+.filters-row{display:flex;gap:10px;align-items:center;margin-bottom:14px;flex-wrap:wrap;background:var(--card);border:0.5px solid var(--border);border-radius:8px;padding:12px 16px}
+.filter-label{font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--ink3);white-space:nowrap}
+select.fsel{background:var(--bg2);border:0.5px solid var(--border2);border-radius:6px;padding:6px 10px;font-family:'DM Sans',sans-serif;font-size:13px;color:var(--ink);outline:none;cursor:pointer}
+.col-toggles{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.col-toggle{display:flex;align-items:center;gap:4px;font-size:11px;color:var(--ink2);cursor:pointer;padding:3px 8px;border-radius:5px;border:0.5px solid var(--border2);background:var(--bg2);user-select:none;transition:all .15s}
+.col-toggle input{width:12px;height:12px;cursor:pointer}
+.col-toggle:has(input:checked){background:var(--blue-lt);border-color:var(--blue-bd);color:var(--blue)}
+
+/* PREVIEW BANNER */
+.preview-banner{background:var(--purple-lt);border:0.5px solid var(--purple-bd);border-radius:8px;padding:10px 16px;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between;gap:10px}
+.preview-banner-left{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--purple)}
+.preview-banner span{font-weight:600}
+
+/* KPIs */
+.kpi-row{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px}
+.kpi{background:var(--card);border:0.5px solid var(--border);border-radius:9px;padding:14px 16px;position:relative;overflow:hidden}
+.kpi::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:var(--blue)}
+.kpi.green::before{background:var(--green)}.kpi.amber::before{background:var(--amber)}.kpi.red::before{background:var(--red)}
+.kpi-label{font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--ink3);margin-bottom:6px}
+.kpi-value{font-size:22px;font-weight:700;letter-spacing:-1px;font-family:'Playfair Display',serif}
+.kpi-sub{font-size:11px;color:var(--ink3);margin-top:2px}
+
+/* TABLE */
+.table-wrap{background:var(--card);border:0.5px solid var(--border);border-radius:10px;overflow:auto;box-shadow:0 1px 4px rgba(0,0,0,0.06)}
+table{width:100%;border-collapse:collapse}
+thead th{background:var(--bg2);padding:9px 12px;text-align:left;font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--ink3);border-bottom:0.5px solid var(--border2);white-space:nowrap}
+thead th.num{text-align:right}
+tbody tr{border-bottom:0.5px solid var(--border);transition:background .1s}
+tbody tr:last-child{border-bottom:none}
+tbody tr:hover{background:var(--bg2)}
+tbody td{padding:9px 12px;font-size:13px;vertical-align:middle}
+tbody td.num{text-align:right;font-family:'DM Mono',monospace;font-size:12px}
+.grupo-row td{background:var(--bg3)!important;font-weight:700;font-size:11px;letter-spacing:.04em;color:var(--ink2);padding:7px 12px}
+.no-data{text-align:center;padding:50px 20px;color:var(--ink3)}
+.no-data .icon{font-size:36px;margin-bottom:12px}
+.td-mono{font-family:'DM Mono',monospace;font-size:12px;color:var(--ink3)}
+
+/* BADGE */
+.badge{display:inline-block;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:600}
+.badge-blue{background:var(--blue-lt);color:var(--blue)}
+.badge-green{background:var(--green-lt);color:var(--green)}
+.badge-amber{background:var(--amber-lt);color:var(--amber)}
+.badge-red{background:var(--red-lt);color:var(--red)}
+.badge-purple{background:var(--purple-lt);color:var(--purple)}
+
+/* MODAL */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:200;align-items:center;justify-content:center}
+.modal-overlay.open{display:flex}
+.modal-box{background:var(--card);border-radius:14px;width:600px;max-width:96vw;padding:32px;box-shadow:0 24px 80px rgba(0,0,0,0.25);max-height:90vh;overflow-y:auto}
+.modal-title{font-family:'Playfair Display',serif;font-size:20px;font-weight:700;margin-bottom:4px}
+.modal-sub{font-size:12px;color:var(--ink3);margin-bottom:20px;line-height:1.5}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.form-group{display:flex;flex-direction:column;gap:5px}
+.form-group.full{grid-column:1/-1}
+.form-group label{font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--ink3)}
+.form-group input,.form-group select,.form-group textarea{padding:9px 12px;border:0.5px solid var(--border2);border-radius:7px;font-family:'DM Sans',sans-serif;font-size:13px;color:var(--ink);background:var(--bg2);outline:none;transition:border-color .15s}
+.form-group input:focus,.form-group select:focus,.form-group textarea:focus{border-color:var(--blue)}
+.form-group input:disabled,.form-group select:disabled{background:var(--bg3);color:var(--ink4);cursor:not-allowed}
+.req{color:var(--red)}
+.field-locked{background:var(--bg3)!important;color:var(--ink4)!important;cursor:not-allowed!important}
+.modal-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:20px;padding-top:16px;border-top:0.5px solid var(--border)}
+.status-msg{padding:9px 14px;border-radius:7px;font-size:12px;margin-bottom:14px;display:none}
+.status-msg.ok{display:block;background:var(--green-lt);border:0.5px solid var(--green-bd);color:var(--green)}
+.status-msg.err{display:block;background:var(--red-lt);border:0.5px solid var(--red-bd);color:var(--red)}
+.info-hint{font-size:11px;color:var(--ink3);padding:8px 12px;background:var(--blue-lt);border-radius:6px;margin-bottom:14px;border:0.5px solid var(--blue-bd)}
+
+/* EJECUCION TABLE */
+.exec-table{width:100%;border-collapse:collapse;min-width:900px}
+.exec-table th{background:var(--bg2);padding:9px 12px;text-align:left;font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--ink3);border-bottom:0.5px solid var(--border2);white-space:nowrap}
+.exec-table th.num{text-align:right}
+.exec-table td{padding:9px 12px;font-size:12px;border-bottom:0.5px solid var(--border);vertical-align:middle}
+.exec-table td.num{text-align:right;font-family:'DM Mono',monospace}
+.exec-table tr:hover td{background:var(--bg2)}
+.diff-pos{color:var(--green);font-weight:600}
+.diff-neg{color:var(--red);font-weight:600}
+.progress-wrap{background:var(--bg3);border-radius:10px;height:6px;overflow:hidden;width:70px}
+.progress-fill{height:100%;border-radius:10px;background:var(--blue)}
+.progress-fill.over{background:var(--red)}
+
+@media(max-width:700px){
+  .hdr,.main{padding-left:14px;padding-right:14px}
+  .tabs-bar{padding:0 14px}
+  .kpi-row{grid-template-columns:1fr 1fr}
+  .form-grid{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<div class="blocked" id="blocked-view">
+  <div style="font-size:48px">🔒</div>
+  <h2>Acceso no autorizado</h2>
+  <p>No tienes permisos para acceder al módulo de Presupuesto.</p>
+  <a href="dashboard.html" style="color:var(--blue)">← Volver al Panel</a>
+</div>
+
+<div id="main-hdr" style="display:none">
+  <div class="hdr">
+    <h1>Presupuesto <span>CAC</span></h1>
+    <div class="hdr-meta">
+      <!-- Solo superusuarios -->
+      <div id="preview-controls" style="display:none;align-items:center;gap:8px">
+        <select class="fsel" id="preview-rol-select" onchange="activarPreview()" style="font-size:11px;padding:4px 8px">
+          <option value="">👁 Vista previa por perfil...</option>
+          <option value="presupuesto_docente">Jefe Depto. Docente</option>
+          <option value="presupuesto_rrhh">RRHH</option>
+          <option value="presupuesto">Responsable Presupuesto</option>
+        </select>
+        <button class="btn-hdr" id="btn-exit-preview" onclick="salirPreview()" style="display:none;background:rgba(181,50,14,0.3);color:#ffb3a3">✕ Salir preview</button>
+      </div>
+      <a href="dashboard.html" class="btn-hdr">← Panel</a>
+      <div class="user-chip">
+        <div class="user-avatar" id="user-avatar">?</div>
+        <span id="user-name">—</span>
+      </div>
+      <button class="btn-hdr" onclick="doLogout()">Salir</button>
+    </div>
+  </div>
+  <div class="tabs-bar" id="tabs-bar">
+    <button class="tab-btn active" onclick="showTab('carga',this)">📋 Carga de Presupuesto</button>
+    <button class="tab-btn" onclick="showTab('ejecucion',this)">📈 Ejecución Presupuestaria</button>
+    <button class="tab-btn super-tab" onclick="showTab('consolidado',this)" style="display:none">🏫 Consolidado</button>
+  </div>
+</div>
+
+<div class="main" id="main-content" style="display:none">
+
+  <!-- ══ TAB CARGA ══ -->
+  <div class="tab-content active" id="tab-carga">
+    <div class="top-bar">
+      <div class="top-bar-left">
+        <h2>Carga de Presupuesto</h2>
+        <p id="carga-subtitle">Ingresa las líneas presupuestarias de tu área</p>
+      </div>
+      <div class="btn-group">
+        <div class="anio-wrap">
+          <button class="anio-btn" onclick="cambiarAnio(-1)">‹</button>
+          <div class="anio-val" id="anio-carga">2026</div>
+          <button class="anio-btn" onclick="cambiarAnio(1)">›</button>
+        </div>
+        <button class="btn btn-secondary btn-sm" onclick="exportarExcel()">⬇ Excel</button>
+        <button class="btn btn-primary" id="btn-agregar" onclick="openModalAgregar()">+ Agregar fila</button>
+      </div>
+    </div>
+
+    <!-- Preview banner -->
+    <div class="preview-banner" id="preview-banner" style="display:none">
+      <div class="preview-banner-left">
+        👁 Vista previa como: <span id="preview-label">—</span>
+      </div>
+      <button class="btn btn-sm btn-secondary" onclick="salirPreview()">✕ Salir</button>
+    </div>
+
+    <!-- Filtros -->
+    <div class="filters-row">
+      <span class="filter-label">Área:</span>
+      <select class="fsel" id="select-area-carga" onchange="renderCarga()"></select>
+      <span class="filter-label" style="margin-left:8px">Tipo:</span>
+      <select class="fsel" id="filter-tipo-carga" onchange="renderCarga()">
+        <option value="">Todos</option>
+      </select>
+      <label style="display:flex;align-items:center;gap:5px;font-size:12px;color:var(--ink3);cursor:pointer;margin-left:8px">
+        <input type="checkbox" id="chk-grupos" onchange="renderCarga()"> Agrupar
+      </label>
+      <!-- Selector de columnas solo para superusuarios -->
+      <div id="col-selector" style="display:none;margin-left:auto;align-items:center;gap:6px">
+        <span class="filter-label">Columnas:</span>
+        <div class="col-toggles" id="col-toggles"></div>
+      </div>
+    </div>
+
+    <div class="table-wrap">
+      <table id="carga-table">
+        <thead id="carga-thead"></thead>
+        <tbody id="carga-tbody"></tbody>
+      </table>
+      <div style="padding:9px 14px;border-top:0.5px solid var(--border);font-size:11px;color:var(--ink3);display:flex;justify-content:space-between">
+        <span id="carga-info">0 filas</span>
+        <span id="carga-total"></span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ TAB EJECUCIÓN ══ -->
+  <div class="tab-content" id="tab-ejecucion">
+    <div class="top-bar">
+      <div class="top-bar-left">
+        <h2>Ejecución Presupuestaria</h2>
+        <p>Real vs presupuesto mes a mes — clic en celda para ingresar gasto real</p>
+      </div>
+      <div class="btn-group">
+        <div class="anio-wrap">
+          <button class="anio-btn" onclick="cambiarAnio(-1)">‹</button>
+          <div class="anio-val" id="anio-exec">2026</div>
+          <button class="anio-btn" onclick="cambiarAnio(1)">›</button>
+        </div>
+        <select class="fsel" id="select-area-exec" onchange="renderEjecucion()"></select>
+        <button class="btn btn-secondary btn-sm" onclick="exportarEjecucion()">⬇ Excel</button>
+      </div>
+    </div>
+    <div class="kpi-row">
+      <div class="kpi blue"><div class="kpi-label">Presupuesto Total</div><div class="kpi-value" id="kpi-pres">$0</div><div class="kpi-sub">planificado</div></div>
+      <div class="kpi green"><div class="kpi-label">Ejecutado Real</div><div class="kpi-value" id="kpi-real">$0</div><div class="kpi-sub">registrado</div></div>
+      <div class="kpi amber"><div class="kpi-label">% Ejecución</div><div class="kpi-value" id="kpi-pct">0%</div><div class="kpi-sub">del presupuesto</div></div>
+      <div class="kpi"><div class="kpi-label">Saldo Disponible</div><div class="kpi-value" id="kpi-saldo">$0</div><div class="kpi-sub">por ejecutar</div></div>
+    </div>
+    <div class="table-wrap" style="overflow:auto">
+      <table class="exec-table">
+        <thead>
+          <tr>
+            <th style="min-width:200px">Actividad o Gasto</th>
+            <th style="min-width:150px">Descripción</th>
+            <th class="num" style="min-width:110px">Presupuesto</th>
+            <th class="num" style="min-width:90px">Ene</th><th class="num" style="min-width:90px">Feb</th>
+            <th class="num" style="min-width:90px">Mar</th><th class="num" style="min-width:90px">Abr</th>
+            <th class="num" style="min-width:90px">May</th><th class="num" style="min-width:90px">Jun</th>
+            <th class="num" style="min-width:90px">Jul</th><th class="num" style="min-width:90px">Ago</th>
+            <th class="num" style="min-width:90px">Sep</th><th class="num" style="min-width:90px">Oct</th>
+            <th class="num" style="min-width:90px">Nov</th><th class="num" style="min-width:90px">Dic</th>
+            <th class="num" style="min-width:100px">Total Real</th>
+            <th class="num" style="min-width:100px">Diferencia</th>
+            <th style="min-width:80px">Ejec.</th>
+          </tr>
+        </thead>
+        <tbody id="exec-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ══ TAB CONSOLIDADO ══ -->
+  <div class="tab-content" id="tab-consolidado">
+    <div class="top-bar">
+      <div class="top-bar-left"><h2>Consolidado General</h2><p>Resumen de todos los departamentos</p></div>
+      <button class="btn btn-secondary btn-sm" onclick="exportarConsolidado()">⬇ Excel</button>
+    </div>
+    <div class="kpi-row" id="consolidado-kpis"></div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr>
+          <th>Departamento</th><th class="num">Presupuesto</th>
+          <th class="num">Ejecutado</th><th class="num">% Ejec.</th>
+          <th class="num">Saldo</th><th>Estado</th>
+        </tr></thead>
+        <tbody id="consolidado-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL FILA -->
+<div class="modal-overlay" id="modal-fila">
+  <div class="modal-box">
+    <div class="modal-title" id="modal-titulo">Agregar fila de presupuesto</div>
+    <div class="modal-sub">Completa los datos de la línea presupuestaria.</div>
+    <div class="info-hint" id="modal-hint" style="display:none"></div>
+    <div class="status-msg" id="fila-status"></div>
+    <div class="form-grid">
+      <div class="form-group full">
+        <label>Actividad o Gasto <span class="req">*</span></label>
+        <input type="text" id="f-actividad" placeholder="Nombre de la actividad o gasto">
+      </div>
+      <div class="form-group full">
+        <label>Descripción</label>
+        <textarea id="f-descripcion" placeholder="Detalle adicional..." style="min-height:54px;resize:vertical"></textarea>
+      </div>
+      <div class="form-group">
+        <label>Departamento <span class="req">*</span></label>
+        <select id="f-departamento" onchange="onDeptoChange()"></select>
+      </div>
+      <div class="form-group">
+        <label>Tipo de Gasto <span class="req">*</span></label>
+        <select id="f-tipo" onchange="onTipoChange()">
+          <option value="">Seleccionar...</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Subtipo / Ítem <span class="req">*</span></label>
+        <select id="f-subtipo" onchange="onSubtipoChange()">
+          <option value="">Primero selecciona el tipo...</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Moneda <span class="req">*</span></label>
+        <select id="f-moneda">
+          <option value="CLP">CLP – Peso Chileno</option>
+          <option value="UF">UF</option>
+          <option value="USD">USD – Dólar</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Monto Presupuestado <span class="req">*</span></label>
+        <input type="number" id="f-monto" min="0" placeholder="0">
+      </div>
+      <div class="form-group">
+        <label>Cuenta Contable</label>
+        <input type="text" id="f-cuenta" placeholder="Autocompletado por subtipo" readonly class="field-locked">
+      </div>
+      <div class="form-group">
+        <label>Grupo Cuenta</label>
+        <input type="text" id="f-grupocuenta" placeholder="Autocompletado" readonly class="field-locked">
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeModal('modal-fila')">Cancelar</button>
+      <button class="btn btn-primary" id="btn-guardar-fila" onclick="guardarFila()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL REAL -->
+<div class="modal-overlay" id="modal-real">
+  <div class="modal-box" style="width:400px">
+    <div class="modal-title">Registrar gasto real</div>
+    <div class="modal-sub">Ingresa el monto real ejecutado para este mes.</div>
+    <div class="status-msg" id="real-status"></div>
+    <div class="form-grid">
+      <div class="form-group full"><label>Ítem</label><input type="text" id="real-item" readonly class="field-locked"></div>
+      <div class="form-group"><label>Mes</label><input type="text" id="real-mes" readonly class="field-locked"></div>
+      <div class="form-group"><label>Presupuesto ítem</label><input type="text" id="real-pres" readonly class="field-locked"></div>
+      <div class="form-group full"><label>Monto real <span class="req">*</span></label><input type="number" id="real-monto" min="0" placeholder="0"></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeModal('modal-real')">Cancelar</button>
+      <button class="btn btn-primary" onclick="guardarReal()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════
+//  SUPABASE
+// ═══════════════════════════════════════════════
+const SB_URL  = 'https://iwaosynzrbhkwcmhiilx.supabase.co';
+const SB_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml3YW9zeW56cmJoa3djbWhpaWx4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA0MTU4NzUsImV4cCI6MjA5NTk5MTg3NX0.LwOaFc7vObJlR3Muer7uZxCYSphe2EbYjPTkZ6lGrXQ';
+let SB_TOKEN=null,_currentUser=null;
+function sbH(e={}){const h={'Content-Type':'application/json','apikey':SB_ANON,...e};if(SB_TOKEN)h['Authorization']='Bearer '+SB_TOKEN;return h;}
+async function sbGet(t,p=''){const r=await fetch(`${SB_URL}/rest/v1/${t}${p}`,{headers:sbH()});if(!r.ok)throw new Error(await r.text());return r.json();}
+
+// ═══════════════════════════════════════════════
+//  CONSTANTES
+// ═══════════════════════════════════════════════
+const ROLES_PERMITIDOS=['superusuario','presupuesto','presupuesto_docente','presupuesto_rrhh','admin','directorio'];
+
+// Departamentos docentes — usan estructura de gastos docentes
+const DEPTOS_DOCENTES=['Subdirección Académica','Alemán','Inglés','Lenguaje','Educación Física','ACLE','Ciencias','Matemáticas','Párvulos','Arte y Música','Historia y Ciencias Sociales','IB'];
+const DEPTOS_TODOS=['Dirección','Subdirección Académica','Administración','Alemán','Inglés','Lenguaje','Educación Física','ACLE','Ciencias','Matemáticas','Párvulos','Arte y Música','Historia y Ciencias Sociales','IB','Informática','Biblioteca','Mantenimiento','RRHH'];
+const MESES=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+
+// Estructura de tipos de gasto docente (con subtipos y cuentas)
+const GASTOS_DOCENTES={
+  'Actividades_Pedagógicas':{
+    label:'Actividades Pedagógicas',
+    subtipos:[
+      {codigo:'4010100300',nombre:'Actividades Deportivas'},
+      {codigo:'4010100400',nombre:'Giras Pedagógicas'},
+      {codigo:'4010300200',nombre:'Licenciatura'},
+      {codigo:'4010300400',nombre:'Gira Alemania Aporte Colegio'},
+    ]
+  },
+  'Insumos_Académicos':{
+    label:'Insumos Académicos',
+    subtipos:[
+      {codigo:'4010100100',nombre:'Fotocopias y Papel Fotocopias'},
+      {codigo:'4010300100',nombre:'Eventos y Atención Alumnos'},
+      {codigo:'4010300500',nombre:'Bono Sala Cuna'},
+      {codigo:'4010300700',nombre:'Materiales Didácticos, Libros y Suscripciones'},
+      {codigo:'4010300800',nombre:'Implementación Deportiva'},
+      {codigo:'4010300900',nombre:'Hoteles y Viajes'},
+      {codigo:'4010301000',nombre:'Materiales Escolares'},
+      {codigo:'4010400400',nombre:'Insumos Computacionales'},
+      {codigo:'4010100500',nombre:'Gastos Viajes Profesor'},
+      {codigo:'4010100800',nombre:'Material Of. Depto Docentes'},
+      {codigo:'4010100900',nombre:'Viáticos'},
+      {codigo:'4010101100',nombre:'Atención Profesores'},
+    ]
+  },
+  // Solo RRHH y superusuario
+  'Otros_Gastos_del_Personal_Docente':{
+    label:'Otros Gastos del Personal Docente',
+    soloRRHH:true,
+    subtipos:[
+      {codigo:'4010100700',nombre:'Uniformes Docentes'},
+    ]
+  },
+  'Remuneración_Docente':{
+    label:'Remuneración Docente',
+    soloRRHH:true,
+    subtipos:[
+      {codigo:'4010100100',nombre:'Remuneraciones Docentes'},
+      {codigo:'4010100200',nombre:'Honorarios'},
+      {codigo:'4010101000',nombre:'Finiquitos Docentes'},
+      {codigo:'4010101100',nombre:'Atención Profesores'},
+      {codigo:'4010200100',nombre:'Capacitación Docente'},
+    ]
+  }
+};
+
+// Para departamentos no docentes: tipos genéricos
+const GASTOS_GENERALES={
+  'Gasto corriente':{label:'Gasto corriente',subtipos:[{codigo:'',nombre:'Materiales y suministros'},{codigo:'',nombre:'Servicios básicos'},{codigo:'',nombre:'Otros gastos corrientes'}]},
+  'Inversión':{label:'Inversión',subtipos:[{codigo:'',nombre:'Equipamiento'},{codigo:'',nombre:'Infraestructura'},{codigo:'',nombre:'Tecnología'}]},
+  'Servicios':{label:'Servicios',subtipos:[{codigo:'',nombre:'Servicios profesionales'},{codigo:'',nombre:'Mantención'},{codigo:'',nombre:'Capacitación'}]},
+  'Personal':{label:'Personal',subtipos:[{codigo:'',nombre:'Remuneraciones'},{codigo:'',nombre:'Honorarios'},{codigo:'',nombre:'Horas extra'}]},
+};
+
+// Definición de columnas para tabla de carga
+const TODAS_COLUMNAS=[
+  {id:'actividad',label:'Actividad o Gasto',visible:true,soloSuper:false},
+  {id:'descripcion',label:'Descripción',visible:true,soloSuper:false},
+  {id:'tipo',label:'Tipo de Gasto',visible:true,soloSuper:false},
+  {id:'subtipo',label:'Subtipo / Ítem',visible:true,soloSuper:false},
+  {id:'cuenta',label:'Cuenta Contable',visible:true,soloSuper:true},
+  {id:'grupoCuenta',label:'Grupo Cuenta',visible:true,soloSuper:true},
+  {id:'moneda',label:'Moneda',visible:true,soloSuper:true},
+  {id:'monto',label:'Monto',visible:true,soloSuper:false},
+  {id:'acciones',label:'Acciones',visible:true,soloSuper:false},
+];
+
+// ═══════════════════════════════════════════════
+//  STATE
+// ═══════════════════════════════════════════════
+let _anio=new Date().getFullYear();
+let _filas=[];
+let _reales={};
+let _editingId=null;
+let _realEditing={filaId:null,mes:null};
+let _nextId=200;
+let _previewRol=null; // null = vista real
+let _colsVisibles=new Set(TODAS_COLUMNAS.map(c=>c.id));
+
+// MOCK DATA
+const _mock=[
+  {id:1,actividad:'Gira Pedagógica 5°B',descripcion:'Visita museo regional',departamento:'Alemán',tipo:'Actividades_Pedagógicas',subtipo:'Giras Pedagógicas',cuenta:'4010100400',grupoCuenta:'Actividades Pedagógicas',moneda:'CLP',monto:350000,anio:2026},
+  {id:2,actividad:'Materiales didácticos',descripcion:'Libros y cuadernos alemán',departamento:'Alemán',tipo:'Insumos_Académicos',subtipo:'Materiales Didácticos, Libros y Suscripciones',cuenta:'4010300700',grupoCuenta:'Insumos Académicos',moneda:'CLP',monto:280000,anio:2026},
+  {id:3,actividad:'Licencias Office',descripcion:'Suite anual',departamento:'Informática',tipo:'Inversión',subtipo:'Tecnología',cuenta:'',grupoCuenta:'Inversión',moneda:'CLP',monto:1200000,anio:2026},
+  {id:4,actividad:'Papel fotocopias',descripcion:'Resmas anuales',departamento:'Informática',tipo:'Gasto corriente',subtipo:'Materiales y suministros',cuenta:'',grupoCuenta:'Gasto corriente',moneda:'CLP',monto:180000,anio:2026},
+];
+const _realesMock={'1_3':180000,'1_4':170000,'2_3':140000,'2_4':140000,'3_1':1200000,'4_1':90000,'4_2':90000};
+
+// ═══════════════════════════════════════════════
+//  AUTH
+// ═══════════════════════════════════════════════
+async function checkSession(){
+  const token=sessionStorage.getItem('sb_token');
+  if(!token){window.location.replace('index.html');return;}
+  SB_TOKEN=token;
+  try{
+    const res=await fetch(`${SB_URL}/auth/v1/user`,{headers:{'apikey':SB_ANON,'Authorization':'Bearer '+token}});
+    if(!res.ok){sessionStorage.clear();window.location.replace('index.html');return;}
+    const data=await res.json();
+    sessionStorage.setItem('sb_uid',data.id);
+    sessionStorage.setItem('sb_email',data.email);
+    const rows=await sbGet('app_usuarios',`?id=eq.${data.id}&select=nombre,email,rol,departamento`);
+    _currentUser=rows&&rows.length>0?rows[0]:{nombre:data.email.split('@')[0],email:data.email,rol:'operador',departamento:''};
+  }catch(e){
+    _currentUser={nombre:'',email:'',rol:'operador',departamento:''};
+  }
+  if(!ROLES_PERMITIDOS.includes(_currentUser.rol)){
+    document.getElementById('blocked-view').classList.add('show');
+    return;
+  }
+  initApp();
+}
+function doLogout(){SB_TOKEN=null;_currentUser=null;sessionStorage.clear();window.location.replace('index.html');}
+
+// ═══════════════════════════════════════════════
+//  HELPERS DE ROL
+// ═══════════════════════════════════════════════
+function rolEfectivo(){return _previewRol||_currentUser.rol;}
+function esSuper(){return rolEfectivo()==='superusuario';}
+function esRRHH(){return rolEfectivo()==='presupuesto_rrhh'||rolEfectivo()==='superusuario';}
+function esDocente(depto){return DEPTOS_DOCENTES.includes(depto);}
+function puedeVerTipoRRHH(tipo){return GASTOS_DOCENTES[tipo]?.soloRRHH ? esRRHH() : true;}
+function puedeEditarDepto(depto){
+  const u=_currentUser;
+  if(u.rol==='superusuario') return true;
+  return u.departamento===depto;
+}
+
+// ═══════════════════════════════════════════════
+//  INIT
+// ═══════════════════════════════════════════════
+function initApp(){
+  document.getElementById('main-hdr').style.display='';
+  document.getElementById('main-content').style.display='';
+  const u=_currentUser;
+  const initials=(u.nombre||'').split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase()||'?';
+  document.getElementById('user-avatar').textContent=initials;
+  document.getElementById('user-name').textContent=u.nombre||u.email;
+
+  if(u.rol==='superusuario'){
+    document.getElementById('preview-controls').style.display='flex';
+    document.querySelectorAll('.super-tab').forEach(t=>t.style.display='');
+    document.getElementById('col-selector').style.display='flex';
+  }
+
+  _filas=[..._mock];
+  Object.assign(_reales,_realesMock);
+
+  poblarAreasSelects();
+  construirColToggles();
+  poblarFiltroTipos();
+  renderCarga();
+  renderEjecucion();
+  document.getElementById('anio-carga').textContent=_anio;
+  document.getElementById('anio-exec').textContent=_anio;
+}
+
+function poblarAreasSelects(){
+  const u=_currentUser;
+  const rol=rolEfectivo();
+  const esSup=rol==='superusuario';
+  const areas=esSup?DEPTOS_TODOS:(u.departamento?[u.departamento]:[]);
+
+  ['select-area-carga','select-area-exec'].forEach(id=>{
+    const sel=document.getElementById(id);
+    sel.innerHTML='';
+    if(esSup) sel.innerHTML='<option value="">Todos los departamentos</option>';
+    areas.forEach(a=>{const o=document.createElement('option');o.value=a;o.textContent=a;sel.appendChild(o);});
+    if(u.departamento) sel.value=u.departamento;
+  });
+
+  // Modal departamento
+  const fsel=document.getElementById('f-departamento');
+  fsel.innerHTML='<option value="">Seleccionar...</option>';
+  areas.forEach(a=>{const o=document.createElement('option');o.value=a;o.textContent=a;fsel.appendChild(o);});
+  if(u.departamento) fsel.value=u.departamento;
+}
+
+function construirColToggles(){
+  const wrap=document.getElementById('col-toggles');
+  wrap.innerHTML='';
+  TODAS_COLUMNAS.filter(c=>c.soloSuper&&c.id!=='acciones').forEach(col=>{
+    const lbl=document.createElement('label');
+    lbl.className='col-toggle';
+    lbl.innerHTML=`<input type="checkbox" ${_colsVisibles.has(col.id)?'checked':''} onchange="toggleCol('${col.id}',this.checked)"> ${col.label}`;
+    wrap.appendChild(lbl);
+  });
+}
+
+function toggleCol(id,visible){
+  if(visible) _colsVisibles.add(id); else _colsVisibles.delete(id);
+  renderCarga();
+}
+
+function poblarFiltroTipos(){
+  const sel=document.getElementById('filter-tipo-carga');
+  sel.innerHTML='<option value="">Todos los tipos</option>';
+  const tipos=new Set([...Object.keys(GASTOS_DOCENTES),...Object.keys(GASTOS_GENERALES)]);
+  tipos.forEach(t=>{
+    const label=(GASTOS_DOCENTES[t]||GASTOS_GENERALES[t]).label;
+    sel.innerHTML+=`<option value="${t}">${label}</option>`;
+  });
+}
+
+// ═══════════════════════════════════════════════
+//  PREVIEW
+// ═══════════════════════════════════════════════
+const PREVIEW_LABELS={
+  'presupuesto_docente':'Jefe de Departamento Docente',
+  'presupuesto_rrhh':'RRHH',
+  'presupuesto':'Responsable Presupuesto (no docente)',
+};
+function activarPreview(){
+  const sel=document.getElementById('preview-rol-select');
+  _previewRol=sel.value||null;
+  if(_previewRol){
+    document.getElementById('preview-banner').style.display='flex';
+    document.getElementById('preview-label').textContent=PREVIEW_LABELS[_previewRol]||_previewRol;
+    document.getElementById('btn-exit-preview').style.display='';
+  } else {
+    salirPreview();return;
+  }
+  poblarAreasSelects();
+  renderCarga();
+}
+function salirPreview(){
+  _previewRol=null;
+  document.getElementById('preview-rol-select').value='';
+  document.getElementById('preview-banner').style.display='none';
+  document.getElementById('btn-exit-preview').style.display='none';
+  poblarAreasSelects();
+  renderCarga();
+}
+
+// ═══════════════════════════════════════════════
+//  TABS
+// ═══════════════════════════════════════════════
+function showTab(id,btn){
+  document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('tab-'+id).classList.add('active');
+  btn.classList.add('active');
+  if(id==='consolidado') renderConsolidado();
+}
+function cambiarAnio(d){
+  _anio+=d;
+  document.getElementById('anio-carga').textContent=_anio;
+  document.getElementById('anio-exec').textContent=_anio;
+  renderCarga();renderEjecucion();
+}
+
+// ═══════════════════════════════════════════════
+//  RENDER CARGA
+// ═══════════════════════════════════════════════
+function getFilasCarga(){
+  const area=document.getElementById('select-area-carga').value;
+  const tipo=document.getElementById('filter-tipo-carga').value;
+  return _filas.filter(f=>{
+    const matchAnio=f.anio===_anio;
+    const matchArea=!area||f.departamento===area;
+    const matchTipo=!tipo||f.tipo===tipo;
+    // Filtrar tipos RRHH si no tiene permiso
+    const matchPerm=puedeVerTipoRRHH(f.tipo);
+    return matchAnio&&matchArea&&matchTipo&&matchPerm;
+  });
+}
+
+function renderCarga(){
+  const filas=getFilasCarga();
+  const agrupar=document.getElementById('chk-grupos').checked;
+  const area=document.getElementById('select-area-carga').value;
+  const puedeEditar=_currentUser.rol==='superusuario'?true:puedeEditarDepto(area);
+  const rol=rolEfectivo();
+  const esSup=rol==='superusuario';
+
+  // Mostrar/ocultar botón agregar
+  document.getElementById('btn-agregar').style.display=(puedeEditar&&!_previewRol)||(_previewRol&&false)?'':'none';
+  if(!_previewRol&&puedeEditar) document.getElementById('btn-agregar').style.display='';
+  else if(_previewRol) document.getElementById('btn-agregar').style.display='none';
+
+  // Columnas visibles según rol efectivo
+  const colsRender=TODAS_COLUMNAS.filter(c=>{
+    if(!esSup&&c.soloSuper) return false; // no superusuario no ve cols marcadas soloSuper
+    if(esSup&&!_colsVisibles.has(c.id)) return false; // superusuario respeta toggle
+    return true;
+  });
+
+  // Render thead
+  const thead=document.getElementById('carga-thead');
+  thead.innerHTML='<tr>'+colsRender.map(c=>`<th${c.id==='monto'?' class="num"':''}>${c.label}</th>`).join('')+'</tr>';
+
+  const tbody=document.getElementById('carga-tbody');
+  if(!filas.length){
+    tbody.innerHTML=`<tr><td colspan="${colsRender.length}"><div class="no-data"><div class="icon">📋</div><p>Sin filas.${puedeEditar&&!_previewRol?' Usa "+ Agregar fila".':''}</p></div></td></tr>`;
+    document.getElementById('carga-info').textContent='0 filas';
+    document.getElementById('carga-total').textContent='';
+    return;
+  }
+
+  let html='';
+  if(agrupar){
+    const grupos={};
+    filas.forEach(f=>{if(!grupos[f.tipo])grupos[f.tipo]=[];grupos[f.tipo].push(f);});
+    Object.entries(grupos).forEach(([tipo,gf])=>{
+      const label=(GASTOS_DOCENTES[tipo]||GASTOS_GENERALES[tipo])?.label||tipo;
+      const sub=gf.filter(f=>f.moneda==='CLP').reduce((s,f)=>s+f.monto,0);
+      html+=`<tr class="grupo-row"><td colspan="${colsRender.length}">📁 ${label} — ${fmtM(sub)}</td></tr>`;
+      html+=gf.map(f=>filaHtmlCarga(f,colsRender,puedeEditar&&!_previewRol)).join('');
+    });
+  } else {
+    html=filas.map(f=>filaHtmlCarga(f,colsRender,puedeEditar&&!_previewRol)).join('');
+  }
+  tbody.innerHTML=html;
+
+  const total=filas.filter(f=>f.moneda==='CLP').reduce((s,f)=>s+f.monto,0);
+  document.getElementById('carga-info').textContent=`${filas.length} fila${filas.length!==1?'s':''}`;
+  document.getElementById('carga-total').textContent=`Total CLP: ${fmtM(total)}`;
+}
+
+function filaHtmlCarga(f,cols,puedeEditar){
+  const label=(GASTOS_DOCENTES[f.tipo]||GASTOS_GENERALES[f.tipo])?.label||f.tipo;
+  const cellMap={
+    actividad:`<td><strong>${f.actividad}</strong></td>`,
+    descripcion:`<td style="font-size:12px;color:var(--ink3)">${f.descripcion||'—'}</td>`,
+    tipo:`<td><span class="badge badge-blue" style="font-size:10px">${label}</span></td>`,
+    subtipo:`<td style="font-size:12px">${f.subtipo||'—'}</td>`,
+    cuenta:`<td class="td-mono">${f.cuenta||'—'}</td>`,
+    grupoCuenta:`<td style="font-size:12px">${f.grupoCuenta||'—'}</td>`,
+    moneda:`<td class="td-mono">${f.moneda}</td>`,
+    monto:`<td class="num" style="font-weight:600">${f.moneda==='CLP'?fmtM(f.monto):f.monto+' '+f.moneda}</td>`,
+    acciones:`<td>${puedeEditar?`<div style="display:flex;gap:5px"><button class="btn btn-sm btn-secondary" onclick="openModalEditar(${f.id})">✏</button><button class="btn btn-sm btn-danger" onclick="eliminarFila(${f.id})">🗑</button></div>`:'<span style="font-size:11px;color:var(--ink4)">Solo lectura</span>'}</td>`,
+  };
+  return '<tr>'+cols.map(c=>cellMap[c.id]||'<td>—</td>').join('')+'</tr>';
+}
+
+// ═══════════════════════════════════════════════
+//  RENDER EJECUCIÓN
+// ═══════════════════════════════════════════════
+function getFilasExec(){
+  const area=document.getElementById('select-area-exec').value;
+  return _filas.filter(f=>f.anio===_anio&&(!area||f.departamento===area)&&puedeVerTipoRRHH(f.tipo));
+}
+function sumaReal(id){return[1,2,3,4,5,6,7,8,9,10,11,12].reduce((s,m)=>s+(_reales[`${id}_${m}`]||0),0);}
+
+function renderEjecucion(){
+  const filas=getFilasExec();
+  const area=document.getElementById('select-area-exec').value;
+  const puedeEditar=_currentUser.rol==='superusuario'?true:puedeEditarDepto(area);
+  const tbody=document.getElementById('exec-tbody');
+  let tPres=0,tReal=0;
+  if(!filas.length){
+    tbody.innerHTML=`<tr><td colspan="18"><div class="no-data"><div class="icon">📈</div><p>Sin datos de presupuesto para esta área.</p></div></td></tr>`;
+    actualizarKpisExec(0,0);return;
+  }
+  const grupos={};
+  filas.forEach(f=>{if(!grupos[f.tipo])grupos[f.tipo]=[];grupos[f.tipo].push(f);});
+  let html='';
+  Object.entries(grupos).forEach(([tipo,gf])=>{
+    const label=(GASTOS_DOCENTES[tipo]||GASTOS_GENERALES[tipo])?.label||tipo;
+    const gP=gf.reduce((s,f)=>s+f.monto,0);
+    const gR=gf.reduce((s,f)=>s+sumaReal(f.id),0);
+    html+=`<tr class="grupo-hdr" style="background:var(--bg3)"><td colspan="18" style="padding:7px 12px;font-weight:700;font-size:11px;color:var(--ink2)">📁 ${label} — Pres: ${fmtM(gP)} · Real: ${fmtM(gR)}</td></tr>`;
+    gf.forEach(f=>{
+      const real=sumaReal(f.id);
+      const diff=f.monto-real;
+      const pct=f.monto>0?Math.min(Math.round((real/f.monto)*100),999):0;
+      tPres+=f.monto;tReal+=real;
+      const mesesCols=[1,2,3,4,5,6,7,8,9,10,11,12].map(m=>{
+        const v=_reales[`${f.id}_${m}`]||0;
+        const ed=puedeEditar?`onclick="abrirModalReal(${f.id},${m})" style="cursor:pointer;text-decoration:underline dotted" title="Clic para editar"` :'';
+        return `<td class="num" ${ed}>${v>0?fmtM(v):'<span style="color:var(--ink4)">—</span>'}</td>`;
+      }).join('');
+      html+=`<tr>
+        <td><strong style="font-size:12px">${f.actividad}</strong><div style="font-size:11px;color:var(--ink3)">${f.subtipo||''}</div></td>
+        <td style="font-size:11px;color:var(--ink3)">${f.descripcion||'—'}</td>
+        <td class="num">${fmtM(f.monto)}</td>
+        ${mesesCols}
+        <td class="num"><strong>${fmtM(real)}</strong></td>
+        <td class="num ${diff>=0?'diff-pos':'diff-neg'}">${diff>=0?'+':''}${fmtM(Math.abs(diff))}</td>
+        <td><div class="progress-wrap"><div class="progress-fill ${pct>100?'over':''}" style="width:${Math.min(pct,100)}%"></div></div><div style="font-size:10px;text-align:center;margin-top:2px;color:var(--ink3)">${pct}%</div></td>
+      </tr>`;
+    });
+  });
+  tbody.innerHTML=html;
+  actualizarKpisExec(tPres,tReal);
+}
+
+function actualizarKpisExec(p,r){
+  const pct=p>0?Math.round((r/p)*100):0;
+  document.getElementById('kpi-pres').textContent=fmtM(p);
+  document.getElementById('kpi-real').textContent=fmtM(r);
+  document.getElementById('kpi-pct').textContent=pct+'%';
+  document.getElementById('kpi-saldo').textContent=fmtM(p-r);
+}
+
+function abrirModalReal(filaId,mes){
+  const f=_filas.find(x=>x.id===filaId);if(!f)return;
+  _realEditing={filaId,mes};
+  document.getElementById('real-item').value=f.actividad;
+  document.getElementById('real-mes').value=MESES[mes-1];
+  document.getElementById('real-pres').value=fmtM(f.monto);
+  document.getElementById('real-monto').value=_reales[`${filaId}_${mes}`]||'';
+  openModal('modal-real');
+}
+function guardarReal(){
+  const monto=parseFloat(document.getElementById('real-monto').value)||0;
+  _reales[`${_realEditing.filaId}_${_realEditing.mes}`]=monto;
+  closeModal('modal-real');
+  renderEjecucion();
+}
+
+// ═══════════════════════════════════════════════
+//  RENDER CONSOLIDADO
+// ═══════════════════════════════════════════════
+function renderConsolidado(){
+  const deptos=[...new Set(_filas.filter(f=>f.anio===_anio).map(f=>f.departamento))];
+  let tP=0,tR=0;
+  const rows=deptos.map(d=>{
+    const fd=_filas.filter(f=>f.anio===_anio&&f.departamento===d);
+    const p=fd.reduce((s,f)=>s+f.monto,0);
+    const r=fd.reduce((s,f)=>s+sumaReal(f.id),0);
+    const pct=p>0?Math.round((r/p)*100):0;
+    tP+=p;tR+=r;
+    const estado=pct>=100?'<span class="badge badge-red">Sobreejecutado</span>':pct>=80?'<span class="badge badge-amber">En riesgo</span>':'<span class="badge badge-green">Normal</span>';
+    return `<tr><td><strong>${d}</strong></td><td class="num">${fmtM(p)}</td><td class="num">${fmtM(r)}</td><td class="num">${pct}%</td><td class="num" style="${p-r<0?'color:var(--red)':''}">${fmtM(p-r)}</td><td>${estado}</td></tr>`;
+  });
+  document.getElementById('consolidado-tbody').innerHTML=rows.join('')||'<tr><td colspan="6" style="text-align:center;padding:20px;color:var(--ink3)">Sin datos</td></tr>';
+  const pctT=tP>0?Math.round((tR/tP)*100):0;
+  document.getElementById('consolidado-kpis').innerHTML=`
+    <div class="kpi blue"><div class="kpi-label">Presupuesto Colegio</div><div class="kpi-value">${fmtM(tP)}</div><div class="kpi-sub">total planificado</div></div>
+    <div class="kpi green"><div class="kpi-label">Ejecutado Total</div><div class="kpi-value">${fmtM(tR)}</div><div class="kpi-sub">registrado</div></div>
+    <div class="kpi amber"><div class="kpi-label">% Ejecución Global</div><div class="kpi-value">${pctT}%</div><div class="kpi-sub">del presupuesto</div></div>
+    <div class="kpi"><div class="kpi-label">Departamentos</div><div class="kpi-value">${deptos.length}</div><div class="kpi-sub">con presupuesto</div></div>`;
+}
+
+// ═══════════════════════════════════════════════
+//  CRUD MODAL FILA
+// ═══════════════════════════════════════════════
+function onDeptoChange(){
+  poblarTiposModal();
+  document.getElementById('f-subtipo').innerHTML='<option value="">Primero selecciona el tipo...</option>';
+  document.getElementById('f-cuenta').value='';
+  document.getElementById('f-grupocuenta').value='';
+}
+
+function poblarTiposModal(){
+  const depto=document.getElementById('f-departamento').value;
+  const sel=document.getElementById('f-tipo');
+  sel.innerHTML='<option value="">Seleccionar...</option>';
+  const esDoc=esDocente(depto);
+  const pool=esDoc?GASTOS_DOCENTES:GASTOS_GENERALES;
+  Object.entries(pool).forEach(([key,val])=>{
+    if(val.soloRRHH&&!esRRHH()) return; // ocultar si no tiene permiso
+    sel.innerHTML+=`<option value="${key}">${val.label}</option>`;
+  });
+  // Hint
+  const hint=document.getElementById('modal-hint');
+  if(esDoc&&!esRRHH()){
+    hint.textContent='ℹ Los tipos "Otros Gastos del Personal Docente" y "Remuneración Docente" solo pueden ser cargados por RRHH o Superusuario.';
+    hint.style.display='';
+  } else {
+    hint.style.display='none';
+  }
+}
+
+function onTipoChange(){
+  const tipo=document.getElementById('f-tipo').value;
+  const depto=document.getElementById('f-departamento').value;
+  const esDoc=esDocente(depto);
+  const pool=esDoc?GASTOS_DOCENTES:GASTOS_GENERALES;
+  const entry=pool[tipo];
+  const sel=document.getElementById('f-subtipo');
+  sel.innerHTML='<option value="">Seleccionar subtipo...</option>';
+  if(entry){
+    entry.subtipos.forEach(s=>{
+      sel.innerHTML+=`<option value="${s.nombre}" data-codigo="${s.codigo}">${s.codigo?s.codigo+' — ':''} ${s.nombre}</option>`;
+    });
+    document.getElementById('f-grupocuenta').value=entry.label;
+  }
+  document.getElementById('f-cuenta').value='';
+}
+
+function onSubtipoChange(){
+  const sel=document.getElementById('f-subtipo');
+  const opt=sel.options[sel.selectedIndex];
+  const codigo=opt?.dataset?.codigo||'';
+  document.getElementById('f-cuenta').value=codigo;
+}
+
+function openModalAgregar(){
+  _editingId=null;
+  document.getElementById('modal-titulo').textContent='Agregar fila de presupuesto';
+  document.getElementById('btn-guardar-fila').textContent='Guardar';
+  ['f-actividad','f-descripcion','f-monto'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('f-moneda').value='CLP';
+  document.getElementById('f-subtipo').innerHTML='<option>Primero selecciona el tipo...</option>';
+  document.getElementById('f-cuenta').value='';
+  document.getElementById('f-grupocuenta').value='';
+  document.getElementById('fila-status').className='status-msg';
+  const area=document.getElementById('select-area-carga').value;
+  if(area) document.getElementById('f-departamento').value=area;
+  poblarTiposModal();
+  openModal('modal-fila');
+}
+
+function openModalEditar(id){
+  const f=_filas.find(x=>x.id===id);if(!f)return;
+  _editingId=id;
+  document.getElementById('modal-titulo').textContent='Editar fila';
+  document.getElementById('f-actividad').value=f.actividad;
+  document.getElementById('f-descripcion').value=f.descripcion||'';
+  document.getElementById('f-departamento').value=f.departamento;
+  poblarTiposModal();
+  document.getElementById('f-tipo').value=f.tipo;
+  onTipoChange();
+  document.getElementById('f-subtipo').value=f.subtipo||'';
+  document.getElementById('f-cuenta').value=f.cuenta||'';
+  document.getElementById('f-grupocuenta').value=f.grupoCuenta||'';
+  document.getElementById('f-moneda').value=f.moneda;
+  document.getElementById('f-monto').value=f.monto;
+  document.getElementById('fila-status').className='status-msg';
+  openModal('modal-fila');
+}
+
+async function guardarFila(){
+  const actividad=document.getElementById('f-actividad').value.trim();
+  const depto=document.getElementById('f-departamento').value;
+  const tipo=document.getElementById('f-tipo').value;
+  const subtipo=document.getElementById('f-subtipo').value;
+  const moneda=document.getElementById('f-moneda').value;
+  const monto=parseFloat(document.getElementById('f-monto').value)||0;
+  const cuenta=document.getElementById('f-cuenta').value;
+  const grupoCuenta=document.getElementById('f-grupocuenta').value;
+  const st=document.getElementById('fila-status');
+  if(!actividad||!depto||!tipo||!subtipo||monto<=0){st.textContent='Completa todos los campos obligatorios.';st.className='status-msg err';return;}
+  const fila={actividad,descripcion:document.getElementById('f-descripcion').value,departamento:depto,tipo,subtipo,cuenta,grupoCuenta,moneda,monto,anio:_anio};
+  if(_editingId){
+    const idx=_mock.findIndex(x=>x.id===_editingId);
+    if(idx>=0)_mock[idx]={..._mock[idx],...fila};
+  } else {
+    _mock.push({id:_nextId++,...fila});
+  }
+  _filas=[..._mock];
+  st.textContent='✓ Guardado.';st.className='status-msg ok';
+  renderCarga();renderEjecucion();
+  setTimeout(()=>closeModal('modal-fila'),800);
+}
+
+function eliminarFila(id){
+  if(!confirm('¿Eliminar esta fila?'))return;
+  const idx=_mock.findIndex(f=>f.id===id);
+  if(idx>=0)_mock.splice(idx,1);
+  _filas=[..._mock];
+  renderCarga();renderEjecucion();
+}
+
+// ═══════════════════════════════════════════════
+//  EXPORTS
+// ═══════════════════════════════════════════════
+function exportarExcel(){
+  const filas=getFilasCarga();
+  if(!filas.length){alert('Sin datos.');return;}
+  const ws=XLSX.utils.aoa_to_sheet([
+    ['Actividad o Gasto','Descripción','Departamento','Tipo','Subtipo','Cuenta','Grupo Cuenta','Moneda','Monto','Año'],
+    ...filas.map(f=>[f.actividad,f.descripcion||'',f.departamento,f.tipo,f.subtipo||'',f.cuenta||'',f.grupoCuenta||'',f.moneda,f.monto,f.anio])
+  ]);
+  const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,`Presupuesto ${_anio}`);
+  XLSX.writeFile(wb,`presupuesto_${_anio}.xlsx`);
+}
+function exportarEjecucion(){
+  const filas=getFilasExec();
+  if(!filas.length){alert('Sin datos.');return;}
+  const hdrs=['Actividad','Subtipo','Cuenta','Presupuesto',...MESES,'Total Real','Diferencia','% Ejec.'];
+  const rows=filas.map(f=>{
+    const ms=[1,2,3,4,5,6,7,8,9,10,11,12].map(m=>_reales[`${f.id}_${m}`]||0);
+    const r=ms.reduce((a,b)=>a+b,0);
+    return[f.actividad,f.subtipo||'',f.cuenta||'',f.monto,...ms,r,f.monto-r,f.monto>0?Math.round((r/f.monto)*100)+'%':'-'];
+  });
+  const ws=XLSX.utils.aoa_to_sheet([hdrs,...rows]);
+  const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,`Ejecución ${_anio}`);
+  XLSX.writeFile(wb,`ejecucion_${_anio}.xlsx`);
+}
+function exportarConsolidado(){
+  const deptos=[...new Set(_filas.filter(f=>f.anio===_anio).map(f=>f.departamento))];
+  const rows=deptos.map(d=>{
+    const fd=_filas.filter(f=>f.anio===_anio&&f.departamento===d);
+    const p=fd.reduce((s,f)=>s+f.monto,0);
+    const r=fd.reduce((s,f)=>s+sumaReal(f.id),0);
+    return[d,p,r,p>0?Math.round((r/p)*100)+'%':'-',p-r];
+  });
+  const ws=XLSX.utils.aoa_to_sheet([['Departamento','Presupuesto','Ejecutado','% Ejec.','Saldo'],...rows]);
+  const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,`Consolidado ${_anio}`);
+  XLSX.writeFile(wb,`consolidado_${_anio}.xlsx`);
+}
+
+// ═══════════════════════════════════════════════
+//  UTILS
+// ═══════════════════════════════════════════════
+function fmtM(n){n=Math.abs(n||0);if(n>=1000000)return'$'+(n/1000000).toFixed(1).replace('.',',')+' M';if(n>=1000)return'$'+Math.round(n/1000)+' K';return'$'+Math.round(n).toLocaleString('es-CL');}
+function openModal(id){document.getElementById(id).classList.add('open');}
+function closeModal(id){document.getElementById(id).classList.remove('open');}
+document.querySelectorAll('.modal-overlay').forEach(el=>el.addEventListener('click',e=>{if(e.target===el)el.classList.remove('open');}));
+document.addEventListener('DOMContentLoaded',checkSession);
+</script>
+</body>
+</html>
