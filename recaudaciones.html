@@ -1,0 +1,2320 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Recaudaciones · Sistema CAC</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#F4F1EB;--bg2:#EDEAE0;--bg3:#E4E0D3;
+  --card:#FDFCF8;--card2:#F7F5EE;
+  --ink:#1C1A14;--ink2:#4A4740;--ink3:#7A7670;--ink4:#A8A49E;
+  --border:rgba(28,26,20,0.09);--border2:rgba(28,26,20,0.16);
+  --red:#B5320E;--red-lt:#FBF0EC;--red-bd:rgba(181,50,14,0.2);
+  --amber:#9A5C08;--amber-lt:#FDF5E6;--amber-bd:rgba(154,92,8,0.2);
+  --green:#2A6040;--green-lt:#ECF5EF;--green-bd:rgba(42,96,64,0.2);
+  --blue:#1A4A7A;--blue-lt:#EBF2FB;--blue-bd:rgba(26,74,122,0.2);
+}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--ink);font-size:14px;line-height:1.5;min-height:100vh}
+
+/* ── LOGIN ── */
+.login-wrap{display:none;min-height:100vh;align-items:center;justify-content:center;background:var(--ink)}
+.login-wrap.active{display:flex}
+.login-box{background:var(--card);border-radius:16px;width:420px;max-width:95vw;padding:40px;box-shadow:0 32px 80px rgba(0,0,0,0.4)}
+.login-logo{text-align:center;margin-bottom:28px}
+.login-logo h1{font-family:'Playfair Display',serif;font-size:26px;font-weight:700;color:var(--ink)}
+.login-logo h1 span{color:var(--red)}
+.login-logo p{font-size:11px;color:var(--ink3);margin-top:4px;letter-spacing:.08em;text-transform:uppercase}
+.login-field{margin-bottom:16px}
+.login-field label{display:block;font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--ink3);margin-bottom:6px}
+.login-field input{width:100%;padding:10px 14px;border:0.5px solid var(--border2);border-radius:8px;background:var(--bg2);color:var(--ink);font-size:14px;font-family:'DM Sans',sans-serif;transition:border-color .15s}
+.login-field input:focus{outline:none;border-color:var(--blue)}
+.login-err{background:var(--red-lt);border:0.5px solid var(--red-bd);border-radius:7px;padding:9px 14px;font-size:12px;color:var(--red);margin-bottom:14px;display:none}
+.login-err.show{display:block}
+.btn-login{width:100%;padding:11px;background:var(--red);color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;margin-top:4px;transition:background .15s}
+.btn-login:hover{background:#9a280b}
+.btn-login:disabled{opacity:.6;cursor:not-allowed}
+.login-footer{text-align:center;margin-top:20px;font-size:10px;color:var(--ink4)}
+
+/* ── APP ── */
+.app-wrap{display:none}
+.app-wrap.active{display:block}
+
+/* ── HEADER ── */
+.hdr{background:var(--ink);color:#F5F2EC;padding:0 36px;display:flex;align-items:center;justify-content:space-between;height:58px;border-bottom:3px solid var(--red);position:sticky;top:0;z-index:100}
+.hdr-left{display:flex;align-items:center;gap:20px}
+.hdr h1{font-family:'Playfair Display',serif;font-size:19px;font-weight:700}
+.hdr h1 span{color:#E8896A}
+.hdr-meta{display:flex;align-items:center;gap:14px}
+.corte-chip{background:rgba(255,255,255,0.08);border-radius:5px;padding:4px 12px;font-family:'DM Mono',monospace;font-size:10px;color:rgba(245,242,236,0.6);letter-spacing:.08em;text-transform:uppercase}
+.user-chip{display:flex;align-items:center;gap:8px;font-size:12px;color:rgba(245,242,236,0.7)}
+.user-avatar{width:28px;height:28px;border-radius:50%;background:var(--red);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;color:#fff;flex-shrink:0}
+.btn-upload{display:flex;align-items:center;gap:6px;padding:6px 14px;background:var(--green);color:#fff;border:none;border-radius:6px;font-size:12px;font-weight:500;cursor:pointer;white-space:nowrap}
+.btn-upload:hover{background:#235234}
+.btn-logout{padding:5px 12px;background:rgba(255,255,255,0.08);color:rgba(245,242,236,0.6);border:0.5px solid rgba(255,255,255,0.1);border-radius:5px;font-size:11px;cursor:pointer}
+.btn-logout:hover{background:rgba(255,255,255,0.14);color:#F5F2EC}
+.nav-tabs{display:flex;gap:2px;background:rgba(255,255,255,0.06);border-radius:6px;padding:3px}
+.nav-tab{padding:5px 14px;border-radius:4px;font-size:12px;font-weight:500;color:rgba(245,242,236,0.55);cursor:pointer;border:none;background:none;transition:all .15s}
+.nav-tab:hover{color:#F5F2EC;background:rgba(255,255,255,0.1)}
+.nav-tab.active{background:var(--red);color:#fff}
+
+/* ── MODAL ── */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:200;align-items:center;justify-content:center}
+.modal-overlay.open{display:flex}
+.modal-box{background:var(--card);border-radius:14px;width:520px;max-width:95vw;padding:32px;box-shadow:0 24px 80px rgba(0,0,0,0.25);max-height:90vh;overflow-y:auto}
+.modal-title{font-family:'Playfair Display',serif;font-size:20px;font-weight:700;margin-bottom:6px}
+.modal-sub{font-size:12px;color:var(--ink3);margin-bottom:22px;line-height:1.5}
+.modal-field{margin-bottom:16px}
+.modal-field label{display:block;font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--ink3);margin-bottom:6px}
+.modal-field input{width:100%;padding:9px 12px;border:0.5px solid var(--border2);border-radius:7px;background:var(--bg2);color:var(--ink);font-size:13px;font-family:'DM Sans',sans-serif}
+.modal-field input:focus{outline:none;border-color:var(--blue)}
+.drop-zone{border:2px dashed var(--border2);border-radius:10px;padding:28px;text-align:center;cursor:pointer;transition:all .15s;background:var(--bg2)}
+.drop-zone:hover,.drop-zone.drag{border-color:var(--blue);background:var(--blue-lt)}
+.drop-zone-icon{font-size:30px;margin-bottom:8px}
+.drop-zone-text{font-size:13px;font-weight:500;color:var(--ink)}
+.drop-zone-sub{font-size:11px;color:var(--ink3);margin-top:4px}
+.modal-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:22px;padding-top:18px;border-top:0.5px solid var(--border)}
+.btn-cancel{padding:9px 20px;border-radius:7px;border:0.5px solid var(--border2);background:var(--card2);font-size:13px;cursor:pointer;color:var(--ink)}
+.btn-confirm{padding:9px 20px;border-radius:7px;border:none;background:var(--green);color:#fff;font-size:13px;font-weight:500;cursor:pointer}
+.btn-confirm:disabled{opacity:.5;cursor:not-allowed}
+.progress-bar{height:4px;background:var(--bg3);border-radius:2px;margin-top:12px;overflow:hidden;display:none}
+.progress-fill{height:100%;background:var(--green);border-radius:2px;transition:width .4s}
+
+/* ── STATUS ── */
+.status-bar{padding:9px 16px;border-radius:8px;font-size:12px;margin-bottom:16px;display:none;align-items:center;gap:8px}
+.status-bar.ok{display:flex;background:var(--green-lt);border:0.5px solid var(--green-bd);color:var(--green)}
+.status-bar.error{display:flex;background:var(--red-lt);border:0.5px solid var(--red-bd);color:var(--red)}
+.status-bar.info{display:flex;background:var(--blue-lt);border:0.5px solid var(--blue-bd);color:var(--blue)}
+
+/* ── LAYOUT ── */
+.main{padding:24px 36px 60px;max-width:1320px;margin:0 auto}
+.view{display:none}.view.active{display:block}
+
+/* ── KPIs ── */
+.kpi-row{display:grid;grid-template-columns:repeat(6,1fr);gap:10px;margin-bottom:22px}
+.kpi{background:var(--card);border:0.5px solid var(--border);border-radius:9px;padding:14px 14px 12px;position:relative;overflow:hidden}
+.kpi::before{content:'';position:absolute;top:0;left:0;right:0;height:3px}
+.kpi.r::before{background:var(--red)}.kpi.a::before{background:#C07D20}
+.kpi.g::before{background:var(--green)}.kpi.b::before{background:var(--blue)}.kpi.n::before{background:var(--ink3)}
+.kpi-lbl{font-size:10px;font-weight:500;letter-spacing:.1em;text-transform:uppercase;color:var(--ink3);margin-bottom:7px}
+.kpi-val{font-family:'Playfair Display',serif;font-size:24px;font-weight:700;line-height:1;color:var(--ink)}
+.kpi-val.red{color:var(--red)}.kpi-val.amber{color:var(--amber)}.kpi-val.green{color:var(--green)}
+.kpi-sub{font-size:10px;color:var(--ink4);margin-top:4px;line-height:1.3}
+.kpi-delta{font-size:11px;margin-top:3px;font-weight:500}
+.kpi-delta.up{color:var(--red)}.kpi-delta.down{color:var(--green)}.kpi-delta.flat{color:var(--ink4)}
+
+/* ── CARDS ── */
+.card{background:var(--card);border:0.5px solid var(--border);border-radius:10px;padding:18px}
+.card-title{font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--ink3);margin-bottom:14px}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:16px}
+.g65{display:grid;grid-template-columns:2fr 1fr;gap:14px;margin-bottom:16px}
+.g35{display:grid;grid-template-columns:1fr 2fr;gap:14px;margin-bottom:16px}
+
+/* ── SEMÁFORO ── */
+.sema-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.sema{border-radius:8px;padding:14px 12px;text-align:center}
+.sema.c{background:var(--red-lt);border:1px solid var(--red-bd)}.sema.a{background:var(--amber-lt);border:1px solid var(--amber-bd)}
+.sema.m{background:var(--blue-lt);border:1px solid var(--blue-bd)}.sema.b{background:var(--green-lt);border:1px solid var(--green-bd)}
+.sema-dot{width:9px;height:9px;border-radius:50%;margin:0 auto 7px}
+.sema.c .sema-dot{background:var(--red)}.sema.a .sema-dot{background:#C07D20}
+.sema.m .sema-dot{background:var(--blue)}.sema.b .sema-dot{background:var(--green)}
+.sema-lbl{font-size:10px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;margin-bottom:5px}
+.sema.c .sema-lbl{color:var(--red)}.sema.a .sema-lbl{color:var(--amber)}.sema.m .sema-lbl{color:var(--blue)}.sema.b .sema-lbl{color:var(--green)}
+.sema-n{font-family:'Playfair Display',serif;font-size:28px;font-weight:700;line-height:1;margin-bottom:2px}
+.sema.c .sema-n{color:var(--red)}.sema.a .sema-n{color:var(--amber)}.sema.m .sema-n{color:var(--blue)}.sema.b .sema-n{color:var(--green)}
+.sema-m2{font-family:'DM Mono',monospace;font-size:11px;color:var(--ink2)}
+.sema-p{font-size:10px;color:var(--ink3);margin-top:2px}
+
+/* ── TABLES ── */
+.tbl-wrap{overflow-x:auto}
+.tbl{width:100%;border-collapse:collapse;font-size:12px}
+.tbl th{font-size:9px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--ink3);padding:5px 8px 9px;text-align:left;border-bottom:1px solid var(--border2);background:var(--card2);white-space:nowrap;cursor:pointer;user-select:none}
+.tbl th:hover{color:var(--ink)}.tbl th.r,.tbl td.r{text-align:right}
+.tbl td{padding:7px 8px;border-bottom:0.5px solid var(--border);vertical-align:middle}
+.tbl tr.clickable:hover td{background:var(--bg2);cursor:pointer}
+.tbl tr.selected td{background:var(--blue-lt)}
+.tbl tr:last-child td{border-bottom:none}
+.badge{display:inline-block;font-size:9px;font-weight:600;padding:2px 6px;border-radius:3px;text-transform:uppercase;letter-spacing:.05em;white-space:nowrap}
+.badge.red{background:var(--red-lt);color:var(--red)}.badge.amber{background:var(--amber-lt);color:var(--amber)}
+.badge.blue{background:var(--blue-lt);color:var(--blue)}.badge.green{background:var(--green-lt);color:var(--green)}.badge.gray{background:var(--bg3);color:var(--ink3)}
+.delta-pill{font-family:'DM Mono',monospace;font-size:10px;font-weight:600;padding:2px 6px;border-radius:3px}
+.delta-pill.up{background:var(--red-lt);color:var(--red)}.delta-pill.down{background:var(--green-lt);color:var(--green)}
+
+/* ── PAGINATION ── */
+.pag-row{display:flex;align-items:center;justify-content:space-between;padding:10px 0 4px;flex-wrap:wrap;gap:8px}
+.pag-left{display:flex;align-items:center;gap:8px;font-size:11px;color:var(--ink3)}
+.pag-select{padding:4px 8px;border:0.5px solid var(--border2);border-radius:5px;font-size:11px;background:var(--card);color:var(--ink)}
+.pag-btns{display:flex;gap:4px;align-items:center}
+.pag-btn{padding:4px 10px;border:0.5px solid var(--border2);border-radius:5px;font-size:11px;background:var(--card2);color:var(--ink2);cursor:pointer}
+.pag-btn:hover{background:var(--bg3)}.pag-btn:disabled{opacity:.4;cursor:default}
+.pag-btn.active{background:var(--blue);color:#fff;border-color:var(--blue)}
+.pag-info{font-size:11px;color:var(--ink3)}
+
+/* ── FILTER ROW ── */
+.filter-row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:12px}
+.filter-row input,.filter-row select{padding:7px 10px;border:0.5px solid var(--border2);border-radius:6px;font-size:12px;background:var(--card);color:var(--ink);font-family:'DM Sans',sans-serif}
+.filter-row input{flex:1;min-width:200px}.filter-row select{min-width:140px}
+.result-count{font-size:11px;color:var(--ink3);margin-left:auto;white-space:nowrap}
+
+/* ── DETAIL PANEL ── */
+.detail-panel{background:var(--card);border:0.5px solid var(--blue-bd);border-radius:10px;padding:18px;display:none}
+.detail-panel.open{display:block}
+.detail-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px;padding-bottom:12px;border-bottom:0.5px solid var(--border2)}
+.detail-name{font-family:'Playfair Display',serif;font-size:16px;font-weight:600;color:var(--ink)}
+.detail-sub{font-size:11px;color:var(--ink3);margin-top:2px}
+.btn-close-detail{background:none;border:0.5px solid var(--border2);border-radius:5px;padding:4px 10px;font-size:11px;cursor:pointer;color:var(--ink3)}
+.btn-close-detail:hover{background:var(--bg3)}
+
+/* ── SUB TABS ── */
+.sub-tabs{display:flex;gap:4px;margin-bottom:16px;border-bottom:1px solid var(--border2)}
+.sub-tab{padding:7px 18px;font-size:13px;font-weight:500;color:var(--ink3);cursor:pointer;border:none;background:none;border-bottom:2px solid transparent;margin-bottom:-1px;transition:all .12s}
+.sub-tab:hover{color:var(--ink)}.sub-tab.active{color:var(--blue);border-bottom-color:var(--blue);font-weight:600}
+.sub-view{display:none}.sub-view.active{display:block}
+
+/* ── CHARTS ── */
+.chart-wrap{position:relative;width:100%}
+.chart-wrap.h200{height:200px}.chart-wrap.h240{height:240px}.chart-wrap.h280{height:280px}
+
+/* ── CALENDAR ── */
+.cal-wrap{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px}
+.cal-day{width:36px;height:48px;border-radius:7px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;border:1.5px solid var(--border);background:var(--card2);transition:all .12s}
+.cal-day:hover{border-color:var(--blue);background:var(--blue-lt)}
+.cal-day.has-data{background:var(--green-lt);border-color:var(--green-bd)}
+.cal-day.selected{background:var(--blue);border-color:var(--blue)}
+.cal-day.selected .cal-dn,.cal-day.selected .cal-dw{color:#fff}
+.cal-dn{font-family:'DM Mono',monospace;font-size:13px;font-weight:500;color:var(--ink);line-height:1}
+.cal-dw{font-size:8px;color:var(--ink4);text-transform:uppercase;letter-spacing:.06em;margin-top:1px}
+.cal-dot{width:5px;height:5px;border-radius:50%;background:var(--green);margin-top:2px}
+.cal-day.has-data .cal-dn{color:var(--green);font-weight:700}
+.cal-month-nav{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.cal-month-label{font-family:'Playfair Display',serif;font-size:15px;font-weight:600;color:var(--ink);min-width:140px}
+.btn-nav{background:none;border:0.5px solid var(--border2);border-radius:5px;width:28px;height:28px;cursor:pointer;font-size:14px;color:var(--ink2);display:flex;align-items:center;justify-content:center}
+.btn-nav:hover{background:var(--bg3)}
+
+/* ── MISC ── */
+.uf-note{background:var(--blue-lt);border:0.5px solid var(--blue-bd);border-radius:8px;padding:9px 14px;display:flex;align-items:center;gap:8px;margin-bottom:18px;font-size:11px;color:var(--blue)}
+.empty{text-align:center;padding:40px 20px;color:var(--ink3)}
+.empty-icon{font-size:36px;margin-bottom:12px}
+.empty-title{font-size:14px;font-weight:500;color:var(--ink2);margin-bottom:6px}
+.empty-sub{font-size:12px;line-height:1.6}
+.app-footer{background:var(--bg3);border-top:1px solid var(--border2);padding:12px 36px;display:flex;justify-content:space-between;font-size:10px;color:var(--ink3);margin-top:40px}
+.app-footer span:last-child{font-family:'DM Mono',monospace;text-transform:uppercase;letter-spacing:.08em}
+
+/* ── GRID HELPERS usados en el body ── */
+.lay-2col{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px}
+.lay-sost{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px}
+.lay-alu{display:grid;grid-template-columns:2fr 1fr;gap:14px;margin-bottom:16px}
+.lay-cal{display:grid;grid-template-columns:1fr 2fr;gap:14px}
+.lay-charts{display:flex;flex-direction:column;gap:14px}
+
+/* ════════════════════════════════
+   TABLET  ≤ 1024px
+════════════════════════════════ */
+@media(max-width:1024px){
+  /* Header */
+  .hdr{padding:0 20px;height:auto;min-height:58px;flex-wrap:wrap;gap:8px;padding-top:8px;padding-bottom:8px}
+  .hdr-left{gap:12px;width:100%}
+  .hdr-meta{width:100%;justify-content:space-between;flex-wrap:wrap;gap:8px}
+  .corte-chip{font-size:9px;padding:3px 8px}
+  .user-chip span{display:none} /* ocultar nombre, dejar solo avatar */
+  .btn-upload{font-size:11px;padding:5px 10px}
+  .btn-logout{font-size:10px;padding:4px 8px}
+  .nav-tabs{flex-wrap:wrap}
+
+  /* Layout */
+  .main{padding:16px 20px 40px}
+
+  /* KPIs: 3 columnas en tablet */
+  .kpi-row{grid-template-columns:repeat(3,1fr)}
+  .kpi-val{font-size:20px}
+
+  /* Semáforo: 2x2 */
+  .sema-grid{grid-template-columns:repeat(2,1fr)}
+
+  /* Grids 2 columnas → 1 columna */
+  .lay-sost{grid-template-columns:1fr}
+  .lay-alu{grid-template-columns:1fr}
+  .lay-2col{grid-template-columns:1fr}
+  .lay-cal{grid-template-columns:1fr}
+  .g2{grid-template-columns:1fr}
+  .g3{grid-template-columns:1fr 1fr}
+  .g35{grid-template-columns:1fr}
+  .g65{grid-template-columns:1fr}
+
+  /* Sub-tabs más compactos */
+  .sub-tab{padding:6px 12px;font-size:12px}
+
+  /* Filtros */
+  .filter-row input{min-width:160px}
+  .filter-row select{min-width:120px}
+
+  /* Gráficos */
+  .chart-wrap.h280{height:220px}
+  .chart-wrap.h200{height:180px}
+
+  /* Modal full-width */
+  .modal-box{width:95vw;padding:24px}
+
+  /* Footer */
+  .app-footer{padding:10px 20px;flex-direction:column;gap:4px;text-align:center}
+}
+
+/* ════════════════════════════════
+   MÓVIL  ≤ 640px
+════════════════════════════════ */
+@media(max-width:640px){
+  /* Header compacto */
+  .hdr{padding:10px 14px;gap:6px}
+  .hdr h1{font-size:16px}
+  .hdr-left{gap:8px}
+  .nav-tabs{background:none;padding:0}
+  .nav-tab{padding:4px 10px;font-size:11px}
+  .corte-chip{display:none} /* ocultar en móvil, se ve en KPI */
+  .hdr-meta{gap:6px}
+  .btn-upload{font-size:11px;padding:5px 10px;gap:4px}
+  .btn-upload span{display:none} /* solo ícono de flecha */
+  .btn-logout{padding:4px 8px;font-size:10px}
+
+  /* Layout */
+  .main{padding:12px 12px 40px}
+
+  /* KPIs: 2x3 en móvil */
+  .kpi-row{grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:14px}
+  .kpi{padding:10px 10px 8px}
+  .kpi-val{font-size:18px}
+  .kpi-lbl{font-size:9px}
+  .kpi-sub{font-size:9px}
+  .kpi-delta{font-size:10px}
+
+  /* Semáforo: 2x2 compacto */
+  .sema-grid{grid-template-columns:repeat(2,1fr);gap:8px}
+  .sema{padding:10px 8px}
+  .sema-n{font-size:22px}
+  .sema-m2{font-size:10px}
+
+  /* Sub-tabs scroll horizontal */
+  .sub-tabs{overflow-x:auto;white-space:nowrap;flex-wrap:nowrap;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+  .sub-tabs::-webkit-scrollbar{display:none}
+  .sub-tab{padding:6px 14px;font-size:12px;flex-shrink:0}
+
+  /* Todos los grids a 1 columna */
+  .lay-sost,.lay-alu,.lay-2col,.lay-cal,.g2,.g3,.g35,.g65{grid-template-columns:1fr}
+
+  /* Tablas: scroll horizontal + fuente pequeña */
+  .tbl{font-size:11px}
+  .tbl th{font-size:8px;padding:4px 6px 7px}
+  .tbl td{padding:6px 6px}
+
+  /* Ocultar columnas menos importantes en móvil */
+  .tbl .hide-mobile{display:none}
+
+  /* Filtros apilados */
+  .filter-row{flex-direction:column;align-items:stretch}
+  .filter-row input{min-width:unset;width:100%}
+  .filter-row select{min-width:unset;width:100%}
+  .result-count{margin-left:0;text-align:right}
+
+  /* Paginación compacta */
+  .pag-row{flex-direction:column;align-items:flex-start;gap:6px}
+  .pag-btn{padding:4px 8px;font-size:10px}
+
+  /* Gráficos más bajos */
+  .chart-wrap.h280{height:200px}
+  .chart-wrap.h200{height:160px}
+  .chart-wrap.h240{height:180px}
+
+  /* Modal pantalla completa */
+  .modal-overlay{align-items:flex-end}
+  .modal-box{width:100vw;max-width:100vw;border-radius:16px 16px 0 0;padding:20px 16px;max-height:92vh}
+
+  /* Login */
+  .login-box{padding:28px 20px}
+  .login-logo h1{font-size:22px}
+
+  /* UF note */
+  .uf-note{font-size:10px;padding:8px 10px}
+
+  /* Calendario */
+  .cal-day{width:32px;height:44px}
+  .cal-dn{font-size:12px}
+
+  /* Detail panel */
+  .detail-panel{padding:12px}
+  .detail-name{font-size:14px}
+
+  /* Footer */
+  .app-footer{padding:10px 14px;flex-direction:column;gap:3px;text-align:center;font-size:9px}
+}
+</style>
+</head>
+<body>
+
+<!-- ══ APP ══ -->
+<div class="app-wrap" id="app-wrap">
+  <div class="hdr">
+    <div class="hdr-left">
+      <h1>Morosidad <span>CAC</span></h1>
+      <div class="nav-tabs">
+        <button class="nav-tab active" onclick="showView('dashboard',this)">Dashboard</button>
+        <button class="nav-tab" onclick="showView('correspondencia',this)">Correspondencia</button>
+      </div>
+    </div>
+    <div class="hdr-meta">
+      <span class="corte-chip" id="corte-label">Sin datos</span>
+      <div class="user-chip">
+        <div class="user-avatar" id="user-avatar">?</div>
+        <span id="user-name">—</span>
+      </div>
+      <button class="btn-upload" onclick="openImportModal()">&#8593; Subir archivo del día</button>
+      <a href="dashboard.html" style="padding:5px 12px;background:rgba(255,255,255,0.08);color:rgba(245,242,236,0.6);border:0.5px solid rgba(255,255,255,0.1);border-radius:5px;font-size:11px;text-decoration:none">← Panel</a><button class="btn-logout" onclick="doLogout()">Salir</button>
+    </div>
+  </div>
+
+  <!-- MODAL IMPORTAR -->
+  <div class="modal-overlay" id="import-modal">
+    <div class="modal-box">
+      <div class="modal-title">Importar datos del día</div>
+      <div class="modal-sub">Sube el archivo <strong>MOROSOS_ALUMNO.csv</strong> de Syscolnet.<br>Si ya existe un archivo para esa fecha, será reemplazado.</div>
+      <div class="modal-field">
+        <label>¿A qué día corresponde el archivo?</label>
+        <input type="date" id="import-fecha" value="">
+        <div style="font-size:10px;color:var(--ink4);margin-top:5px">Ej: si hoy es martes y el archivo refleja el lunes, selecciona el lunes. Puedes importar fechas pasadas.</div>
+      </div>
+      <div class="modal-field">
+        <label>Archivo</label>
+        <div class="drop-zone" id="drop-zone" onclick="document.getElementById('file-input').click()"
+             ondragover="event.preventDefault();this.classList.add('drag')"
+             ondragleave="this.classList.remove('drag')"
+             ondrop="handleDrop(event)">
+          <div class="drop-zone-icon" id="dz-icon">&#128193;</div>
+          <div class="drop-zone-text" id="dz-text">Clic o arrastra el archivo aquí</div>
+          <div class="drop-zone-sub" id="dz-sub">CSV o XLSX · Syscol MOROSOS_ALUMNO</div>
+        </div>
+        <input type="file" id="file-input" accept=".csv,.xlsx" style="display:none" onchange="handleFileSelect(this)">
+        <div class="progress-bar" id="progress-bar"><div class="progress-fill" id="progress-fill" style="width:0%"></div></div>
+      </div>
+      <div class="modal-actions">
+        <button class="btn-cancel" onclick="closeImportModal()">Cancelar</button>
+        <button class="btn-confirm" id="btn-confirm-import" onclick="confirmImport()" disabled>Importar</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="main">
+    <div id="status-bar" class="status-bar"></div>
+
+    <div id="view-dashboard" class="view active">
+      <div class="uf-note">
+        &#x2139; <span><strong>Nota:</strong> Valores CLP según conversión UF diaria. La columna <strong>Cantidad</strong> del CSV indica cuántas cuotas debe ese alumno. Un sostenedor con varios hijos aparece con varias filas.</span>
+      </div>
+
+      <!-- KPIs -->
+      <div style="display:flex;align-items:center;justify-content:flex-end;margin-bottom:8px;gap:10px">
+        <span style="font-size:11px;color:var(--ink3)">Ver montos en:</span>
+        <div style="display:flex;background:var(--bg3);border-radius:7px;padding:3px;gap:2px" id="currency-toggle">
+          <button id="btn-clp" onclick="setCurrency('CLP')"
+            style="padding:5px 16px;border-radius:5px;border:none;font-size:12px;font-weight:600;cursor:pointer;background:var(--ink);color:#fff;transition:all .15s">
+            $ CLP
+          </button>
+          <button id="btn-uf" onclick="setCurrency('UF')"
+            style="padding:5px 16px;border-radius:5px;border:none;font-size:12px;font-weight:600;cursor:pointer;background:transparent;color:var(--ink3);transition:all .15s">
+            UF
+          </button>
+        </div>
+        <span id="uf-dia-chip" style="font-family:'DM Mono',monospace;font-size:10px;color:var(--ink4);display:none">
+          UF día: <span id="uf-dia-val">—</span>
+        </span>
+      </div>
+      <div class="kpi-row">
+        <div class="kpi r"><div class="kpi-lbl">Mora total</div><div class="kpi-val red" id="kpi-mora">—</div><div class="kpi-sub" id="kpi-mora-sub">CLP vigente</div><div class="kpi-delta" id="kpi-mora-delta"></div></div>
+        <div class="kpi r"><div class="kpi-lbl">Sostenedores</div><div class="kpi-val red" id="kpi-sost">—</div><div class="kpi-sub">con deuda activa</div><div class="kpi-delta" id="kpi-sost-delta"></div></div>
+        <div class="kpi a"><div class="kpi-lbl">Alumnos</div><div class="kpi-val amber" id="kpi-alu">—</div><div class="kpi-sub">con cuotas pendientes</div></div>
+        <div class="kpi a"><div class="kpi-lbl">Total cuotas</div><div class="kpi-val amber" id="kpi-cuotas">—</div><div class="kpi-sub">suma columna Cantidad</div></div>
+        <div class="kpi g"><div class="kpi-lbl">Pagado acumulado</div><div class="kpi-val green" id="kpi-pagado">—</div><div class="kpi-sub">total del año</div></div>
+        <div class="kpi n"><div class="kpi-lbl">Último corte</div><div class="kpi-val" style="font-size:16px" id="kpi-corte">—</div><div class="kpi-sub" id="kpi-corte-sub">por <span id="kpi-corte-usr"></span></div></div>
+      </div>
+
+      <!-- Sub-tabs -->
+      <div class="sub-tabs">
+        <button class="sub-tab active" onclick="showSubView('sv-sost',this)">Por Sostenedor</button>
+        <button class="sub-tab" onclick="showSubView('sv-alu',this)">Por Alumno</button>
+        <button class="sub-tab" onclick="showSubView('sv-evolucion',this)">Evolución Diaria</button>
+        <button class="sub-tab" onclick="showSubView('sv-calendario',this)">Calendario</button>
+      </div>
+
+      <!-- ── POR SOSTENEDOR ── -->
+      <div class="sub-view active" id="sv-sost">
+        <div class="card" style="margin-bottom:14px">
+          <div class="card-title">Semáforo por monto — <span id="sema-fecha" style="font-weight:400;color:var(--ink4)">último corte</span></div>
+          <div class="sema-grid">
+            <div class="sema c"><div class="sema-dot"></div><div class="sema-lbl">Crítico</div><div class="sema-n" id="sema-crit-n">—</div><div class="sema-m2" id="sema-crit-m">—</div><div class="sema-p">&gt;$1.500.000</div></div>
+            <div class="sema a"><div class="sema-dot"></div><div class="sema-lbl">Alto</div><div class="sema-n" id="sema-alto-n">—</div><div class="sema-m2" id="sema-alto-m">—</div><div class="sema-p">$900K–$1.5M</div></div>
+            <div class="sema m"><div class="sema-dot"></div><div class="sema-lbl">Medio</div><div class="sema-n" id="sema-med-n">—</div><div class="sema-m2" id="sema-med-m">—</div><div class="sema-p">$400K–$900K</div></div>
+            <div class="sema b"><div class="sema-dot"></div><div class="sema-lbl">Bajo</div><div class="sema-n" id="sema-bajo-n">—</div><div class="sema-m2" id="sema-bajo-m">—</div><div class="sema-p">&lt;$400K</div></div>
+          </div>
+        </div>
+
+        <!-- Configuración recaudable por mes -->
+        <div class="card" style="margin-bottom:14px">
+          <div style="font-size:11px;color:var(--ink3);font-weight:600;margin-bottom:10px">
+            Máximo recaudable por mes de colegiatura
+            <span style="font-weight:400;color:var(--ink4);font-size:10px">· Ingresa el monto $ esperado por cada mes. Se usa para calcular el % de morosidad en la matriz.</span>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:10px" id="recaudable-grid">
+            <!-- Se genera con JS -->
+          </div>
+          <div style="display:flex;gap:8px;align-items:center">
+            <button onclick="saveRecaudablePorMes()" style="padding:6px 16px;background:var(--ink);color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer">Guardar</button>
+            <span id="recaudable-status" style="font-size:11px;color:var(--green);display:none">✓ Guardado en Supabase</span>
+            <span style="font-size:10px;color:var(--ink4)">Si todos los meses tienen el mismo valor, ingresa uno y se replica.</span>
+            <input type="number" id="cfg-rec-global" placeholder="Valor único para todos" style="width:160px;padding:5px 8px;border:0.5px solid var(--border2);border-radius:5px;font-size:11px;background:var(--bg2);color:var(--ink);font-family:'DM Mono',monospace">
+            <button onclick="replicarRecaudable()" style="padding:5px 10px;background:var(--blue-lt);color:var(--blue);border:0.5px solid var(--blue-bd);border-radius:5px;font-size:11px;cursor:pointer">Replicar a todos</button>
+          </div>
+        </div>
+
+        <!-- Matriz morosidad: Y=meses de colegiatura, X=cuotas adeudadas, valor=N° sostenedores -->
+        <div class="card" style="margin-bottom:14px;overflow-x:auto">
+          <div class="card-title">Matriz de morosidad
+            <span style="font-weight:400;color:var(--ink4);font-size:9px">· Eje Y: mes de colegiatura · Eje X: cuotas adeudadas por mes · Valor: N° de cuotas adeudadas · Clic en una celda o total para ver el desglose</span>
+          </div>
+          <div id="matriz-container">
+            <div style="text-align:center;padding:16px;color:var(--ink4);font-size:12px">Carga un archivo para ver la matriz</div>
+          </div>
+        </div>
+
+        <!-- Gráficos: Forma de pago y Cuotas por mes, uno al lado del otro -->
+        <div class="g2">
+          <div class="card">
+            <div class="card-title">Forma de pago <span style="font-weight:400;color:var(--ink4);font-size:9px">· Clic en barra para ver detalle</span></div>
+            <div class="chart-wrap h200"><canvas id="chart-fp" style="cursor:pointer"></canvas></div>
+          </div>
+          <div class="card">
+            <div class="card-title" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px">
+              <span>Cuotas por mes de colegiatura <span style="font-weight:400;color:var(--ink4);font-size:9px">· Clic en sector para ver detalle</span></span>
+              <div style="display:flex;background:var(--bg3);border-radius:6px;padding:2px;gap:2px">
+                <button id="btn-meses-cuotas" onclick="setMesesView('cuotas')"
+                  style="padding:3px 10px;border-radius:4px;border:none;font-size:10px;font-weight:600;cursor:pointer;background:var(--ink);color:#fff">Cuotas</button>
+                <button id="btn-meses-pesos" onclick="setMesesView('pesos')"
+                  style="padding:3px 10px;border-radius:4px;border:none;font-size:10px;font-weight:600;cursor:pointer;background:transparent;color:var(--ink3)">$</button>
+              </div>
+            </div>
+            <div class="chart-wrap h200"><canvas id="chart-meses" style="cursor:pointer"></canvas></div>
+          </div>
+        </div>
+
+        <!-- Tabla sostenedores + panel detalle -->
+        <div class="lay-sost">
+          <!-- Tabla principal -->
+          <div class="card">
+            <div class="card-title">Sostenedores con deuda <span id="sost-tbl-meta" style="font-weight:400;color:var(--ink4)"></span></div>
+            <div class="filter-row">
+              <input type="text" id="sost-search" placeholder="Buscar nombre o RUT..." oninput="filterSostTable()">
+              <select id="sost-filter-cuotas" onchange="filterSostTable()">
+                <option value="">Todas las cuotas</option>
+                <option value="1">1 cuota</option><option value="2">2 cuotas</option><option value="3">3+ cuotas</option>
+              </select>
+              <span class="result-count" id="sost-count"></span>
+            </div>
+            <div class="tbl-wrap">
+              <table class="tbl">
+                <thead><tr>
+                  <th onclick="sortSost('nombre_sostenedor')">Sostenedor &#8597;</th>
+                  <th class="r" onclick="sortSost('saldo_total')">Saldo &#8597;</th>
+                  <th class="r" onclick="sortSost('n_cuotas')">Cuotas &#8597;</th>
+                  <th class="r" title="Meses de colegiatura adeudados (marzo-diciembre)">Meses</th>
+                  <th class="r hide-mobile" onclick="sortSost('n_alumnos')">Alumnos &#8597;</th>
+                  <th class="hide-mobile">F.Pago</th>
+                  <th class="hide-mobile" onclick="sortSost('ultimo_pago')">Últ.pago &#8597;</th>
+                </tr></thead>
+                <tbody id="sost-tbody"></tbody>
+              </table>
+            </div>
+            <!-- Paginación -->
+            <div class="pag-row">
+              <div class="pag-left">
+                <span>Mostrar</span>
+                <select class="pag-select" id="sost-page-size" onchange="setSostPageSize(this.value)">
+                  <option value="25">25</option>
+                  <option value="50">50</option>
+                  <option value="9999">Todas</option>
+                </select>
+                <span>filas</span>
+              </div>
+              <div class="pag-btns" id="sost-pag-btns"></div>
+              <span class="pag-info" id="sost-pag-info"></span>
+            </div>
+          </div>
+
+          <!-- Panel derecho: paneles de detalle -->
+          <div class="lay-charts">
+            <!-- Panel drill-down para forma de pago, mes colegiatura y matriz de morosidad -->
+            <div class="detail-panel" id="chart-drill-panel">
+              <div class="detail-header">
+                <div>
+                  <div class="detail-name" id="drill-title">—</div>
+                  <div class="detail-sub" id="drill-sub">—</div>
+                </div>
+                <button class="btn-close-detail" onclick="closeDrillPanel()">✕ Cerrar</button>
+              </div>
+              <div id="drill-body"></div>
+            </div>
+            <!-- Panel detalle sostenedor seleccionado -->
+            <div class="detail-panel" id="sost-detail-panel">
+              <div class="detail-header">
+                <div>
+                  <div class="detail-name" id="detail-sost-name">—</div>
+                  <div class="detail-sub" id="detail-sost-sub">—</div>
+                </div>
+                <button class="btn-close-detail" onclick="closeDetailPanel()">✕ Cerrar</button>
+              </div>
+              <div id="detail-sost-body"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── POR ALUMNO ── -->
+      <div class="sub-view" id="sv-alu">
+        <div class="lay-alu">
+          <div class="card">
+            <div class="card-title">Alumnos con deuda <span id="alu-tbl-meta" style="font-weight:400;color:var(--ink4)"></span></div>
+            <div class="filter-row">
+              <input type="text" id="alu-search" placeholder="Buscar alumno, RUT, curso o sostenedor..." oninput="filterAluTable()">
+              <select id="alu-filter-curso" onchange="filterAluTable()"><option value="">Todos los cursos</option></select>
+              <select id="alu-filter-beca" onchange="filterAluTable()">
+                <option value="">Con y sin beca</option><option value="con">Con beca</option><option value="sin">Sin beca</option>
+              </select>
+              <span class="result-count" id="alu-count"></span>
+            </div>
+            <div class="tbl-wrap">
+              <table class="tbl">
+                <thead><tr>
+                  <th onclick="sortAlu('nombre_alumno')">Alumno &#8597;</th>
+                  <th onclick="sortAlu('nc_curso')">Curso &#8597;</th>
+                  <th class="r" onclick="sortAlu('saldo_total')">Saldo &#8597;</th>
+                  <th class="r" onclick="sortAlu('n_cuotas')">Cuotas &#8597;</th>
+                  <th class="hide-mobile">Beca</th>
+                  <th class="hide-mobile" onclick="sortAlu('nombre_sostenedor')">Sostenedor &#8597;</th>
+                  <th class="hide-mobile">Contacto</th>
+                </tr></thead>
+                <tbody id="alu-tbody"></tbody>
+              </table>
+            </div>
+            <div class="pag-row">
+              <div class="pag-left">
+                <span>Mostrar</span>
+                <select class="pag-select" id="alu-page-size" onchange="setAluPageSize(this.value)">
+                  <option value="25">25</option><option value="50">50</option><option value="9999">Todas</option>
+                </select>
+                <span>filas</span>
+              </div>
+              <div class="pag-btns" id="alu-pag-btns"></div>
+              <span class="pag-info" id="alu-pag-info"></span>
+            </div>
+          </div>
+          <div class="lay-charts">
+            <div class="card"><div class="card-title">Mora por curso</div><div class="chart-wrap h280"><canvas id="chart-cursos"></canvas></div></div>
+            <div class="card"><div class="card-title">Con / Sin beca</div><div class="chart-wrap" style="height:180px"><canvas id="chart-beca"></canvas></div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── EVOLUCIÓN ── -->
+      <div class="sub-view" id="sv-evolucion">
+        <div class="card" style="margin-bottom:14px">
+          <div class="card-title">Evolución diaria mora total — <span style="font-weight:400;color:var(--ink4)">CLP · todos los días importados</span></div>
+          <div class="chart-wrap h280"><canvas id="chart-evolucion"></canvas></div>
+        </div>
+        <div class="g2">
+          <div class="card"><div class="card-title">Variación día a día</div><div id="variacion-list"></div></div>
+          <div class="card"><div class="card-title">Historial de importaciones</div><div id="log-list"></div></div>
+        </div>
+      </div>
+
+      <!-- ── CALENDARIO ── -->
+      <div class="sub-view" id="sv-calendario">
+        <div class="lay-cal">
+          <div class="card">
+            <div class="card-title">Días con datos importados</div>
+            <div class="cal-month-nav">
+              <button class="btn-nav" onclick="calNavMonth(-1)">&#8249;</button>
+              <span class="cal-month-label" id="cal-month-label"></span>
+              <button class="btn-nav" onclick="calNavMonth(1)">&#8250;</button>
+            </div>
+            <div class="cal-wrap" id="cal-grid"></div>
+            <div style="display:flex;gap:14px;margin-top:12px;font-size:10px;color:var(--ink3)">
+              <span style="display:flex;align-items:center;gap:4px"><span style="width:10px;height:10px;background:var(--green-lt);border:1px solid var(--green-bd);border-radius:2px;display:inline-block"></span>Con datos</span>
+              <span style="display:flex;align-items:center;gap:4px"><span style="width:10px;height:10px;background:var(--blue);border-radius:2px;display:inline-block"></span>Seleccionado</span>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-title" id="cal-detail-title">Selecciona un día</div>
+            <div id="cal-detail"><div class="empty"><div class="empty-icon">&#128197;</div><div class="empty-sub">Haz clic en un día verde para ver los datos de ese corte y cargarlo en el dashboard.</div></div></div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /dashboard -->
+
+    <!-- ══════════════════════ CORRESPONDENCIA ══ -->
+    <div id="view-correspondencia" class="view">
+
+      <div class="sec-hdr" style="margin-top:0"><h2>Envío de correspondencia masiva</h2><span class="sec-tag">Seleccionar · Personalizar · Enviar</span></div>
+
+      <!-- Configuración remitente -->
+      <div style="background:var(--amber-lt);border:0.5px solid var(--amber-bd);border-radius:10px;padding:14px 18px;margin-bottom:18px;display:flex;gap:12px;align-items:flex-start">
+        <span style="font-size:18px;flex-shrink:0">⚙️</span>
+        <div>
+          <div style="font-size:12px;font-weight:600;color:var(--amber);margin-bottom:4px">Configuración del correo remitente (Microsoft 365)</div>
+          <div style="font-size:11px;color:var(--ink2);line-height:1.6">
+            Para enviar correos desde el sistema necesitas conectar una cuenta de Microsoft 365 vía <strong>Azure App Registration</strong> con OAuth2.<br>
+            <strong>Pasos:</strong> (1) En Azure Portal → App Registrations → Nueva app. (2) Permisos: <code style="background:var(--bg3);padding:1px 5px;border-radius:3px">Mail.Send</code> en Microsoft Graph. (3) Generar Client Secret. (4) Ingresar los datos abajo.<br>
+            La cuenta remitente puede ser exclusiva como <code style="background:var(--bg3);padding:1px 5px;border-radius:3px">cobranza@dschillan.cl</code>.
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:12px" id="email-config-grid">
+            <div><label style="font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--ink3);display:block;margin-bottom:4px">Correo remitente</label>
+              <input id="cfg-email-from" type="email" placeholder="cobranza@dschillan.cl" style="width:100%;padding:7px 10px;border:0.5px solid var(--border2);border-radius:6px;font-size:12px;background:var(--card);color:var(--ink)"></div>
+            <div><label style="font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--ink3);display:block;margin-bottom:4px">Client ID (Azure)</label>
+              <input id="cfg-client-id" type="text" placeholder="xxxxxxxx-xxxx-xxxx..." style="width:100%;padding:7px 10px;border:0.5px solid var(--border2);border-radius:6px;font-size:12px;background:var(--card);color:var(--ink)"></div>
+            <div><label style="font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--ink3);display:block;margin-bottom:4px">Client Secret</label>
+              <input id="cfg-client-secret" type="password" placeholder="••••••••••••" style="width:100%;padding:7px 10px;border:0.5px solid var(--border2);border-radius:6px;font-size:12px;background:var(--card);color:var(--ink)"></div>
+          </div>
+          <div style="margin-top:8px">
+            <label style="font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--ink3);display:block;margin-bottom:4px">Tenant ID (Azure)</label>
+            <input id="cfg-tenant-id" type="text" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" style="width:100%;max-width:360px;padding:7px 10px;border:0.5px solid var(--border2);border-radius:6px;font-size:12px;background:var(--card);color:var(--ink)">
+          </div>
+          <button onclick="saveCfgEmail()" style="margin-top:10px;padding:6px 16px;background:var(--amber);color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer">Guardar configuración</button>
+          <span id="cfg-status" style="font-size:11px;color:var(--green);margin-left:10px;display:none">✓ Guardado</span>
+        </div>
+      </div>
+
+      <div class="g2">
+        <!-- Columna izquierda: selección de sostenedores -->
+        <div class="card">
+          <div class="card-title">1. Seleccionar destinatarios</div>
+          <div class="filter-row" style="margin-bottom:10px">
+            <input type="text" id="corr-search" placeholder="Buscar nombre o RUT..." oninput="filterCorrTable()" style="flex:1">
+            <select id="corr-filter-cuotas" onchange="filterCorrTable()">
+              <option value="">Todas las cuotas</option>
+              <option value="1">1 cuota</option>
+              <option value="2">2 cuotas</option>
+              <option value="3">3+ cuotas</option>
+            </select>
+            <select id="corr-filter-fp" onchange="filterCorrTable()">
+              <option value="">Todas las F.Pago</option>
+              <option>WEB</option><option>TRA</option><option>PAC</option>
+              <option>TCR</option><option>TDB</option><option>PAT</option>
+              <option>CH</option><option>DEP</option><option>DES</option>
+            </select>
+          </div>
+          <div style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap">
+            <button onclick="selectAllCorr(true)" style="padding:5px 12px;border-radius:5px;border:0.5px solid var(--border2);background:var(--card2);font-size:11px;cursor:pointer">☑ Seleccionar todos</button>
+            <button onclick="selectAllCorr(false)" style="padding:5px 12px;border-radius:5px;border:0.5px solid var(--border2);background:var(--card2);font-size:11px;cursor:pointer">☐ Deseleccionar</button>
+            <span id="corr-selected-count" style="font-size:11px;color:var(--blue);font-weight:600;align-self:center"></span>
+          </div>
+          <div class="tbl-wrap" style="max-height:420px;overflow-y:auto">
+            <table class="tbl">
+              <thead><tr>
+                <th style="width:32px"><input type="checkbox" id="corr-chk-all" onchange="selectAllCorr(this.checked)"></th>
+                <th onclick="sortCorr('nombre_sostenedor')">Sostenedor &#8597;</th>
+                <th class="r" onclick="sortCorr('saldo_total')">Saldo &#8597;</th>
+                <th class="r" onclick="sortCorr('n_cuotas')">Cuotas &#8597;</th>
+                <th class="hide-mobile">Email</th>
+              </tr></thead>
+              <tbody id="corr-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Columna derecha: plantilla y envío -->
+        <div style="display:flex;flex-direction:column;gap:14px">
+          <div class="card">
+            <div class="card-title">2. Asunto del correo</div>
+            <input type="text" id="corr-asunto" value="Estimado/a {{nombre}}: Aviso de saldo pendiente Colegio Alemán de Chillán"
+              style="width:100%;padding:9px 12px;border:0.5px solid var(--border2);border-radius:7px;font-size:13px;background:var(--bg2);color:var(--ink)">
+          </div>
+          <div class="card">
+            <div class="card-title">3. Plantilla del mensaje
+              <span style="font-weight:400;color:var(--ink4)">Variables: <code style="background:var(--bg3);padding:1px 4px;border-radius:2px;font-size:9px">{{nombre}}</code> <code style="background:var(--bg3);padding:1px 4px;border-radius:2px;font-size:9px">{{saldo}}</code> <span style="font-size:9px;color:var(--ink4)">(UF+CLP)</span> <code style="background:var(--bg3);padding:1px 4px;border-radius:2px;font-size:9px">{{saldo_uf}}</code> <code style="background:var(--bg3);padding:1px 4px;border-radius:2px;font-size:9px">{{saldo_clp}}</code> <code style="background:var(--bg3);padding:1px 4px;border-radius:2px;font-size:9px">{{alumnos}}</code> <span style="font-size:9px;color:var(--ink4)">(incluye meses y UF por alumno)</span></span>
+            </div>
+            <textarea id="corr-plantilla" rows="12" style="width:100%;padding:10px 12px;border:0.5px solid var(--border2);border-radius:7px;font-size:12px;background:var(--bg2);color:var(--ink);resize:vertical;font-family:'DM Sans',sans-serif;line-height:1.6">Estimado/a {{nombre}},
+
+Le informamos que registra un saldo pendiente de {{saldo}} por concepto de mensualidades del año lectivo 2026, correspondiente a los siguientes alumnos:
+
+{{alumnos}}
+
+Le solicitamos regularizar su situación a la brevedad posible comunicándose con la administración del colegio o realizando el pago a través de los canales habituales.
+
+Favor recordar que al generar el pago debe ser con la UF del mismo día de la realización del pago.
+
+Ante cualquier consulta o para acordar un plan de pago, no dude en contactarnos:
+  - Correo: administracion@dschillan.cl
+  - Teléfono: (42) 2 XXX XXX
+
+Atentamente,
+Administración
+Deutsche Schule Chillán / Colegio Alemán de Chillán</textarea>
+          </div>
+          <div class="card">
+            <div class="card-title">4. Vista previa</div>
+            <div id="corr-preview" style="background:var(--bg2);border-radius:7px;padding:12px 14px;font-size:12px;color:var(--ink2);line-height:1.7;min-height:80px;white-space:pre-wrap;max-height:200px;overflow-y:auto">
+              Selecciona un sostenedor para ver la vista previa personalizada.
+            </div>
+          </div>
+          <!-- Botón de prueba -->
+          <div style="background:var(--blue-lt);border:0.5px solid var(--blue-bd);border-radius:8px;padding:12px 14px;display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+            <span style="font-size:11px;color:var(--blue);font-weight:600;white-space:nowrap">🧪 Envío de prueba</span>
+            <input type="email" id="test-email-input" placeholder="tu-correo@ejemplo.com"
+              style="flex:1;min-width:200px;padding:7px 10px;border:0.5px solid var(--blue-bd);border-radius:6px;font-size:12px;background:var(--card);color:var(--ink)">
+            <button onclick="enviarPrueba()"
+              style="padding:7px 16px;background:var(--blue);color:#fff;border:none;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap">
+              Enviar prueba
+            </button>
+            <span id="test-result" style="font-size:11px;width:100%;display:none"></span>
+            <span style="font-size:10px;color:var(--blue);opacity:.7;width:100%">Envía el mensaje del primer sostenedor seleccionado a este correo, para verificar formato y contenido antes del envío masivo.</span>
+          </div>
+
+          <button id="btn-enviar-corr" onclick="enviarCorrespondencia()"
+            style="padding:12px;background:var(--green);color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;opacity:.5;pointer-events:none"
+            disabled>
+            ✉ Enviar a <span id="btn-enviar-n">0</span> destinatario(s)
+          </button>
+          <div id="corr-result" style="font-size:11px;color:var(--ink3);text-align:center;display:none"></div>
+        </div>
+      </div>
+
+    </div><!-- /correspondencia -->
+
+  </div><!-- /main -->
+
+  <div class="app-footer">
+    <span>Colegio Alemán de Chillán · Sistema Morosidad · Uso interno</span>
+    <span>Supabase · v5.9 · 2026</span>
+  </div>
+</div><!-- /app-wrap -->
+
+<!-- MODAL: DESGLOSE MATRIZ DE MOROSIDAD -->
+<div class="modal-overlay" id="modal-matriz">
+  <div class="modal-box" style="width:680px">
+    <div class="modal-title" id="matriz-modal-title">Desglose</div>
+    <div class="modal-sub" id="matriz-modal-sub">—</div>
+    <div id="matriz-modal-body" style="max-height:420px;overflow-y:auto"></div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeModal('modal-matriz')">Cerrar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════
+//  CONFIG SUPABASE
+// ═══════════════════════════════════════════════════════════
+const SB_URL  = 'https://iwaosynzrbhkwcmhiilx.supabase.co';
+const SB_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml3YW9zeW56cmJoa3djbWhpaWx4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA0MTU4NzUsImV4cCI6MjA5NTk5MTg3NX0.LwOaFc7vObJlR3Muer7uZxCYSphe2EbYjPTkZ6lGrXQ';
+let   SB_TOKEN = null;   // JWT de sesión (se actualiza al login)
+
+function sbH(extra={}){
+  const h={'Content-Type':'application/json','apikey':SB_ANON,...extra};
+  if(SB_TOKEN) h['Authorization']='Bearer '+SB_TOKEN;
+  return h;
+}
+async function sbGet(t,p=''){const r=await fetch(`${SB_URL}/rest/v1/${t}${p}`,{headers:sbH()});if(!r.ok)throw new Error(await r.text());return r.json();}
+async function sbPost(t,b,pref='return=representation'){const r=await fetch(`${SB_URL}/rest/v1/${t}`,{method:'POST',headers:{...sbH(),'Prefer':pref},body:JSON.stringify(b)});if(!r.ok)throw new Error(await r.text());return pref.includes('representation')?r.json():null;}
+async function sbDelete(t,p){const r=await fetch(`${SB_URL}/rest/v1/${t}${p}`,{method:'DELETE',headers:sbH()});if(!r.ok)throw new Error(await r.text());}
+
+// ═══════════════════════════════════════════════════════════
+//  AUTENTICACIÓN
+// ═══════════════════════════════════════════════════════════
+let _currentUser = null;
+
+// Login manejado por index.html — esta función no aplica en recaudaciones.html
+
+async function loadUserProfile(uid, email){
+  try{
+    const rows = await sbGet('app_usuarios',`?id=eq.${uid}&select=nombre,email,rol`);
+    if(rows&&rows.length>0){
+      _currentUser = rows[0];
+    } else {
+      _currentUser = {nombre: email.split('@')[0], email, rol:'operador'};
+    }
+  }catch(e){ _currentUser={nombre:email.split('@')[0],email,rol:'operador'}; }
+  // Update UI
+  const initials = (_currentUser.nombre||'').split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase()||'U';
+  const av=document.getElementById('user-avatar'); if(av) av.textContent=initials;
+  const un=document.getElementById('user-name'); if(un) un.textContent=_currentUser.nombre;
+}
+
+async function checkSession(){
+  const token = sessionStorage.getItem('sb_token');
+  if(!token){ window.location.href='index.html'; return false; }
+  try{
+    const res = await fetch(`${SB_URL}/auth/v1/user`,{headers:{'apikey':SB_ANON,'Authorization':'Bearer '+token}});
+    if(!res.ok){ sessionStorage.clear(); window.location.href='index.html'; return false; }
+    const data = await res.json();
+    SB_TOKEN = token;
+    sessionStorage.setItem('sb_uid',   data.id);
+    sessionStorage.setItem('sb_email', data.email);
+    await loadUserProfile(data.id, data.email);
+    return true;
+  }catch(e){ sessionStorage.clear(); window.location.href='index.html'; return false; }
+}
+
+function doLogout(){
+  SB_TOKEN=null; _currentUser=null;
+  sessionStorage.clear();
+  window.location.href='index.html';
+}
+
+function startApp(){
+  document.getElementById('app-wrap').classList.add('active');
+  bootDashboard();
+  buildRecaudableGrid();
+}
+
+// ═══════════════════════════════════════════════════════════
+//  ESTADO GLOBAL
+// ═══════════════════════════════════════════════════════════
+const MESES=['','Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+
+// Moneda activa: 'CLP' o 'UF'
+let _moneda = 'CLP';
+let _activeFecha = null;   // fecha ISO del snapshot activo (evita INVALID DATE)
+window._ufDia = 0;  // UF del día, calculada al importar
+
+function setCurrency(m){
+  _moneda = m;
+  const bClp=document.getElementById('btn-clp'), bUf=document.getElementById('btn-uf');
+  const chip=document.getElementById('uf-dia-chip');
+  if(bClp){ bClp.style.background=m==='CLP'?'var(--ink)':'transparent'; bClp.style.color=m==='CLP'?'#fff':'var(--ink3)'; }
+  if(bUf){  bUf.style.background=m==='UF'?'var(--ink)':'transparent';  bUf.style.color=m==='UF'?'#fff':'var(--ink3)';   }
+  if(chip)  chip.style.display=m==='UF'?'inline':'none';
+  if(_currentSnap && _activeFecha) renderDashboard(_currentSnap, _activeFecha);
+}
+
+function fmtCurrency(clp, uf){
+  if(_moneda==='UF'){
+    const v = uf > 0 ? uf : (window._ufDia>0 ? clp/window._ufDia : 0);
+    return v > 0 ? fmtUF(v) : '$'+fmtM(clp);
+  }
+  return '$'+fmtM(clp);
+}
+function fmtUF(v){ return v>=1000?(v/1000).toFixed(2)+'K UF':v.toFixed(2)+' UF'; }
+function fmtCurrencyFull(clp, uf){
+  if(_moneda==='UF'){
+    const v = uf > 0 ? uf : (window._ufDia>0 ? clp/window._ufDia : 0);
+    return v > 0 ? v.toFixed(4)+' UF' : '$'+fmt(clp);
+  }
+  return '$'+fmt(clp);
+}
+const MES_CUOTA={3:1,4:2,5:3,6:4,7:5,8:6,9:7,10:8,11:9,12:10};
+const PERIODO_LECTIVO=[3,4,5,6,7,8,9,10,11,12]; // marzo a diciembre
+
+// ─── MESES ADEUDADOS (acotado al periodo lectivo marzo-diciembre) ───
+// Para una fila del CSV: f.mes = mes "base" de la cuota, f.cantidad = cuántas
+// mensualidades acumuladas representa esa fila (1 = solo ese mes, 2 = ese
+// mes + el anterior, etc). Expandimos retrocediendo desde f.mes pero SOLO
+// dentro del periodo lectivo (marzo-diciembre); no envolvemos a meses fuera
+// de ese rango (enero/febrero/años distintos).
+function expandirMesesFila(f){
+  // El mes de FechaVence es la cuota MÁS RECIENTE vencida
+  // Cantidad = total de cuotas sin pagar (retrocediendo desde ese mes)
+  // Solo se cuentan los meses dentro del período lectivo (3-12)
+  const meses=[];
+  const mesFin=f.mes;
+  const cant=f.cantidad||1;
+  for(let i=0;i<cant;i++){
+    const m=mesFin-i;
+    if(m<3) break;          // no retroceder antes de marzo
+    if(m>12) continue;      // no contar meses fuera del período
+    if(PERIODO_LECTIVO.includes(m)) meses.push(m);
+  }
+  return meses.sort((a,b)=>a-b);
+}
+// Conjunto de meses únicos (1-12) que adeuda un alumno
+function mesesAdeudadosAlumno(alumno){
+  const set=new Set();
+  (alumno.filas||[]).forEach(f=>expandirMesesFila(f).forEach(m=>set.add(m)));
+  return [...set].sort((a,b)=>a-b);
+}
+// Conjunto de meses únicos que adeuda un sostenedor (unión de todos sus alumnos)
+function mesesAdeudadosSostenedor(rutSostenedor){
+  const alus=(_currentSnap?.alu||[]).filter(a=>a.rut_sostenedor===rutSostenedor);
+  const set=new Set();
+  alus.forEach(a=>mesesAdeudadosAlumno(a).forEach(m=>set.add(m)));
+  return [...set].sort((a,b)=>a-b);
+}
+
+
+let _importFile=null,_allDates=[],_calYear=new Date().getFullYear(),_calMonth=new Date().getMonth();
+let _selectedDate=null,_snapCache={},_moraDiaria=[],_logImport=[];
+let _charts={},_sortSost={field:'saldo_total',asc:false},_sortAlu={field:'saldo_total',asc:false};
+let _currentSnap=null;
+let _sostFiltered=[],_aluFiltered=[];
+let _sostPage=1,_sostPageSize=25,_aluPage=1,_aluPageSize=25;
+let _selectedSost=null;
+
+// ═══════════════════════════════════════════════════════════
+//  BOOT
+// ═══════════════════════════════════════════════════════════
+document.addEventListener('DOMContentLoaded',async()=>{
+  const ok = await checkSession();
+  if(ok){ startApp(); }
+  // else: checkSession ya redirigió a index.html
+});
+
+async function bootDashboard(){
+  showStatus('Conectando con Supabase...','info');
+  try{
+    await Promise.all([loadMoraDiaria(),loadLogImportaciones(),loadCfgFromSupabase(),loadUFOficial()]);
+    if(_moraDiaria.length>0){
+      await loadSnapshot(_moraDiaria[_moraDiaria.length-1].fecha_dato);
+      hideStatus();
+    } else { hideStatus(); renderEmpty(); }
+    renderEvolucion(); renderCalendar(); renderLogList();
+  }catch(e){ showStatus('Error de conexión: '+e.message,'error'); renderEmpty(); }
+}
+
+// ─── UF OFICIAL DEL DÍA (mindicador.cl, fuente: Banco Central de Chile) ───
+window._ufDiaOficial = 0; // valor real publicado por el Banco Central
+async function loadUFOficial(){
+  try{
+    const res=await fetch('https://mindicador.cl/api/uf');
+    if(!res.ok) return;
+    const data=await res.json();
+    const valor=data?.serie?.[0]?.valor;
+    const fechaUF=data?.serie?.[0]?.fecha;
+    if(valor>0){
+      window._ufDiaOficial=valor;
+      window._ufDia=valor; // usar siempre la UF oficial como valor de conversión
+      const ev=document.getElementById('uf-dia-val');
+      if(ev) ev.textContent='$'+fmt(valor)+(fechaUF?' ('+fmtDate(fechaUF.split('T')[0])+')':'');
+    }
+  }catch(e){
+    // Si falla, se mantiene el valor derivado del CSV (fallback) o 0
+  }
+}
+
+// ═══════════════════════════════════════════════════════════
+//  CARGA DE DATOS
+// ═══════════════════════════════════════════════════════════
+async function loadMoraDiaria(){
+  const rows=await sbGet('v_mora_diaria','?order=fecha_dato.asc');
+  _moraDiaria=rows||[]; _allDates=_moraDiaria.map(r=>r.fecha_dato);
+}
+async function loadLogImportaciones(){
+  const rows=await sbGet('log_importaciones','?order=fecha_dato.desc&limit=60');
+  _logImport=rows||[];
+}
+
+async function loadSnapshot(fechaDato){
+  if(_snapCache[fechaDato]){_currentSnap=_snapCache[fechaDato];renderDashboard(_currentSnap,fechaDato);return;}
+  showStatus('Cargando datos de '+fmtDate(fechaDato)+'...','info');
+  try{
+    const [sostRows,aluRaw]=await Promise.all([
+      sbGet('v_evolucion_sostenedor_diaria',`?fecha_dato=eq.${fechaDato}&order=saldo_total.desc`),
+      sbGet('snapshots_diarios',`?fecha_dato=eq.${fechaDato}&order=valor_pendiente.desc&limit=1000`)
+    ]);
+    // Agrupar alumnos: cada fila del CSV = un alumno con X cuotas (columna Cantidad)
+    // ValorPendiente ya viene calculado como precio_cuota × Cantidad
+    const aluMap={};
+    (aluRaw||[]).forEach(r=>{
+      if(!aluMap[r.rut_alumno]) aluMap[r.rut_alumno]={
+        rut_alumno:r.rut_alumno,nombre_alumno:r.nombre_alumno,
+        nc_curso:r.nc_curso,n_curso:r.n_curso,beca:r.beca,
+        saldo_total:0,saldo_uf:0,valor_pagado:0,n_cuotas:0,filas:[],
+        ultimo_pago:r.ultimo_pago,rut_sostenedor:r.rut_sostenedor,
+        nombre_sostenedor:r.nombre_sostenedor,email_sostenedor:r.email_sostenedor,
+        movil_sostenedor:r.movil_sostenedor
+      };
+      const a=aluMap[r.rut_alumno];
+      // saldo_total = suma de ValorPendiente (ya incluye todas las cuotas de esa fila)
+      a.saldo_total += r.valor_pendiente;
+      a.saldo_uf    += (r.pendiente_uf||0);
+      a.valor_pagado+= r.valor_pagado;
+      // n_cuotas = suma de Cantidad (cuotas que debe ese alumno en esa fila)
+      a.n_cuotas   += (r.cantidad_cuotas||1);
+      // Guardar fila completa para el detalle
+      a.filas.push({
+        mes:       r.mes_colegiatura,
+        anio:      r.anio_colegiatura,
+        fecha_vence: r.fecha_vence,
+        saldo:     r.valor_pendiente,
+        cantidad:  r.cantidad_cuotas||1
+      });
+      if(r.ultimo_pago>a.ultimo_pago) a.ultimo_pago=r.ultimo_pago;
+    });
+    const snap={sost:sostRows||[],alu:Object.values(aluMap),raw:aluRaw||[]};
+    _snapCache[fechaDato]=snap; _currentSnap=snap;
+    renderDashboard(snap,fechaDato); hideStatus();
+  }catch(e){showStatus('Error: '+e.message,'error');}
+}
+
+// ═══════════════════════════════════════════════════════════
+//  RENDER DASHBOARD
+// ═══════════════════════════════════════════════════════════
+function renderDashboard(snap,fechaDato){
+  _activeFecha = fechaDato; // guardar para setCurrency
+  const {sost,alu,raw}=snap;
+  const moraTotal=sost.reduce((s,r)=>s+(r.saldo_total||0),0);
+  const pagadoTotal=raw.reduce((s,r)=>s+(r.valor_pagado||0),0);
+  // Total cuotas = suma de cantidad_cuotas del CSV
+  const totalCuotas=raw.reduce((s,r)=>s+(r.cantidad_cuotas||1),0);
+
+  const idx=_moraDiaria.findIndex(r=>r.fecha_dato===fechaDato);
+  let dTxt='',dCls='flat';
+  if(idx>0){const prev=_moraDiaria[idx-1].mora_total;const diff=moraTotal-prev;const pct=prev>0?((diff/prev)*100).toFixed(1):0;dTxt=(diff>=0?'+':'')+fmtM(Math.abs(diff))+' ('+pct+'%)';dCls=diff>0?'up':'down';}
+
+  const log=_logImport.find(r=>r.fecha_dato===fechaDato);
+
+  // UF total del día (from snapshot raw) — solo como fallback si no tenemos UF oficial
+  const moraUFTotal = raw.reduce((s,r)=>s+(r.pendiente_uf||0),0);
+  if(!window._ufDiaOficial && moraUFTotal>0 && raw.length>0){
+    window._ufDia = Math.round((moraTotal/moraUFTotal)*100)/100;
+    const ev=document.getElementById('uf-dia-val');if(ev)ev.textContent='$'+fmt(window._ufDia)+' (estimado)';
+  }
+  const moraMostrar = _moneda==='UF' && moraUFTotal>0 ? fmtUF(moraUFTotal) : '$'+fmtM(moraTotal);
+  const subMora = _moneda==='UF' ? 'UF · '+fmtDate(fechaDato) : 'CLP · '+fmtDate(fechaDato);
+  upd('kpi-mora', moraMostrar, subMora, dTxt, dCls, true);
+  upd('kpi-sost',sost.length,'con deuda activa');
+  upd('kpi-alu',alu.length,'con cuotas pendientes');
+  upd('kpi-cuotas',totalCuotas,'suma columna Cantidad');
+  upd('kpi-pagado','$'+fmtM(pagadoTotal),'total acumulado');
+  const kc=document.getElementById('kpi-corte'); if(kc) kc.textContent=fmtDate(fechaDato);
+  const kcu=document.getElementById('kpi-corte-usr'); if(kcu) kcu.textContent=log?.importado_por||'—';
+  const cl=document.getElementById('corte-label'); if(cl) cl.textContent='Corte: '+fmtDate(fechaDato);
+  const sf=document.getElementById('sema-fecha'); if(sf) sf.textContent=fmtDate(fechaDato);
+
+  // Semáforo
+  const seg={c:0,a:0,m:0,b:0,mc:0,ma:0,mm:0,mb:0};
+  sost.forEach(r=>{if(r.saldo_total>1500000){seg.c++;seg.mc+=r.saldo_total;}else if(r.saldo_total>900000){seg.a++;seg.ma+=r.saldo_total;}else if(r.saldo_total>400000){seg.m++;seg.mm+=r.saldo_total;}else{seg.b++;seg.mb+=r.saldo_total;}});
+  const sx=(id,n,m)=>{const en=document.getElementById('sema-'+id+'-n'),em=document.getElementById('sema-'+id+'-m');if(en)en.textContent=n;if(em)em.textContent='$'+fmt(m);};
+  sx('crit',seg.c,seg.mc);sx('alto',seg.a,seg.ma);sx('med',seg.m,seg.mm);sx('bajo',seg.b,seg.mb);
+
+  renderSostTable(sost);
+  // Reset cursor filtros alumno
+  document.getElementById('alu-filter-curso').innerHTML='<option value="">Todos los cursos</option>';
+  renderAluTable(alu);
+  renderChartFP(raw); renderChartMeses(raw); renderChartCursos(alu); renderChartBeca(alu);
+  renderMatriz(raw);
+}
+
+function renderEmpty(){
+  ['sost-tbody','alu-tbody'].forEach(id=>{const el=document.getElementById(id);if(el)el.innerHTML=`<tr><td colspan="8"><div class="empty"><div class="empty-icon">&#128202;</div><div class="empty-title">Sin datos</div><div class="empty-sub">Usa "Subir archivo del día" para cargar el primer archivo.</div></div></td></tr>`;});
+}
+
+// ═══════════════════════════════════════════════════════════
+//  TABLA SOSTENEDORES + PAGINACIÓN
+// ═══════════════════════════════════════════════════════════
+function filterSostTable(){_sostPage=1;buildSostFiltered();}
+function setSostPageSize(v){_sostPageSize=parseInt(v)||25;_sostPage=1;renderSostPage();}
+
+function buildSostFiltered(){
+  if(!_currentSnap){return;}
+  const data=_currentSnap.sost;
+  const q=(document.getElementById('sost-search')?.value||'').toLowerCase();
+  const cf=document.getElementById('sost-filter-cuotas')?.value||'';
+  _sostFiltered=data.filter(r=>{
+    const mQ=!q||(r.nombre_sostenedor||'').toLowerCase().includes(q)||(r.rut_sostenedor||'').includes(q);
+    const mc=!cf||(cf==='1'?r.n_cuotas===1:cf==='2'?r.n_cuotas===2:r.n_cuotas>=3);
+    return mQ&&mc;
+  }).sort((a,b)=>{
+    let va=a[_sortSost.field]??0,vb=b[_sortSost.field]??0;
+    if(typeof va==='string'){va=va.toLowerCase();vb=vb.toLowerCase();}
+    return _sortSost.asc?(va>vb?1:-1):(va<vb?1:-1);
+  });
+  renderSostPage();
+  const cnt=document.getElementById('sost-count');if(cnt)cnt.textContent=_sostFiltered.length+' sostenedor'+(_sostFiltered.length!==1?'es':'');
+  const meta=document.getElementById('sost-tbl-meta');if(meta)meta.textContent='· '+(data||[]).length+' total';
+}
+
+function renderSostTable(data){
+  _sostFiltered=data||[];
+  buildSostFiltered();
+}
+
+function renderSostPage(){
+  const pageSize=_sostPageSize>=9999?_sostFiltered.length:_sostPageSize;
+  const totalPages=Math.ceil(_sostFiltered.length/pageSize)||1;
+  if(_sostPage>totalPages)_sostPage=totalPages;
+  const start=(_sostPage-1)*pageSize, end=Math.min(start+pageSize,_sostFiltered.length);
+  const pageRows=_sostFiltered.slice(start,end);
+
+  const tbody=document.getElementById('sost-tbody');
+  const tds='padding:7px 8px;border-bottom:0.5px solid var(--border);vertical-align:middle';
+  tbody.innerHTML=pageRows.map(r=>{
+    const isSelected=_selectedSost&&_selectedSost.rut_sostenedor===r.rut_sostenedor;
+    const nMeses=mesesAdeudadosSostenedor(r.rut_sostenedor).length;
+    return`<tr class="clickable${isSelected?' selected':''}" onclick="selectSostenedor('${r.rut_sostenedor}')">
+      <td style="${tds};font-weight:500;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.nombre_sostenedor}</td>
+      <td style="${tds};font-family:'DM Mono',monospace;text-align:right;color:var(--red)">${_moneda==='UF'&&r.n_cuotas>0?(r.saldo_uf>0?fmtUF(r.saldo_uf):(_ufDia>0?fmtUF(r.saldo_total/window._ufDia):'$'+fmtM(r.saldo_total))):'$'+fmtM(r.saldo_total)}</td>
+      <td style="${tds};text-align:right"><span class="badge ${r.n_cuotas>=6?'red':r.n_cuotas>=3?'amber':'blue'}">${r.n_cuotas}</span></td>
+      <td style="${tds};text-align:right"><span class="badge ${nMeses>=6?'red':nMeses>=3?'amber':'blue'}" title="${mesesAdeudadosSostenedor(r.rut_sostenedor).map(m=>MESES[m]).join(', ')}">${nMeses}</span></td>
+      <td style="${tds};text-align:right" class="hide-mobile">${r.n_alumnos}</td>
+      <td style="${tds}" class="hide-mobile"><span class="badge gray">${r.forma_pago_soste||'—'}</span></td>
+      <td style="${tds};font-family:'DM Mono',monospace;font-size:11px" class="hide-mobile">${r.ultimo_pago?fmtDate(r.ultimo_pago):'—'}</td>
+    </tr>`;
+  }).join('');
+  if(!pageRows.length) tbody.innerHTML=`<tr><td colspan="7" style="text-align:center;padding:20px;color:var(--ink3)">Sin resultados</td></tr>`;
+
+  // Paginación
+  const pi=document.getElementById('sost-pag-info');if(pi&&_sostFiltered.length)pi.textContent=`${start+1}–${end} de ${_sostFiltered.length}`;
+  renderPagBtns('sost-pag-btns',_sostPage,totalPages,(p)=>{_sostPage=p;renderSostPage();});
+}
+
+function sortSost(f){_sortSost=(_sortSost.field===f)?{field:f,asc:!_sortSost.asc}:{field:f,asc:false};buildSostFiltered();}
+
+// ═══════════════════════════════════════════════════════════
+//  PANEL DETALLE SOSTENEDOR
+// ═══════════════════════════════════════════════════════════
+function selectSostenedor(rut){
+  if(!_currentSnap) return;
+  _selectedSost=_currentSnap.sost.find(s=>s.rut_sostenedor===rut)||null;
+  if(!_selectedSost){closeDetailPanel();return;}
+  renderSostPage(); // re-render to show selected row highlight
+  openDetailPanel(_selectedSost);
+}
+
+function openDetailPanel(sost){
+  const panel=document.getElementById('sost-detail-panel');
+  if(!panel) return;
+
+  const alus=(_currentSnap?.alu||[])
+    .filter(a=>a.rut_sostenedor===sost.rut_sostenedor)
+    .sort((a,b)=>(b.saldo_total||0)-(a.saldo_total||0));
+
+  const totalSaldo  = alus.reduce((s,a)=>s+(a.saldo_total||0),0);
+  const totalSaldoUF= alus.reduce((s,a)=>s+(a.saldo_uf||0),0);
+  const totalCuotas = alus.reduce((s,a)=>s+(a.n_cuotas||0),0);
+  const mesesSost   = mesesAdeudadosSostenedor(sost.rut_sostenedor);
+
+  document.getElementById('detail-sost-name').textContent=sost.nombre_sostenedor||'—';
+  document.getElementById('detail-sost-sub').textContent=
+    '$'+fmt(totalSaldo)+
+    (totalSaldoUF>0?' · '+totalSaldoUF.toFixed(2)+' UF':'')+
+    ' · '+totalCuotas+' cuota'+(totalCuotas!==1?'s':'')+
+    ' · '+mesesSost.length+' mes'+(mesesSost.length!==1?'es':'')+' adeudado'+(mesesSost.length!==1?'s':'')+
+    ' ('+mesesSost.map(m=>MESES[m]).join(', ')+')'+
+    ' · '+alus.length+' alumno'+(alus.length!==1?'s':'')+
+    (sost.email_sostenedor?' · '+sost.email_sostenedor:'');
+
+  const tds='padding:7px 8px;border-bottom:0.5px solid var(--border);font-size:12px';
+  const th='padding:7px 8px;font-size:9px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--ink3);border-bottom:1px solid var(--border2);background:var(--card2)';
+
+  const aluHTML=alus.length?`
+    <table style="width:100%;border-collapse:collapse">
+      <thead><tr>
+        <th style="${th}">Alumno</th>
+        <th style="${th}">Curso</th>
+        <th style="${th};text-align:right">Saldo CLP</th>
+        <th style="${th};text-align:right">Saldo UF</th>
+        <th style="${th};text-align:center">Cuotas</th>
+        <th style="${th}">Beca</th>
+        <th style="${th}">Meses adeudados</th>
+      </tr></thead>
+      <tbody>
+        ${alus.map(a=>{
+          const mesesTexto=mesesAdeudadosAlumno(a).map(m=>MESES[m]).join(', ');
+          const ufStr=a.saldo_uf>0?a.saldo_uf.toFixed(4)+' UF':'—';
+          return `<tr>
+            <td style="${tds};font-weight:500">${a.nombre_alumno}</td>
+            <td style="${tds}"><span class="badge blue">${a.nc_curso||'—'}</span></td>
+            <td style="${tds};font-family:'DM Mono',monospace;text-align:right;color:var(--red)">$${fmt(a.saldo_total)}</td>
+            <td style="${tds};font-family:'DM Mono',monospace;text-align:right;color:var(--ink3);font-size:11px">${ufStr}</td>
+            <td style="${tds};text-align:center"><span class="badge ${a.n_cuotas>=6?'red':a.n_cuotas>=3?'amber':'blue'}">${a.n_cuotas}</span></td>
+            <td style="${tds};font-size:10px;color:var(--amber)">${a.beca||''}</td>
+            <td style="${tds};font-size:10px;color:var(--ink3)">${mesesTexto||'—'}</td>
+          </tr>`;
+        }).join('')}
+        <tr style="background:var(--card2)">
+          <td style="${tds};font-weight:600;border-bottom:none" colspan="2">TOTAL SOSTENEDOR</td>
+          <td style="${tds};font-family:'DM Mono',monospace;text-align:right;color:var(--red);font-weight:600;border-bottom:none">$${fmt(totalSaldo)}</td>
+          <td style="${tds};font-family:'DM Mono',monospace;text-align:right;color:var(--ink3);font-size:11px;border-bottom:none">${totalSaldoUF>0?totalSaldoUF.toFixed(4)+' UF':'—'}</td>
+          <td style="${tds};text-align:center;font-weight:600;border-bottom:none"><span class="badge ${totalCuotas>=6?'red':totalCuotas>=3?'amber':'blue'}">${totalCuotas}</span></td>
+          <td style="${tds};border-bottom:none" colspan="2"></td>
+        </tr>
+      </tbody>
+    </table>`
+    :`<div style="text-align:center;padding:14px;color:var(--ink3);font-size:12px">Sin alumnos encontrados</div>`;
+
+  const contactHTML=`
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">
+      ${[['Email',sost.email_sostenedor],['Móvil',sost.movil_sostenedor],['F.Pago',sost.forma_pago_soste],['Últ.pago',sost.ultimo_pago?fmtDate(sost.ultimo_pago):'—']].map(([l,v])=>
+        `<div style="background:var(--bg2);border-radius:6px;padding:8px 10px">
+           <div style="font-size:9px;color:var(--ink3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:2px">${l}</div>
+           <div style="font-size:12px;font-weight:500">${v||'—'}</div>
+         </div>`
+      ).join('')}
+    </div>`;
+
+  document.getElementById('detail-sost-body').innerHTML=contactHTML+aluHTML;
+  panel.classList.add('open');
+}
+
+function closeDetailPanel(){
+  _selectedSost=null;
+  const p=document.getElementById('sost-detail-panel');
+  if(p) p.classList.remove('open');
+  renderSostPage();
+}
+
+// ═══════════════════════════════════════════════════════════
+//  TABLA ALUMNOS + PAGINACIÓN
+// ═══════════════════════════════════════════════════════════
+function filterAluTable(){_aluPage=1;buildAluFiltered();}
+function setAluPageSize(v){_aluPageSize=parseInt(v)||25;_aluPage=1;renderAluPage();}
+
+function buildAluFiltered(){
+  if(!_currentSnap) return;
+  const data=_currentSnap.alu;
+  const q=(document.getElementById('alu-search')?.value||'').toLowerCase();
+  const cur=document.getElementById('alu-filter-curso')?.value||'';
+  const bk=document.getElementById('alu-filter-beca')?.value||'';
+  _aluFiltered=data.filter(r=>{
+    const mQ=!q||(r.nombre_alumno||'').toLowerCase().includes(q)||(r.rut_alumno||'').includes(q)||(r.nc_curso||'').toLowerCase().includes(q)||(r.nombre_sostenedor||'').toLowerCase().includes(q);
+    return mQ&&(!cur||r.nc_curso===cur)&&(!bk||(bk==='con'?!!r.beca:!r.beca));
+  }).sort((a,b)=>{
+    let va=a[_sortAlu.field]??0,vb=b[_sortAlu.field]??0;
+    if(typeof va==='string'){va=va.toLowerCase();vb=vb.toLowerCase();}
+    return _sortAlu.asc?(va>vb?1:-1):(va<vb?1:-1);
+  });
+  renderAluPage();
+  const cnt=document.getElementById('alu-count');if(cnt)cnt.textContent=_aluFiltered.length+' alumno'+(_aluFiltered.length!==1?'s':'');
+  const meta=document.getElementById('alu-tbl-meta');if(meta)meta.textContent='· '+(data||[]).length+' total';
+}
+
+function renderAluTable(data){
+  // Rebuild curso filter
+  const cs=document.getElementById('alu-filter-curso');
+  if(cs){const cursos=[...new Set((data||[]).map(r=>r.nc_curso).filter(Boolean))].sort();
+    cs.innerHTML='<option value="">Todos los cursos</option>'+cursos.map(c=>`<option value="${c}">${c}</option>`).join('');}
+  _aluFiltered=data||[];
+  buildAluFiltered();
+}
+
+function renderAluPage(){
+  const pageSize=_aluPageSize>=9999?_aluFiltered.length:_aluPageSize;
+  const totalPages=Math.ceil(_aluFiltered.length/pageSize)||1;
+  if(_aluPage>totalPages)_aluPage=totalPages;
+  const start=(_aluPage-1)*pageSize,end=Math.min(start+pageSize,_aluFiltered.length);
+  const pageRows=_aluFiltered.slice(start,end);
+  const tbody=document.getElementById('alu-tbody');
+  const tds='padding:7px 8px;border-bottom:0.5px solid var(--border);vertical-align:middle';
+  tbody.innerHTML=pageRows.map(r=>`<tr>
+    <td style="${tds};font-weight:500;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.nombre_alumno}</td>
+    <td style="${tds}"><span class="badge blue">${r.nc_curso||'—'}</span></td>
+    <td style="${tds};font-family:'DM Mono',monospace;text-align:right;color:var(--red)">$${fmtM(r.saldo_total)}</td>
+    <td style="${tds};text-align:right"><span class="badge ${r.n_cuotas>=6?'red':r.n_cuotas>=3?'amber':'blue'}">${r.n_cuotas}</span></td>
+    <td style="${tds};font-size:10px;color:var(--amber)" class="hide-mobile">${r.beca||''}</td>
+    <td style="${tds};font-size:11px;max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" class="hide-mobile">${r.nombre_sostenedor||'—'}</td>
+    <td style="${tds};font-size:10px;color:var(--ink3)" class="hide-mobile">${r.email_sostenedor||r.movil_sostenedor||'—'}</td>
+  </tr>`).join('');
+  if(!pageRows.length) tbody.innerHTML=`<tr><td colspan="7" style="text-align:center;padding:20px;color:var(--ink3)">Sin resultados</td></tr>`;
+  const pi=document.getElementById('alu-pag-info');if(pi&&_aluFiltered.length)pi.textContent=`${start+1}–${end} de ${_aluFiltered.length}`;
+  renderPagBtns('alu-pag-btns',_aluPage,totalPages,(p)=>{_aluPage=p;renderAluPage();});
+}
+
+function sortAlu(f){_sortAlu=(_sortAlu.field===f)?{field:f,asc:!_sortAlu.asc}:{field:f,asc:false};buildAluFiltered();}
+
+// ═══════════════════════════════════════════════════════════
+//  PAGINACIÓN HELPER
+// ═══════════════════════════════════════════════════════════
+function renderPagBtns(containerId,current,total,cb){
+  const el=document.getElementById(containerId);if(!el||total<=1){if(el)el.innerHTML='';return;}
+  const pages=[];
+  if(total<=7){for(let i=1;i<=total;i++)pages.push(i);}
+  else{pages.push(1);if(current>3)pages.push('...');
+    for(let i=Math.max(2,current-1);i<=Math.min(total-1,current+1);i++)pages.push(i);
+    if(current<total-2)pages.push('...');pages.push(total);}
+  el.innerHTML=
+    `<button class="pag-btn" ${current===1?'disabled':''} onclick="(${cb.toString()})(${current-1})">&#8249;</button>`+
+    pages.map(p=>p==='...'?`<span style="padding:0 4px;color:var(--ink4)">…</span>`:
+      `<button class="pag-btn${p===current?' active':''}" onclick="(${cb.toString()})(${p})">${p}</button>`).join('')+
+    `<button class="pag-btn" ${current===total?'disabled':''} onclick="(${cb.toString()})(${current+1})">&#8250;</button>`;
+}
+
+// ═══════════════════════════════════════════════════════════
+//  CHARTS
+// ═══════════════════════════════════════════════════════════
+function dc(id){if(_charts[id]){_charts[id].destroy();delete _charts[id];}}
+function renderChartFP(raw){
+  dc('fp');
+  const map={}, mapSost={};
+  raw.forEach(r=>{
+    const k=r.forma_pago_soste||'N/A';
+    map[k]=(map[k]||0)+1;
+    if(!mapSost[k]) mapSost[k]=[];
+    // Agregar sostenedor si no está ya
+    if(!mapSost[k].find(s=>s.rut===r.rut_sostenedor)){
+      mapSost[k].push({rut:r.rut_sostenedor,nombre:r.nombre_sostenedor,email:r.email_sostenedor,movil:r.movil_sostenedor});
+    }
+  });
+  const labels=Object.keys(map).sort((a,b)=>map[b]-map[a]);
+  const ctx=document.getElementById('chart-fp')?.getContext('2d');if(!ctx)return;
+  const colors=['#1A4A7A','#2A6040','#9A5C08','#B5320E','#7A3580','#4A4740','#1A7A6A','#7A6040'];
+  _charts['fp']=new Chart(ctx,{
+    type:'bar',
+    data:{labels,datasets:[{data:labels.map(k=>map[k]),backgroundColor:colors,borderRadius:4,borderWidth:0}]},
+    options:{
+      responsive:true,maintainAspectRatio:false,indexAxis:'y',
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>` ${c.parsed.x} cuotas`}}},
+      scales:{x:{grid:{display:false}},y:{grid:{display:false}}},
+      onClick:(evt,elements)=>{
+        if(!elements.length) return;
+        const fp=labels[elements[0].index];
+        const sosts=(_currentSnap?.sost||[])
+          .filter(s=>s.forma_pago_soste===fp||(!s.forma_pago_soste&&fp==='N/A'))
+          .sort((a,b)=>b.saldo_total-a.saldo_total);
+        openDrillPanel(
+          `Forma de pago: ${fp}`,
+          `${sosts.length} sostenedor${sosts.length!==1?'es':''} · Total: $${fmtM(sosts.reduce((s,r)=>s+r.saldo_total,0))}`,
+          buildSostDrillTable(sosts)
+        );
+      }
+    }
+  });
+}
+
+let _mesesView='cuotas'; // 'cuotas' o 'pesos'
+let _lastRawForMeses=null;
+
+function setMesesView(v){
+  _mesesView=v;
+  const bC=document.getElementById('btn-meses-cuotas'), bP=document.getElementById('btn-meses-pesos');
+  if(bC){bC.style.background=v==='cuotas'?'var(--ink)':'transparent';bC.style.color=v==='cuotas'?'#fff':'var(--ink3)';}
+  if(bP){bP.style.background=v==='pesos'?'var(--ink)':'transparent';bP.style.color=v==='pesos'?'#fff':'var(--ink3)';}
+  if(_lastRawForMeses) renderChartMeses(_lastRawForMeses);
+}
+
+function renderChartMeses(raw){
+  dc('meses');
+  _lastRawForMeses=raw;
+  // Filtrar solo meses válidos (marzo=3 a diciembre=12)
+  const map={}, rawFiltrado=raw.filter(r=>PERIODO_LECTIVO.includes(r.mes_colegiatura));
+  rawFiltrado.forEach(r=>{
+    const k=MESES[r.mes_colegiatura]||'?';
+    if(_mesesView==='pesos'){
+      // Precio de 1 colegiatura = valor_pendiente / cantidad (ya que ValorPendiente incluye todas las cuotas)
+      const cuotaUnit=(r.valor_pendiente||0)/Math.max(r.cantidad_cuotas||1,1);
+      map[k]=(map[k]||0)+cuotaUnit;
+    } else {
+      // N° de colegiaturas = 1 por fila (1 alumno × 1 mes = 1 colegiatura)
+      map[k]=(map[k]||0)+1;
+    }
+  });
+  const labels=Object.keys(map);
+  const ctx=document.getElementById('chart-meses')?.getContext('2d');if(!ctx)return;
+  const unidad=_mesesView==='pesos'?'$':'cuotas';
+  _charts['meses']=new Chart(ctx,{
+    type:'doughnut',
+    data:{labels,datasets:[{data:labels.map(k=>map[k]),backgroundColor:['#B5320E','#C07D20','#1A4A7A','#2A6040','#7A3580'],borderWidth:0,hoverOffset:6}]},
+    options:{
+      responsive:true,maintainAspectRatio:false,cutout:'60%',
+      plugins:{
+        legend:{position:'bottom',labels:{font:{size:10}}},
+        tooltip:{callbacks:{label:c=>_mesesView==='pesos'?` $${fmtM(c.parsed)}`:` ${c.parsed} cuotas`}}
+      },
+      onClick:(evt,elements)=>{
+        if(!elements.length) return;
+        const mesNombre=labels[elements[0].index];
+        // Buscar sostenedores con deuda en ese mes
+        const rawMes=(_currentSnap?.raw||[]).filter(r=>
+          PERIODO_LECTIVO.includes(r.mes_colegiatura) && MESES[r.mes_colegiatura]===mesNombre
+        );
+        // Agrupar por sostenedor
+        const sostMap={};
+        rawMes.forEach(r=>{
+          if(!sostMap[r.rut_sostenedor]) sostMap[r.rut_sostenedor]={
+            rut:r.rut_sostenedor,nombre:r.nombre_sostenedor,
+            email:r.email_sostenedor,movil:r.movil_sostenedor,
+            saldo:0,cuotas:0,alumnos:[]
+          };
+          sostMap[r.rut_sostenedor].saldo+=r.valor_pendiente;
+          sostMap[r.rut_sostenedor].cuotas+=r.cantidad_cuotas||1;
+          sostMap[r.rut_sostenedor].alumnos.push(r.nombre_alumno);
+        });
+        const sosts=Object.values(sostMap).sort((a,b)=>b.saldo-a.saldo);
+        openDrillPanel(
+          `Cuota ${mesNombre}`,
+          `${sosts.length} sostenedor${sosts.length!==1?'es':''} · Total: $${fmtM(sosts.reduce((s,r)=>s+r.saldo,0))}`,
+          buildMesDrillTable(sosts)
+        );
+      }
+    }
+  });
+}
+
+// ── DRILL-DOWN PANELS ─────────────────────────────────────────
+function openDrillPanel(title, sub, html){
+  // Cerrar panel de sostenedor si está abierto
+  closeDetailPanel();
+  document.getElementById('drill-title').textContent=title;
+  document.getElementById('drill-sub').textContent=sub;
+  document.getElementById('drill-body').innerHTML=html;
+  document.getElementById('chart-drill-panel').classList.add('open');
+}
+function closeDrillPanel(){
+  document.getElementById('chart-drill-panel')?.classList.remove('open');
+}
+
+function buildSostDrillTable(sosts){
+  if(!sosts.length) return '<div style="text-align:center;padding:14px;color:var(--ink3);font-size:12px">Sin sostenedores</div>';
+  const tds='padding:6px 8px;border-bottom:0.5px solid var(--border);font-size:11px';
+  return `<div style="overflow-x:auto">
+    <table style="width:100%;border-collapse:collapse">
+      <thead><tr style="background:var(--card2)">
+        <th style="${tds};font-size:9px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--ink3)">Sostenedor</th>
+        <th style="${tds};font-size:9px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--ink3);text-align:right">Saldo</th>
+        <th style="${tds};font-size:9px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--ink3);text-align:center">Cuotas</th>
+        <th style="${tds};font-size:9px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--ink3)">Contacto</th>
+      </tr></thead>
+      <tbody>
+        ${sosts.map(s=>`<tr>
+          <td style="${tds};font-weight:500">${s.nombre_sostenedor}</td>
+          <td style="${tds};font-family:'DM Mono',monospace;text-align:right;color:var(--red)">$${fmtM(s.saldo_total)}</td>
+          <td style="${tds};text-align:center"><span class="badge ${s.n_cuotas>=6?'red':s.n_cuotas>=3?'amber':'blue'}">${s.n_cuotas}</span></td>
+          <td style="${tds};font-size:10px;color:var(--ink3)">${s.email_sostenedor||s.movil_sostenedor||'—'}</td>
+        </tr>`).join('')}
+      </tbody>
+    </table>
+  </div>`;
+}
+
+function buildMesDrillTable(sosts){
+  if(!sosts.length) return '<div style="text-align:center;padding:14px;color:var(--ink3);font-size:12px">Sin sostenedores</div>';
+  const tds='padding:6px 8px;border-bottom:0.5px solid var(--border);font-size:11px';
+  return `<div style="overflow-x:auto">
+    <table style="width:100%;border-collapse:collapse">
+      <thead><tr style="background:var(--card2)">
+        <th style="${tds};font-size:9px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--ink3)">Sostenedor</th>
+        <th style="${tds};font-size:9px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--ink3);text-align:right">Saldo</th>
+        <th style="${tds};font-size:9px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--ink3);text-align:center">Cuotas</th>
+        <th style="${tds};font-size:9px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--ink3)">Alumnos</th>
+        <th style="${tds};font-size:9px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--ink3)">Contacto</th>
+      </tr></thead>
+      <tbody>
+        ${sosts.map(s=>`<tr>
+          <td style="${tds};font-weight:500">${s.nombre}</td>
+          <td style="${tds};font-family:'DM Mono',monospace;text-align:right;color:var(--red)">$${fmtM(s.saldo)}</td>
+          <td style="${tds};text-align:center"><span class="badge ${s.cuotas>=6?'red':s.cuotas>=3?'amber':'blue'}">${s.cuotas}</span></td>
+          <td style="${tds};font-size:10px;color:var(--ink2)">${[...new Set(s.alumnos)].join(', ')}</td>
+          <td style="${tds};font-size:10px;color:var(--ink3)">${s.email||s.movil||'—'}</td>
+        </tr>`).join('')}
+      </tbody>
+    </table>
+  </div>`;
+}
+function renderChartCursos(alu){
+  dc('cursos');const map={};alu.forEach(r=>{const k=r.nc_curso||'S/C';map[k]=(map[k]||0)+(r.saldo_total||0);});
+  const sorted=Object.entries(map).sort((a,b)=>b[1]-a[1]).slice(0,12);
+  const ctx=document.getElementById('chart-cursos')?.getContext('2d');if(!ctx)return;
+  _charts['cursos']=new Chart(ctx,{type:'bar',data:{labels:sorted.map(e=>e[0]),datasets:[{data:sorted.map(e=>e[1]),backgroundColor:'#1A4A7A',borderRadius:3,borderWidth:0}]},options:{responsive:true,maintainAspectRatio:false,indexAxis:'y',plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>` $${fmtM(c.parsed.x)}`}}},scales:{x:{ticks:{callback:v=>'$'+fmtM(v),font:{size:9}},grid:{display:false}},y:{grid:{display:false},ticks:{font:{size:10}}}}}});
+}
+function renderChartBeca(alu){
+  dc('beca');const c=alu.filter(r=>r.beca).length,s=alu.filter(r=>!r.beca).length;
+  const ctx=document.getElementById('chart-beca')?.getContext('2d');if(!ctx)return;
+  _charts['beca']=new Chart(ctx,{type:'doughnut',data:{labels:['Sin beca','Con beca'],datasets:[{data:[s,c],backgroundColor:['#1A4A7A','#9A5C08'],borderWidth:0,hoverOffset:4}]},options:{responsive:true,maintainAspectRatio:false,cutout:'60%',plugins:{legend:{position:'bottom',labels:{font:{size:11}}}}}});
+}
+function renderEvolucion(){
+  dc('evolucion');if(!_moraDiaria.length)return;
+  const ctx=document.getElementById('chart-evolucion')?.getContext('2d');if(!ctx)return;
+  _charts['evolucion']=new Chart(ctx,{type:'line',data:{
+    labels:_moraDiaria.map(r=>fmtDate(r.fecha_dato)),
+    datasets:[{label:'Mora CLP',data:_moraDiaria.map(r=>r.mora_total),borderColor:'#B5320E',backgroundColor:'rgba(181,50,14,0.08)',borderWidth:2.5,fill:true,tension:0.3,pointRadius:4,pointBackgroundColor:'#B5320E',pointHoverRadius:6,pointBorderColor:'#fff',pointBorderWidth:2}]
+  },options:{responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>' $'+fmtM(c.parsed.y)}}},
+    scales:{x:{grid:{display:false},ticks:{font:{size:10}}},y:{grid:{color:'rgba(0,0,0,0.04)'},ticks:{callback:v=>'$'+fmtM(v),font:{size:10}}}}}});
+  const vl=document.getElementById('variacion-list');
+  if(vl){vl.innerHTML=_moraDiaria.slice().reverse().slice(0,12).map((r,i,arr)=>{
+    if(i===arr.length-1)return'';const prev=arr[i+1].mora_total,curr=r.mora_total;
+    const diff=curr-prev,pct=prev>0?((diff/prev)*100).toFixed(1):0,cls=diff>0?'up':'down';
+    return`<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:0.5px solid var(--border);font-size:12px">
+      <span style="color:var(--ink2)">${fmtDate(r.fecha_dato)}</span>
+      <span class="delta-pill ${cls}">${diff>0?'+':''}${fmtM(Math.abs(diff))} (${diff>0?'+':''}${pct}%)</span>
+    </div>`;
+  }).join('');}
+}
+function renderLogList(){
+  const el=document.getElementById('log-list');if(!el)return;
+  if(!_logImport.length){
+    el.innerHTML=`<div style="text-align:center;padding:20px;color:var(--ink3);font-size:12px">Sin importaciones registradas</div>`;
+    return;
+  }
+  el.innerHTML=_logImport.map(r=>`
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:0.5px solid var(--border);gap:8px">
+      <!-- Info clickeable -->
+      <div style="flex:1;cursor:pointer;min-width:0" onclick="loadSnapshot('${r.fecha_dato}');showSubView('sv-sost',null)">
+        <div style="font-size:12px;font-weight:500;color:var(--ink)">${fmtDate(r.fecha_dato)}</div>
+        <div style="font-size:10px;color:var(--ink4);margin-top:1px">${r.importado_por||'—'} · ${r.n_alumnos} alumnos · ${r.n_sostenedores} sost.</div>
+      </div>
+      <!-- Monto -->
+      <div style="text-align:right;flex-shrink:0;cursor:pointer" onclick="loadSnapshot('${r.fecha_dato}');showSubView('sv-sost',null)">
+        <div style="font-family:'DM Mono',monospace;font-size:12px;color:var(--red)">$${fmtM(r.mora_total_clp)}</div>
+        <div style="font-size:10px;color:var(--ink4)">Ver datos</div>
+      </div>
+      <!-- Botón borrar -->
+      <button
+        onclick="deleteImport('${r.fecha_dato}')"
+        title="Eliminar importación del ${fmtDate(r.fecha_dato)}"
+        style="flex-shrink:0;padding:4px 8px;border-radius:5px;border:0.5px solid var(--red-bd);background:var(--red-lt);color:var(--red);font-size:11px;font-weight:600;cursor:pointer;line-height:1"
+      >🗑</button>
+    </div>`).join('');
+}
+
+async function deleteImport(fechaDato){
+  const label = fmtDate(fechaDato);
+  if(!confirm(`¿Eliminar todos los registros importados del ${label}?\n\nEsto borrará:\n· Todos los snapshots de ese día\n· El registro del log de importación\n\nEsta acción no se puede deshacer.`)) return;
+
+  showStatus(`Eliminando registros del ${label}...`, 'info');
+  try {
+    // Borrar snapshots del día
+    await sbDelete('snapshots_diarios', `?fecha_dato=eq.${fechaDato}`);
+    // Borrar log
+    await sbDelete('log_importaciones', `?fecha_dato=eq.${fechaDato}`);
+    // Limpiar cache local
+    delete _snapCache[fechaDato];
+    // Actualizar listas
+    await Promise.all([loadMoraDiaria(), loadLogImportaciones()]);
+    renderLogList();
+    renderEvolucion();
+    renderCalendar();
+    // Si el dashboard estaba mostrando ese día, cargar el más reciente
+    if(_currentSnap && _moraDiaria.length > 0){
+      await loadSnapshot(_moraDiaria[_moraDiaria.length-1].fecha_dato);
+    } else if(_moraDiaria.length === 0){
+      _currentSnap = null;
+      renderEmpty();
+    }
+    showStatus(`Registros del ${label} eliminados correctamente`, 'ok');
+  } catch(e){
+    showStatus('Error al eliminar: ' + e.message, 'error');
+  }
+}
+
+// ═══════════════════════════════════════════════════════════
+//  CALENDARIO
+// ═══════════════════════════════════════════════════════════
+function renderCalendar(){
+  const mNames=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+  const label=document.getElementById('cal-month-label'),grid=document.getElementById('cal-grid');
+  if(!label||!grid)return;
+  label.textContent=mNames[_calMonth]+' '+_calYear;
+  const first=new Date(_calYear,_calMonth,1).getDay(),days=new Date(_calYear,_calMonth+1,0).getDate();
+  const today=new Date().toISOString().split('T')[0];
+  const cells=[];
+  for(let i=0;i<(first===0?6:first-1);i++)cells.push(null);
+  for(let d=1;d<=days;d++)cells.push(d);
+  grid.innerHTML=cells.map(d=>{
+    if(!d)return`<div style="width:36px;height:48px"></div>`;
+    const ds=`${_calYear}-${String(_calMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const hd=_allDates.includes(ds),it=ds===today,is=ds===_selectedDate;
+    const dow=['L','M','X','J','V','S','D'][(new Date(_calYear,_calMonth,d).getDay()+6)%7];
+    let cls='cal-day';if(hd)cls+=' has-data';if(it)cls+=' today';if(is)cls+=' selected';
+    return`<div class="${cls}" onclick="selectCalDay('${ds}')" title="${ds}"><span class="cal-dn">${d}</span><span class="cal-dw">${dow}</span>${hd?'<span class="cal-dot"></span>':''}</div>`;
+  }).join('');
+}
+function calNavMonth(dir){_calMonth+=dir;if(_calMonth>11){_calMonth=0;_calYear++;}if(_calMonth<0){_calMonth=11;_calYear--;}renderCalendar();}
+async function selectCalDay(ds){
+  _selectedDate=ds;renderCalendar();
+  const hd=_allDates.includes(ds);
+  const det=document.getElementById('cal-detail'),tit=document.getElementById('cal-detail-title');
+  if(!det||!tit)return;tit.textContent=fmtDate(ds);
+  if(!hd){det.innerHTML=`<div class="empty"><div class="empty-icon">&#128205;</div><div class="empty-title">Sin datos</div><div class="empty-sub">No hay archivo importado para este día.<br>Puedes importar este día usando "Subir archivo del día".</div></div>`;return;}
+  det.innerHTML=`<div style="color:var(--ink3);font-size:12px;padding:12px 0">Cargando...</div>`;
+  await loadSnapshot(ds);
+  const snap=_snapCache[ds];if(!snap){det.innerHTML='Error';return;}
+  const mora=snap.sost.reduce((s,r)=>s+(r.saldo_total||0),0);
+  const log=_logImport.find(r=>r.fecha_dato===ds);
+  det.innerHTML=`<div style="display:flex;flex-direction:column;gap:0">
+    ${[['Mora total','$'+fmtM(mora),'red'],['Sostenedores',snap.sost.length,''],['Alumnos',snap.alu.length,''],['Total cuotas',snap.raw.reduce((s,r)=>s+(r.cantidad_cuotas||1),0),''],['Importado por',log?.importado_por||'—','']].map(([l,v,c])=>`<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:0.5px solid var(--border);font-size:12px"><span style="color:var(--ink3)">${l}</span><span style="font-family:'DM Mono',monospace;${c?'color:var(--'+c+');':''}">${v}</span></div>`).join('')}
+    <button onclick="loadSnapshot('${ds}');showSubView('sv-sost',null)" style="margin-top:14px;width:100%;padding:9px;border-radius:7px;background:var(--blue);color:#fff;border:none;font-size:12px;font-weight:500;cursor:pointer">Ver datos de este día en el dashboard</button>
+  </div>`;
+}
+
+// ═══════════════════════════════════════════════════════════
+//  IMPORTAR — usa usuario autenticado
+// ═══════════════════════════════════════════════════════════
+function openImportModal(){
+  const yd=new Date();yd.setDate(yd.getDate()-1);
+  document.getElementById('import-fecha').value=yd.toISOString().split('T')[0];
+  document.getElementById('import-modal').classList.add('open');
+}
+function closeImportModal(){
+  document.getElementById('import-modal').classList.remove('open');
+  _importFile=null;
+  document.getElementById('dz-icon').textContent='📂';
+  document.getElementById('dz-text').textContent='Clic o arrastra el archivo aquí';
+  document.getElementById('dz-sub').textContent='CSV o XLSX · Syscol MOROSOS_ALUMNO';
+  document.getElementById('btn-confirm-import').disabled=true;
+  document.getElementById('progress-bar').style.display='none';
+  document.getElementById('progress-fill').style.width='0%';
+}
+function handleFileSelect(inp){setFile(inp.files[0]);}
+function handleDrop(e){e.preventDefault();document.getElementById('drop-zone').classList.remove('drag');setFile(e.dataTransfer.files[0]);}
+function setFile(f){if(!f)return;_importFile=f;document.getElementById('dz-icon').textContent='✅';document.getElementById('dz-text').textContent=f.name;document.getElementById('dz-sub').textContent=(f.size/1024).toFixed(1)+' KB';document.getElementById('btn-confirm-import').disabled=false;}
+
+async function confirmImport(){
+  if(!_importFile)return;
+  const fd=document.getElementById('import-fecha').value;
+  if(!fd){alert('Selecciona la fecha.');return;}
+  // Usar nombre del usuario autenticado automáticamente
+  const usr=_currentUser?.nombre||_currentUser?.email||'Sistema';
+  const btn=document.getElementById('btn-confirm-import');
+  btn.disabled=true;btn.textContent='Importando...';
+  const pb=document.getElementById('progress-bar'),pf=document.getElementById('progress-fill');
+  pb.style.display='block';pf.style.width='10%';
+  const reader=new FileReader();
+  reader.onload=async e=>{
+    try{
+      let rows;
+      if(_importFile.name.toLowerCase().endsWith('.csv')){
+        const txt=new TextDecoder('iso-8859-1').decode(e.target.result);
+        rows=csvParse(txt);
+      } else {
+        const wb=XLSX.read(e.target.result,{type:'array'});
+        rows=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]);
+      }
+      pf.style.width='30%';
+      await doImport(rows,fd,usr);
+      pf.style.width='100%';
+      closeImportModal();
+      await Promise.all([loadMoraDiaria(),loadLogImportaciones()]);
+      delete _snapCache[fd];
+      await loadSnapshot(fd);
+      renderEvolucion();renderCalendar();renderLogList();
+      showStatus('Archivo importado por '+usr+' · '+fmtDate(fd),'ok');
+    }catch(err){showStatus('Error: '+err.message,'error');}
+    btn.disabled=false;btn.textContent='Importar';
+  };
+  reader.readAsArrayBuffer(_importFile);
+}
+
+async function doImport(rows,fd,usr){
+  await sbDelete('snapshots_diarios',`?fecha_dato=eq.${fd}`);
+  const snapRows=rows.map(r=>{
+    const saldo=parseInt(r.ValorPendiente||0)||0;if(saldo===0)return null;
+    // CANTIDAD: usar columna Cantidad del CSV directamente
+    const cantidad=parseInt(r.Cantidad||1)||1;
+    const fv=String(r.FechaVence||'');const fvp=fv.split('/');
+    let mesCol=5,anioCol=2026;
+    if(fvp.length===3){anioCol=parseInt(fvp[2]);mesCol=parseInt(fvp[1]);}
+    const numC=MES_CUOTA[mesCol]||1;
+    return{
+      fecha_dato:fd,importado_por:usr,
+      syscol_id_alumno:parseInt(r.id)||null,
+      rut_alumno:String(r.Rut||'').trim(),
+      nombre_alumno:String(r.Nombre||'—'),
+      nc_curso:r.NCCurso||null,n_curso:r.NCurso||null,
+      beca:r.Beca||null,forma_pago:r.SosteFormaPago||r.FormaPago||null,
+      comuna:r.Comuna||null,fecha_vence:pdm(fv),
+      mes_colegiatura:mesCol,anio_colegiatura:anioCol,num_cuota:numC,
+      // AQUÍ: cantidad_cuotas toma el valor de la columna Cantidad
+      cantidad_cuotas:cantidad,
+      // PendienteOriginal: UF con coma decimal (ej: "7,8795") → convertir a float
+      pendiente_uf: (()=>{
+        const raw=String(r.PendienteOriginal||'0').replace(',','.');
+        const val=parseFloat(raw)||0;
+        // Si el valor es > 200 no es UF (caso residual como 113000 CLP) → calcular
+        return val > 200 ? 0 : Math.round(val*10000)/10000;
+      })(),
+      valor_pendiente:saldo,valor_pagado:parseInt(r.ValorPagado||0)||0,
+      ultimo_pago:pdm(r.UltimoPago),
+      rut_sostenedor:String(r.SosteRut||'').trim(),
+      nombre_sostenedor:String(r.SosteNombre||'—'),
+      email_sostenedor:r.SosteEmail||null,
+      movil_sostenedor:r.SosteMovil?String(r.SosteMovil):null,
+      forma_pago_soste:r.SosteFormaPago||null,
+      direccion_soste:r.SosteDireccion||null
+    };
+  }).filter(Boolean);
+  if(!snapRows.length)throw new Error('No hay filas con saldo > 0');
+  for(let i=0;i<snapRows.length;i+=100)await sbPost('snapshots_diarios',snapRows.slice(i,i+100),'return=minimal');
+  const mora=snapRows.reduce((s,r)=>s+r.valor_pendiente,0);
+  const nSost=new Set(snapRows.map(r=>r.rut_sostenedor)).size;
+  const nAlu=new Set(snapRows.map(r=>r.rut_alumno)).size;
+  const moraUF=snapRows.reduce((s,r)=>s+(r.pendiente_uf||0),0);
+  const ufDia = moraUF > 0 ? Math.round((mora/moraUF)*100)/100 : 0;
+  if(!window._ufDiaOficial && ufDia>0){ window._ufDia=ufDia; const el=document.getElementById('uf-dia-val'); if(el) el.textContent='$'+fmt(ufDia)+' (estimado)'; }
+  const log={fecha_dato:fd,importado_por:usr,n_filas_csv:rows.length,n_alumnos:nAlu,n_sostenedores:nSost,mora_total_clp:mora,fecha_importacion:new Date().toISOString()};
+  await fetch(`${SB_URL}/rest/v1/log_importaciones`,{method:'POST',headers:{...sbH(),'Prefer':'resolution=merge-duplicates,return=minimal'},body:JSON.stringify(log)});
+}
+
+// ═══════════════════════════════════════════════════════════
+//  NAV
+// ═══════════════════════════════════════════════════════════
+function showView(n,b){
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('view-'+n)?.classList.add('active');
+  if(b)b.classList.add('active');
+  if(n==='correspondencia') initCorrespondencia();
+}
+function showSubView(n,b){
+  document.querySelectorAll('.sub-view').forEach(v=>v.classList.remove('active'));
+  document.querySelectorAll('.sub-tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById(n)?.classList.add('active');
+  if(b)b.classList.add('active');
+  else document.querySelectorAll('.sub-tab').forEach(t=>{if(t.getAttribute('onclick')?.includes(n))t.classList.add('active');});
+  if(n==='sv-evolucion')renderEvolucion();
+  if(n==='sv-calendario')renderCalendar();
+}
+
+// ═══════════════════════════════════════════════════════════
+//  UTILS
+// ═══════════════════════════════════════════════════════════
+function upd(id,val,sub,delta,dCls,red){
+  const e=document.getElementById(id);if(!e)return;e.textContent=val;if(red)e.classList.add('red');
+  const s=document.getElementById(id+'-sub');if(s)s.textContent=sub;
+  const d=document.getElementById(id+'-delta');if(d){d.textContent=delta||'';d.className='kpi-delta '+(dCls||'flat');}
+}
+// ═══════════════════════════════════════════════════════════
+//  CORRESPONDENCIA
+// ═══════════════════════════════════════════════════════════
+let _corrFiltered=[], _corrSelected=new Set(), _sortCorr={field:'saldo_total',asc:false};
+
+function initCorrespondencia(){
+  if(!_currentSnap) return;
+  _corrFiltered=[..._currentSnap.sost];
+  _corrSelected.clear();
+  renderCorrTable();
+  updateCorrBtn();
+  loadCfgEmail();
+}
+
+function filterCorrTable(){
+  if(!_currentSnap) return;
+  const q=(document.getElementById('corr-search')?.value||'').toLowerCase();
+  const cf=document.getElementById('corr-filter-cuotas')?.value||'';
+  const fp=document.getElementById('corr-filter-fp')?.value||'';
+  _corrFiltered=_currentSnap.sost.filter(r=>{
+    const mQ=!q||(r.nombre_sostenedor||'').toLowerCase().includes(q)||(r.rut_sostenedor||'').includes(q);
+    const mc=!cf||(cf==='1'?r.n_cuotas===1:cf==='2'?r.n_cuotas===2:r.n_cuotas>=3);
+    const mf=!fp||r.forma_pago_soste===fp;
+    return mQ&&mc&&mf;
+  }).sort((a,b)=>{
+    let va=a[_sortCorr.field]??0,vb=b[_sortCorr.field]??0;
+    if(typeof va==='string'){va=va.toLowerCase();vb=vb.toLowerCase();}
+    return _sortCorr.asc?(va>vb?1:-1):(va<vb?1:-1);
+  });
+  renderCorrTable();
+}
+
+function sortCorr(f){_sortCorr=(_sortCorr.field===f)?{field:f,asc:!_sortCorr.asc}:{field:f,asc:false};filterCorrTable();}
+
+function renderCorrTable(){
+  const tbody=document.getElementById('corr-tbody');if(!tbody)return;
+  const tds='padding:6px 8px;border-bottom:0.5px solid var(--border);font-size:12px';
+  tbody.innerHTML=_corrFiltered.map(r=>{
+    const chk=_corrSelected.has(r.rut_sostenedor);
+    return`<tr style="cursor:pointer" onclick="toggleCorrRow('${r.rut_sostenedor}','${(r.nombre_sostenedor||'').replace(/'/g,"\\'")}')">
+      <td style="${tds};text-align:center"><input type="checkbox" ${chk?'checked':''} onchange="toggleCorrRow('${r.rut_sostenedor}','${(r.nombre_sostenedor||'').replace(/'/g,"\\'")}');event.stopPropagation()"></td>
+      <td style="${tds};font-weight:${chk?'600':'400'};color:${chk?'var(--blue)':'var(--ink)'}">
+        ${r.nombre_sostenedor}
+        ${r.email_sostenedor?'':'<span style="font-size:9px;color:var(--red);background:var(--red-lt);padding:1px 4px;border-radius:2px;margin-left:4px">sin email</span>'}
+      </td>
+      <td style="${tds};text-align:right">
+        <div style="font-family:'DM Mono',monospace;font-size:12px;color:var(--red)">$${fmtM(r.saldo_total)}</div>
+        ${r.saldo_uf>0?`<div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--ink3)">${fmtUF(r.saldo_uf)}</div>`:''}
+      </td>
+      <td style="${tds};text-align:right"><span class="badge ${r.n_cuotas>=6?'red':r.n_cuotas>=3?'amber':'blue'}">${r.n_cuotas}</span></td>
+      <td style="${tds};font-size:10px;color:var(--ink3)" class="hide-mobile">${r.email_sostenedor||'—'}</td>
+    </tr>`;
+  }).join('');
+  const cnt=document.getElementById('corr-selected-count');
+  if(cnt) cnt.textContent=_corrSelected.size>0?`${_corrSelected.size} seleccionado${_corrSelected.size!==1?'s':''}  ($${fmtM(calcCorrTotal())} CLP)`:'';
+  // Update preview with first selected
+  updatePreview();
+}
+
+function toggleCorrRow(rut){
+  if(_corrSelected.has(rut)) _corrSelected.delete(rut);
+  else _corrSelected.add(rut);
+  renderCorrTable();
+  updateCorrBtn();
+}
+
+function selectAllCorr(checked){
+  if(checked){
+    _corrFiltered.forEach(r=>_corrSelected.add(r.rut_sostenedor));
+  } else {
+    _corrFiltered.forEach(r=>_corrSelected.delete(r.rut_sostenedor));
+  }
+  renderCorrTable();
+  updateCorrBtn();
+}
+
+function calcCorrTotal(){
+  return (_currentSnap?.sost||[])
+    .filter(r=>_corrSelected.has(r.rut_sostenedor))
+    .reduce((s,r)=>s+(r.saldo_total||0),0);
+}
+
+function updateCorrBtn(){
+  const n=_corrSelected.size;
+  const btn=document.getElementById('btn-enviar-corr');
+  const sp=document.getElementById('btn-enviar-n');
+  if(btn){btn.disabled=n===0;btn.style.opacity=n>0?'1':'0.5';btn.style.pointerEvents=n>0?'auto':'none';}
+  if(sp) sp.textContent=n;
+}
+
+function buildMensaje(sost, plantilla){
+  const alus=(_currentSnap?.alu||[]).filter(a=>a.rut_sostenedor===sost.rut_sostenedor);
+  // Por alumno: nombre (curso) - meses adeudados: Marzo, Abril...
+  const alumDetalle=alus.map(a=>{
+    const mesesStr=mesesAdeudadosAlumno(a).map(m=>MESES[m]).join(', ');
+    const ufAlu = a.saldo_uf > 0 ? a.saldo_uf.toFixed(4) : (window._ufDia>0?(a.saldo_total/window._ufDia).toFixed(4):'—');
+    const clpAlu = fmt(a.saldo_total);
+    return `  • ${a.nombre_alumno} (${a.nc_curso||'—'}): ${ufAlu} UF ($${clpAlu} CLP)
+    Meses adeudados: ${mesesStr}`;
+  }).join('\n');
+  // Totales
+  const ufTotal = sost.saldo_uf>0 ? sost.saldo_uf.toFixed(4) : (window._ufDia>0?(sost.saldo_total/window._ufDia).toFixed(4):'—');
+  const clpTotal = fmt(sost.saldo_total||0);
+  return plantilla
+    .replace(/{{nombre}}/g,   sost.nombre_sostenedor||'sostenedor/a')
+    .replace(/{{saldo_uf}}/g, ufTotal+' UF')
+    .replace(/{{saldo_clp}}/g,'$'+clpTotal+' CLP')
+    .replace(/{{saldo}}/g,    ufTotal+' UF ($'+clpTotal+' CLP)')
+    .replace(/{{cuotas}}/g,   sost.n_cuotas||0)
+    .replace(/{{alumnos}}/g,  alumDetalle||'—');
+}
+
+function updatePreview(){
+  const el=document.getElementById('corr-preview');if(!el)return;
+  const plantilla=document.getElementById('corr-plantilla')?.value||'';
+  const firstSel=(_currentSnap?.sost||[]).find(r=>_corrSelected.has(r.rut_sostenedor));
+  if(!firstSel){el.textContent='Selecciona un sostenedor para ver la vista previa personalizada.';return;}
+  el.textContent=buildMensaje(firstSel,plantilla);
+}
+
+// Actualizar preview al escribir en plantilla
+document.addEventListener('DOMContentLoaded',()=>{
+  document.getElementById('corr-plantilla')?.addEventListener('input',updatePreview);
+});
+
+async function enviarPrueba(){
+  const testEmail = document.getElementById('test-email-input')?.value?.trim();
+  const res       = document.getElementById('test-result');
+
+  if(!testEmail || !testEmail.includes('@')){
+    if(res){ res.style.display='block'; res.style.color='var(--red)'; res.textContent='⚠ Ingresa un correo válido para la prueba.'; }
+    return;
+  }
+  const cfg = loadCfgEmail();
+  if(!cfg.clientId || !cfg.clientSecret || !cfg.tenantId || !cfg.from){
+    if(res){ res.style.display='block'; res.style.color='var(--red)'; res.textContent='⚠ Configura primero los datos de Azure / Microsoft 365.'; }
+    return;
+  }
+  // Tomar el primer sostenedor seleccionado; si no hay, usar el primero disponible
+  const sost = (_currentSnap?.sost||[]).find(r => _corrSelected.has(r.rut_sostenedor))
+            || (_currentSnap?.sost||[])[0];
+  if(!sost){
+    if(res){ res.style.display='block'; res.style.color='var(--red)'; res.textContent='⚠ No hay sostenedores cargados. Importa un archivo primero.'; }
+    return;
+  }
+
+  const plantilla = document.getElementById('corr-plantilla')?.value || '';
+  const asunto    = document.getElementById('corr-asunto')?.value || 'Prueba · Aviso de saldo pendiente';
+  const cuerpo    = buildMensaje(sost, plantilla);
+  const asuntoFinal = '[PRUEBA] ' + asunto.replace(/{{nombre}}/g, sost.nombre_sostenedor||'');
+
+  if(res){ res.style.display='block'; res.style.color='var(--blue)'; res.textContent='Enviando correo de prueba...'; }
+
+  try{
+    const cuerpoCompleto =
+      `═══════════════════════════════════════\n` +
+      `CORREO DE PRUEBA — datos de: ${sost.nombre_sostenedor}\n` +
+      `(En envío real iría a: ${sost.email_sostenedor||'sin email'})\n` +
+      `═══════════════════════════════════════\n\n` +
+      cuerpo;
+
+    // Llamar a la función serverless de Vercel (evita CORS con Microsoft)
+    const apiRes = await fetch('/api/send-email', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        tenantId:     cfg.tenantId,
+        clientId:     cfg.clientId,
+        clientSecret: cfg.clientSecret,
+        from:         cfg.from,
+        emails: [{
+          to:      testEmail,
+          toName:  'Prueba Sistema Morosidad',
+          subject: asuntoFinal,
+          body:    cuerpoCompleto
+        }]
+      })
+    });
+
+    const data = await apiRes.json();
+    if(!apiRes.ok) throw new Error(data.detail || data.error || 'Error en el servidor');
+
+    if(res){
+      res.style.color = data.sent > 0 ? 'var(--green)' : 'var(--red)';
+      res.textContent = data.sent > 0
+        ? `✓ Prueba enviada a ${testEmail} con datos de "${sost.nombre_sostenedor}"`
+        : `✗ Error al enviar: ${data.results?.[0]?.error || 'sin detalle'}`;
+    }
+  } catch(e){
+    if(res){ res.style.color='var(--red)'; res.textContent='✗ Error: ' + e.message; }
+  }
+}
+
+async function enviarCorrespondencia(){
+  const plantilla=document.getElementById('corr-plantilla')?.value||'';
+  const asunto=document.getElementById('corr-asunto')?.value||'Aviso de saldo pendiente';
+  const cfg=loadCfgEmail();
+  if(!cfg.clientId||!cfg.clientSecret||!cfg.tenantId||!cfg.from){
+    alert('Configura primero los datos de Azure / Microsoft 365 en la sección superior.');return;
+  }
+  const sosts=(_currentSnap?.sost||[]).filter(r=>_corrSelected.has(r.rut_sostenedor)&&r.email_sostenedor);
+  const sinEmail=(_currentSnap?.sost||[]).filter(r=>_corrSelected.has(r.rut_sostenedor)&&!r.email_sostenedor);
+  if(!sosts.length){alert('Ninguno de los seleccionados tiene email registrado.');return;}
+  const msg=`Se enviarán ${sosts.length} correo${sosts.length!==1?'s':''}.${sinEmail.length?`\n${sinEmail.length} sostenedor${sinEmail.length!==1?'es':''} sin email serán omitidos.`:''}\n\n¿Confirmas el envío?`;
+  if(!confirm(msg)) return;
+
+  const btn=document.getElementById('btn-enviar-corr');
+  btn.disabled=true; btn.textContent='Enviando...';
+  const res=document.getElementById('corr-result');
+  if(res){res.style.display='block'; res.style.color='var(--blue)'; res.textContent='Preparando envío...';}
+
+  // Construir lista de emails
+  const emails = sosts.map(sost => ({
+    to:      sost.email_sostenedor,
+    toName:  sost.nombre_sostenedor,
+    subject: asunto.replace(/{{nombre}}/g, sost.nombre_sostenedor||''),
+    body:    buildMensaje(sost, plantilla)
+  }));
+
+  try {
+    // Llamar a la función serverless de Vercel (evita CORS con Microsoft)
+    const apiRes = await fetch('/api/send-email', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        tenantId:     cfg.tenantId,
+        clientId:     cfg.clientId,
+        clientSecret: cfg.clientSecret,
+        from:         cfg.from,
+        emails
+      })
+    });
+
+    const data = await apiRes.json();
+    if(!apiRes.ok) throw new Error(data.detail || data.error || 'Error en el servidor');
+
+    btn.disabled=false; btn.textContent=`✉ Enviar a ${_corrSelected.size} destinatario(s)`;
+    if(res){
+      const err = data.failed || 0;
+      res.style.color = err > 0 ? 'var(--amber)' : 'var(--green)';
+      res.textContent =
+        `✓ ${data.sent} enviado${data.sent!==1?'s':''}` +
+        (err ? ` · ${err} error${err!==1?'es':''}` : '') +
+        (sinEmail.length ? ` · ${sinEmail.length} sin email omitido${sinEmail.length!==1?'s':''}` : '');
+    }
+  } catch(e) {
+    btn.disabled=false; btn.textContent=`✉ Enviar a ${_corrSelected.size} destinatario(s)`;
+    if(res){ res.style.color='var(--red)'; res.textContent='✗ Error: '+e.message; }
+  }
+}
+
+// ─── CONFIG EMAIL — Supabase es la fuente de verdad ─────────────
+// Los valores se guardan en tabla `configuracion` y son compartidos
+// por todos los usuarios del sistema.
+const CFG_EMAIL_DEFAULTS = {from:'',clientId:'',clientSecret:'',tenantId:''};
+
+async function loadCfgFromSupabase(){
+  try{
+    const rows=await sbGet('configuracion',
+      '?clave=in.(email_from,email_client_id,email_client_secret,email_tenant_id,recaudable_por_mes)');
+    const map={};(rows||[]).forEach(r=>{map[r.clave]=r.valor;});
+    if(map.email_from)          CFG_EMAIL_DEFAULTS.from         =map.email_from;
+    if(map.email_client_id)     CFG_EMAIL_DEFAULTS.clientId     =map.email_client_id;
+    if(map.email_client_secret) CFG_EMAIL_DEFAULTS.clientSecret =map.email_client_secret;
+    if(map.email_tenant_id)     CFG_EMAIL_DEFAULTS.tenantId     =map.email_tenant_id;
+    if(map.recaudable_por_mes){
+      try{ window._recaudablePorMes=JSON.parse(map.recaudable_por_mes); }catch(e){}
+    }
+    buildRecaudableGrid();
+    // Poblar formulario si está abierto
+    loadCfgEmail();
+  }catch(e){}
+}
+
+// ─── RECAUDABLE POR MES ──────────────────────────────────────────
+// Monto $ esperado de colegiatura para cada mes del período lectivo
+// Clave: número de mes (3=Marzo .. 12=Diciembre)
+window._recaudablePorMes = {};
+
+const MESES_LECTIVO_ARR = [
+  {n:3,nom:'Marzo'},{n:4,nom:'Abril'},{n:5,nom:'Mayo'},{n:6,nom:'Junio'},
+  {n:7,nom:'Julio'},{n:8,nom:'Agosto'},{n:9,nom:'Sep'},{n:10,nom:'Oct'},
+  {n:11,nom:'Nov'},{n:12,nom:'Dic'}
+];
+
+function buildRecaudableGrid(){
+  const grid=document.getElementById('recaudable-grid');
+  if(!grid) return;
+  grid.innerHTML=MESES_LECTIVO_ARR.map(m=>`
+    <div>
+      <label style="font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--ink3);display:block;margin-bottom:4px">${m.nom}</label>
+      <input type="number" id="rec-mes-${m.n}" placeholder="0"
+        value="${window._recaudablePorMes[m.n]||''}"
+        style="width:100%;padding:5px 8px;border:0.5px solid var(--border2);border-radius:5px;font-size:11px;background:var(--bg2);color:var(--ink);font-family:'DM Mono',monospace">
+    </div>`).join('');
+}
+
+function replicarRecaudable(){
+  const val=parseFloat(document.getElementById('cfg-rec-global')?.value)||0;
+  if(!val){ alert('Ingresa un valor primero'); return; }
+  MESES_LECTIVO_ARR.forEach(m=>{
+    const inp=document.getElementById('rec-mes-'+m.n);
+    if(inp) inp.value=val;
+  });
+}
+
+async function saveRecaudablePorMes(){
+  MESES_LECTIVO_ARR.forEach(m=>{
+    const inp=document.getElementById('rec-mes-'+m.n);
+    window._recaudablePorMes[m.n]=parseFloat(inp?.value)||0;
+  });
+  const json=JSON.stringify(window._recaudablePorMes);
+  try{
+    await fetch(`${SB_URL}/rest/v1/configuracion`,{method:'POST',
+      headers:{...sbH(),'Prefer':'resolution=merge-duplicates,return=minimal'},
+      body:JSON.stringify({clave:'recaudable_por_mes',valor:json,descripcion:'Monto $ recaudable por cada mes de colegiatura Mar-Dic'})});
+  }catch(e){}
+  const s=document.getElementById('recaudable-status');
+  if(s){s.style.display='inline';setTimeout(()=>s.style.display='none',3000);}
+  if(_currentSnap?.raw) renderMatriz(_currentSnap.raw);
+}
+
+function saveCfgEmail(){
+  const cfg={
+    from:document.getElementById('cfg-email-from')?.value||'',
+    clientId:document.getElementById('cfg-client-id')?.value||'',
+    clientSecret:document.getElementById('cfg-client-secret')?.value||'',
+    tenantId:document.getElementById('cfg-tenant-id')?.value||''
+  };
+  // Guardar localmente
+  try{localStorage.setItem('cac_email_cfg',JSON.stringify(cfg));}catch(e){}
+  // Guardar en Supabase para todos los usuarios
+  [{clave:'email_from',valor:cfg.from},{clave:'email_client_id',valor:cfg.clientId},
+   {clave:'email_client_secret',valor:cfg.clientSecret},{clave:'email_tenant_id',valor:cfg.tenantId}]
+  .filter(r=>r.valor).forEach(async r=>{
+    try{ await fetch(`${SB_URL}/rest/v1/configuracion`,{method:'POST',
+      headers:{...sbH(),'Prefer':'resolution=merge-duplicates,return=minimal'},
+      body:JSON.stringify({...r,descripcion:'Config email Microsoft 365'})}); }catch(e){}
+  });
+  const s=document.getElementById('cfg-status');
+  if(s){s.style.display='inline';setTimeout(()=>s.style.display='none',3000);}
+}
+
+function loadCfgEmail(){
+  // 1. Base: valores de Supabase
+  let cfg={...CFG_EMAIL_DEFAULTS};
+  // 2. Override: valores locales (del usuario que está logueado)
+  try{const s=localStorage.getItem('cac_email_cfg');if(s)Object.assign(cfg,JSON.parse(s));}catch(e){}
+  // 3. Poblar formulario
+  const f=document.getElementById('cfg-email-from'),ci=document.getElementById('cfg-client-id');
+  const cs=document.getElementById('cfg-client-secret'),ti=document.getElementById('cfg-tenant-id');
+  if(f&&cfg.from)f.value=cfg.from;if(ci&&cfg.clientId)ci.value=cfg.clientId;
+  if(cs&&cfg.clientSecret)cs.value=cfg.clientSecret;if(ti&&cfg.tenantId)ti.value=cfg.tenantId;
+  return cfg;
+}
+
+
+// ─── MATRIZ MOROSIDAD ────────────────────────────────────────────
+// Y = mes de colegiatura, X = cuotas adeudadas (por alumno/fila), valor = N° de cuotas adeudadas
+// Helper: calcula % de morosidad total para la fila de totales de la matriz
+
+
+// Helper: % total para fila de totales
+function calcPctTotal(montoTotal,meses,recaudablePorMes,tdPct){
+  const anyRec=Object.keys(recaudablePorMes).some(function(k){return recaudablePorMes[k]>0;});
+  if(!anyRec) return '';
+  const totRec=meses.reduce(function(s,m){return s+(recaudablePorMes[m]||0);},0);
+  if(!totRec) return '';
+  const pct=((montoTotal/totRec)*100).toFixed(1)+'%';
+  return '<td style="'+tdPct+';font-weight:700">'+pct+'</td>';
+}
+function calcPctCel(monto,recMes,tdPct){
+  if(!recMes) return '<td></td>';
+  const pct=(monto/recMes)*100;
+  const col=pct>=15?'color:var(--red)':pct>=7?'color:var(--amber)':'color:var(--green)';
+  return '<td style="'+tdPct+';'+col+'">'+pct.toFixed(1)+'%</td>';
+}
+
+function renderMatriz(raw){
+  const el=document.getElementById('matriz-container');
+  if(!el) return;
+  if(!raw||!raw.length){
+    el.innerHTML='<div style="text-align:center;padding:16px;color:var(--ink4);font-size:12px">Carga un archivo para ver la matriz</div>';
+    return;
+  }
+  // Solo meses del período lectivo
+  const rawV=raw.filter(function(r){return PERIODO_LECTIVO.includes(r.mes_colegiatura);});
+  if(!rawV.length){
+    el.innerHTML='<div style="text-align:center;padding:16px;color:var(--ink4);font-size:12px">Sin datos de meses de colegiatura válidos</div>';
+    return;
+  }
+
+  // Meses presentes ordenados
+  const meses=[...new Set(rawV.map(function(r){return r.mes_colegiatura;}))].sort(function(a,b){return a-b;});
+
+  // Por mes:
+  //   n_alumnos  = COUNT de filas (alumnos) con ese mes en FechaVence
+  //   n_cuotas   = SUM(cantidad_cuotas) de esas filas
+  //   monto_mes  = SUM(valor_pendiente / cantidad_cuotas) = precio de 1 mes × alumnos
+  const nAlumnos={}, nCuotas={}, montoMes={};
+  meses.forEach(function(m){nAlumnos[m]=0; nCuotas[m]=0; montoMes[m]=0;});
+  rawV.forEach(function(r){
+    const m=r.mes_colegiatura;
+    nAlumnos[m]++;
+    nCuotas[m]+=(r.cantidad_cuotas||1);
+    montoMes[m]+=(r.valor_pendiente||0)/Math.max(r.cantidad_cuotas||1,1);
+  });
+
+  const totalAlumnos=meses.reduce(function(s,m){return s+nAlumnos[m];},0);
+  const totalCuotas=meses.reduce(function(s,m){return s+nCuotas[m];},0);
+  const totalMonto=meses.reduce(function(s,m){return s+montoMes[m];},0);
+  const recaudablePorMes=window._recaudablePorMes||{};
+  const anyRec=meses.some(function(m){return (recaudablePorMes[m]||0)>0;});
+
+  // Estilos
+  const th='padding:8px 14px;font-size:9px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--ink3);border-bottom:1px solid var(--border2);text-align:center;background:var(--card2);white-space:nowrap';
+  const tl='padding:8px 14px;font-size:12px;font-weight:500;border-bottom:0.5px solid var(--border);text-align:left;background:var(--card2);white-space:nowrap';
+  const td='padding:8px 14px;font-size:13px;font-weight:700;text-align:center;border-bottom:0.5px solid var(--border);font-family:\'DM Mono\',monospace;cursor:pointer';
+  const tt='padding:8px 14px;font-size:12px;font-weight:700;text-align:center;border-bottom:0.5px solid var(--border);font-family:\'DM Mono\',monospace;background:var(--card2)';
+  const tdR='padding:8px 14px;font-size:12px;font-weight:600;text-align:right;border-bottom:0.5px solid var(--border);font-family:\'DM Mono\',monospace';
+  const tdPct='padding:8px 14px;font-size:12px;font-weight:700;text-align:center;border-bottom:0.5px solid var(--border)';
+
+  let html='<table style="width:100%;border-collapse:collapse">';
+
+  // Encabezado
+  html+='<thead><tr>';
+  html+='<th style="'+th+';text-align:left">Mes</th>';
+  html+='<th style="'+th+'">Alumnos</th>';
+  html+='<th style="'+th+'">Cuotas</th>';
+  html+='<th style="'+th+';color:var(--red)">Monto adeudado</th>';
+  if(anyRec) html+='<th style="'+th+';color:var(--blue)">% Morosidad</th>';
+  html+='</tr></thead>';
+
+  // Filas por mes
+  html+='<tbody>';
+  meses.forEach(function(m){
+    const recMes=recaudablePorMes[m]||0;
+    const pct=recMes>0?((montoMes[m]/recMes)*100):null;
+    const pctColor=pct===null?'':pct>=15?'color:var(--red)':pct>=7?'color:var(--amber)':'color:var(--green)';
+    html+='<tr onclick="abrirDesgloseMatriz('+m+')" style="cursor:pointer" title="Clic para ver desglose de '+MESES[m]+'">';
+    html+='<td style="'+tl+'"><strong>'+MESES[m]+'</strong></td>';
+    html+='<td style="'+td+';background:var(--blue-lt);color:var(--blue)">'+nAlumnos[m]+'</td>';
+    html+='<td style="'+td+';background:var(--amber-lt);color:var(--amber)">'+nCuotas[m]+'</td>';
+    html+='<td style="'+tdR+';color:var(--red)">$'+fmtM(montoMes[m])+'</td>';
+    if(anyRec) html+='<td style="'+tdPct+';'+pctColor+'">'+(pct!==null?pct.toFixed(1)+'%':'—')+'</td>';
+    html+='</tr>';
+  });
+  html+='</tbody>';
+
+  // Totales
+  html+='<tfoot><tr style="border-top:2px solid var(--border2)">';
+  html+='<td style="'+tl+';font-weight:700">Total</td>';
+  html+='<td style="'+tt+';background:var(--ink);color:#F5F2EC">'+totalAlumnos+'</td>';
+  html+='<td style="'+tt+';background:var(--ink);color:#F5F2EC">'+totalCuotas+'</td>';
+  html+='<td style="'+tdR+';font-weight:700;color:var(--red)">$'+fmtM(totalMonto)+'</td>';
+  if(anyRec){
+    const totRec=meses.reduce(function(s,m){return s+(recaudablePorMes[m]||0);},0);
+    const pctTot=totRec>0?((totalMonto/totRec)*100).toFixed(1)+'%':'—';
+    html+='<td style="'+tdPct+';font-weight:700">'+pctTot+'</td>';
+  }
+  html+='</tr></tfoot></table>';
+
+  el.innerHTML=html;
+}
+
+// ─── DESGLOSE MATRIZ (modal) ──────────────────────────────────────
+// mes=null → todos los meses; cuotas=null → todas las cantidades de cuotas
+function abrirDesgloseMatriz(mes){
+  const raw=(_currentSnap?.raw||[]).filter(r=>{
+    const okMes=mes==null||r.mes_colegiatura===mes;
+    return PERIODO_LECTIVO.includes(r.mes_colegiatura)&&okMes;
+  });
+  // Agrupar por sostenedor → alumnos
+  const sostMap={};
+  raw.forEach(r=>{
+    if(!sostMap[r.rut_sostenedor]) sostMap[r.rut_sostenedor]={
+      rut:r.rut_sostenedor,nombre:r.nombre_sostenedor,
+      email:r.email_sostenedor,movil:r.movil_sostenedor,
+      saldo:0,cuotas:0,alumnos:{}
+    };
+    const s=sostMap[r.rut_sostenedor];
+    s.saldo+=r.valor_pendiente||0;
+    s.cuotas+=r.cantidad_cuotas||1;
+    if(!s.alumnos[r.rut_alumno]) s.alumnos[r.rut_alumno]={nombre:r.nombre_alumno,curso:r.nc_curso,cuotas:0,saldo:0,meses:new Set()};
+    s.alumnos[r.rut_alumno].cuotas+=r.cantidad_cuotas||1;
+    s.alumnos[r.rut_alumno].saldo+=r.valor_pendiente||0;
+    s.alumnos[r.rut_alumno].meses.add(r.mes_colegiatura);
+  });
+  const sosts=Object.values(sostMap).sort((a,b)=>b.saldo-a.saldo);
+
+  const tituloMes = mes!=null ? MESES[mes] : 'Todos los meses';
+  const tituloCuotas = cuotas!=null ? `${cuotas} cuota${cuotas>1?'s':''}` : 'todas las cuotas';
+  document.getElementById('matriz-modal-title').textContent=`${tituloMes} · ${tituloCuotas}`;
+  document.getElementById('matriz-modal-sub').textContent=
+    `${sosts.length} sostenedor${sosts.length!==1?'es':''} · ${raw.reduce((s,r)=>s+(r.cantidad_cuotas||1),0)} cuotas · $${fmt(raw.reduce((s,r)=>s+(r.valor_pendiente||0),0))} adeudados`;
+
+  const tds='padding:6px 8px;border-bottom:0.5px solid var(--border);font-size:11px';
+  const body=sosts.length?`<div style="overflow-x:auto">
+    <table style="width:100%;border-collapse:collapse">
+      <thead><tr style="background:var(--card2)">
+        <th style="${tds};font-size:9px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--ink3)">Sostenedor / Alumno</th>
+        <th style="${tds};font-size:9px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--ink3)">Curso</th>
+        <th style="${tds};font-size:9px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--ink3);text-align:center">Cuotas</th>
+        <th style="${tds};font-size:9px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--ink3);text-align:right">Saldo</th>
+      </tr></thead>
+      <tbody>
+        ${sosts.map(s=>`
+          <tr style="background:var(--card2)">
+            <td style="${tds};font-weight:600" colspan="2">${s.nombre}</td>
+            <td style="${tds};text-align:center;font-weight:600"><span class="badge ${s.cuotas>=6?'red':s.cuotas>=3?'amber':'blue'}">${s.cuotas}</span></td>
+            <td style="${tds};text-align:right;font-weight:600;font-family:'DM Mono',monospace;color:var(--red)">$${fmt(s.saldo)}</td>
+          </tr>
+          ${Object.values(s.alumnos).map(a=>`
+            <tr>
+              <td style="${tds};padding-left:20px;color:var(--ink2)">${a.nombre}</td>
+              <td style="${tds}"><span class="badge blue">${a.curso||'—'}</span></td>
+              <td style="${tds};text-align:center">${a.cuotas}</td>
+              <td style="${tds};text-align:right;font-family:'DM Mono',monospace">$${fmt(a.saldo)}</td>
+            </tr>
+          `).join('')}
+        `).join('')}
+      </tbody>
+    </table>
+  </div>`:'<div style="text-align:center;padding:14px;color:var(--ink3);font-size:12px">Sin datos para este cruce</div>';
+
+  document.getElementById('matriz-modal-body').innerHTML=body;
+  openModal('modal-matriz');
+}
+
+// ─── UTILS ──────────────────────────────────────────────────────
+function openModal(id){const el=document.getElementById(id);if(el)el.classList.add('open');}
+function closeModal(id){const el=document.getElementById(id);if(el)el.classList.remove('open');}
+document.addEventListener('DOMContentLoaded',()=>{
+  document.querySelectorAll('.modal-overlay').forEach(el=>el.addEventListener('click',e=>{
+    if(e.target===el) el.classList.remove('open');
+  }));
+});
+function fmt(n){return Math.round(n||0).toLocaleString('es-CL');}
+function fmtM(n){n=Math.abs(n||0);if(n>=1000000)return(n/1000000).toFixed(1)+'M';if(n>=1000)return(n/1000).toFixed(0)+'K';return fmt(n);}
+function fmtDate(s){if(!s)return'—';const d=new Date(s+'T12:00:00');return d.toLocaleDateString('es-CL',{day:'2-digit',month:'2-digit',year:'numeric'});}
+function pdm(s){if(!s||String(s)==='NULL'||String(s)===''||String(s)==='null')return null;if(String(s).match(/^\d{4}-\d{2}-\d{2}/))return String(s).split('T')[0];const p=String(s).split('/');if(p.length===3)return`${p[2]}-${p[1].padStart(2,'0')}-${p[0].padStart(2,'0')}`;return null;}
+function csvParse(txt){const lines=txt.split(/\r?\n/);const sep=lines[0].includes(';')?';':',';const hdrs=lines[0].split(sep).map(h=>h.trim().replace(/^"|"$/g,''));return lines.slice(1).filter(l=>l.trim()).map(l=>{const vals=l.split(sep).map(v=>v.trim().replace(/^"|"$/g,''));const o={};hdrs.forEach((h,i)=>{o[h]=vals[i]??'';});return o;});}
+function showStatus(m,t){const el=document.getElementById('status-bar');if(!el)return;if(!t||!m){el.className='status-bar';return;}el.className='status-bar '+t;el.innerHTML='<span>'+m+'</span>';if(t==='ok')setTimeout(hideStatus,5000);}
+function hideStatus(){const el=document.getElementById('status-bar');if(el)el.className='status-bar';}
+</script>
+</body>
+</html>
