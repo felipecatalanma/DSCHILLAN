@@ -93,9 +93,6 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--ink);font
 .rol-super{background:var(--red-lt);color:var(--red)}
 .rol-operador{background:var(--blue-lt);color:var(--blue)}
 .rol-presupuesto{background:var(--amber-lt);color:var(--amber)}
-.tipo-pill{display:inline-block;padding:2px 10px;border-radius:20px;font-size:10px;font-weight:600;letter-spacing:.04em;text-transform:uppercase}
-.tipo-super{background:var(--red-lt);color:var(--red)}
-.tipo-estandar{background:var(--blue-lt);color:var(--blue)}
 
 .btn{display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border-radius:7px;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:500;cursor:pointer;border:none;transition:all .15s}
 .btn-primary{background:var(--red);color:#fff}
@@ -197,8 +194,8 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--ink);font
             <tr>
               <th>Nombre</th>
               <th>Correo</th>
-              <th>Tipo de Usuario</th>
               <th>Rol</th>
+              <th>Departamento</th>
               <th>Módulos</th>
               <th>Acciones</th>
             </tr>
@@ -232,39 +229,38 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--ink);font
       <input type="text" id="u-pass" placeholder="Mínimo 8 caracteres">
     </div>
     <div class="modal-field">
-      <label>Tipo de Usuario <span style="color:var(--red)">*</span></label>
-      <select id="u-tipo" onchange="onTipoChange()">
-        <option value="estandar">Usuario Estándar</option>
+      <label>Rol <span style="color:var(--red)">*</span></label>
+      <select id="u-rol" onchange="onRolChange()">
+        <option value="operador">Operador (solo lectura general)</option>
+        <option value="presupuesto">Responsable de Presupuesto</option>
+        <option value="presupuesto_docente">Jefe de Departamento Docente (Presupuesto)</option>
+        <option value="presupuesto_rrhh">RRHH (Presupuesto)</option>
+        <option value="recaudaciones">Responsable de Recaudaciones</option>
         <option value="superusuario">Superusuario (acceso total)</option>
       </select>
     </div>
-    <div class="modal-field" id="u-rol-field">
-      <label>Rol</label>
+    <div class="modal-field" id="u-depto-field">
+      <label>Departamento responsable</label>
       <select id="u-departamento">
-        <option value="">Sin rol asignado</option>
-        <optgroup label="Jefaturas Docentes">
-          <option value="Subdirección Académica">Subdirección Académica</option>
-          <option value="Alemán">Alemán</option>
-          <option value="Inglés">Inglés</option>
-          <option value="Lenguaje">Lenguaje</option>
-          <option value="Educación Física">Educación Física</option>
-          <option value="ACLE">ACLE</option>
-          <option value="Ciencias">Ciencias</option>
-          <option value="Matemáticas">Matemáticas</option>
-          <option value="Párvulos">Párvulos</option>
-          <option value="Arte y Música">Arte y Música</option>
-          <option value="Historia y Ciencias Sociales">Historia y Ciencias Sociales</option>
-          <option value="IB">IB</option>
-        </optgroup>
-        <optgroup label="Responsables / Áreas">
-          <option value="Dirección">Dirección</option>
-          <option value="Administración">Administración</option>
-          <option value="Informática">Informática</option>
-          <option value="Biblioteca">Biblioteca</option>
-          <option value="Mantenimiento">Mantenimiento</option>
-          <option value="RRHH">RRHH</option>
-          <option value="Recaudaciones">Recaudaciones</option>
-        </optgroup>
+        <option value="">Sin departamento</option>
+        <option value="Dirección">Dirección</option>
+        <option value="Subdirección Académica">Subdirección Académica</option>
+        <option value="Administración">Administración</option>
+        <option value="Alemán">Alemán</option>
+        <option value="Inglés">Inglés</option>
+        <option value="Matemáticas">Matemáticas</option>
+        <option value="Lenguaje">Lenguaje</option>
+        <option value="Ciencias">Ciencias</option>
+        <option value="Historia y Ciencias Sociales">Historia y Ciencias Sociales</option>
+        <option value="Arte y Música">Arte y Música</option>
+        <option value="Educación Física">Educación Física</option>
+        <option value="ACLE">ACLE</option>
+        <option value="Párvulos">Párvulos</option>
+        <option value="IB">IB</option>
+        <option value="Informática">Informática</option>
+        <option value="Biblioteca">Biblioteca</option>
+        <option value="Mantenimiento">Mantenimiento</option>
+        <option value="RRHH">RRHH</option>
       </select>
     </div>
     <div class="modal-actions">
@@ -379,23 +375,13 @@ async function checkSession(){
 
 async function loadProfile(uid,email){
   try{
-    const rows=await sbGet('app_usuarios',`?id=eq.${uid}&select=nombre,email,rol,departamento,tipo_usuario,rol_area`);
+    const rows=await sbGet('app_usuarios',`?id=eq.${uid}&select=nombre,email,rol,departamento`);
     _currentUser = rows&&rows.length>0 ? rows[0] : {nombre:email.split('@')[0],email,rol:'operador',departamento:''};
   }catch(e){
-    try{
-      // Fallback si las columnas tipo_usuario/rol_area aún no existen en app_usuarios
-      const rows=await sbGet('app_usuarios',`?id=eq.${uid}&select=nombre,email,rol,departamento`);
-      _currentUser = rows&&rows.length>0 ? rows[0] : {nombre:email.split('@')[0],email,rol:'operador',departamento:''};
-    }catch(e2){
-      _currentUser={nombre:email.split('@')[0],email,rol:'operador',departamento:''};
-    }
+    _currentUser={nombre:email.split('@')[0],email,rol:'operador',departamento:''};
   }
   // Estandarizar nombre de departamento: "Tecnología" -> "Informática"
   if(_currentUser.departamento==='Tecnología') _currentUser.departamento='Informática';
-  if(_currentUser.rol_area==='Tecnología') _currentUser.rol_area='Informática';
-  // Calcular tipo de usuario y rol de área (retro-compatibilidad)
-  _currentUser.tipo_usuario=inferirTipoUsuario(_currentUser);
-  _currentUser.rolArea=inferirRolArea(_currentUser);
 }
 
 function startApp(){
@@ -414,39 +400,8 @@ function doLogout(){
 }
 
 // ═══════════════════════════════════════════════════════
-//  TIPO DE USUARIO / ROL (Departamento)
+//  APP RENDER
 // ═══════════════════════════════════════════════════════
-// "Tipo de Usuario": superusuario | estandar
-// "Rol" (antes "Departamento responsable"): jefatura docente, responsable de área, RRHH o Recaudaciones
-const ROLES_DOCENTES=['Subdirección Académica','Alemán','Inglés','Lenguaje','Educación Física','ACLE','Ciencias','Matemáticas','Párvulos','Arte y Música','Historia y Ciencias Sociales','IB'];
-
-// Calcula el rol "técnico" (columna app_usuarios.rol) usado por los demás módulos
-// (presupuesto.html, recaudaciones, etc.) a partir de tipo_usuario + rol de área.
-function derivarRolTecnico(tipoUsuario,areaRol){
-  if(tipoUsuario==='superusuario') return 'superusuario';
-  if(areaRol==='Recaudaciones') return 'recaudaciones';
-  if(areaRol==='RRHH') return 'presupuesto_rrhh';
-  if(ROLES_DOCENTES.includes(areaRol)) return 'presupuesto_docente';
-  if(areaRol) return 'presupuesto'; // Dirección, Administración, Informática, Biblioteca, Mantenimiento, etc.
-  return 'operador';
-}
-
-// Calcula tipo_usuario a partir de un registro existente (retro-compatibilidad con la
-// columna "rol" usada antes de esta reestructuración).
-function inferirTipoUsuario(u){
-  if(u.tipo_usuario) return u.tipo_usuario;
-  return u.rol==='superusuario' ? 'superusuario' : 'estandar';
-}
-
-// Calcula el "Rol" (área) a partir de un registro existente.
-function inferirRolArea(u){
-  if(u.rol_area) return u.rol_area==='Tecnología'?'Informática':u.rol_area;
-  if(u.rol==='recaudaciones') return 'Recaudaciones';
-  if(u.departamento==='Tecnología') return 'Informática';
-  return u.departamento||'';
-}
-
-
 const MODULES = [
   {
     id:'recaudaciones',
@@ -496,10 +451,10 @@ function renderApp(){
   const initials=(u.nombre||'').split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase()||'?';
   document.getElementById('user-avatar').textContent=initials;
   document.getElementById('user-name').textContent=u.nombre||u.email;
-  const rolLabel=u.tipo_usuario==='superusuario'?'Superusuario':(u.rolArea||'Usuario Estándar');
+  const rolLabel={superusuario:'Superusuario',recaudaciones:'Recaudaciones',presupuesto:'Presupuesto',operador:'Operador'}[u.rol]||u.rol;
   document.getElementById('user-rol-badge').textContent=rolLabel;
   document.getElementById('welcome-name').textContent=(u.nombre||u.email).split(' ')[0];
-  if(u.rolArea) document.getElementById('welcome-sub').textContent=`Rol: ${u.rolArea} · Selecciona el módulo con el que deseas trabajar`;
+  if(u.departamento) document.getElementById('welcome-sub').textContent=`Área: ${u.departamento} · Selecciona el módulo con el que deseas trabajar`;
 
   // Módulos
   const grid=document.getElementById('modules-grid');
@@ -518,7 +473,7 @@ function renderApp(){
   }
 
   // Admin section
-  if(u.tipo_usuario==='superusuario'){
+  if(u.rol==='superusuario'){
     document.getElementById('admin-section').style.display='block';
     loadUsers();
   }
@@ -533,16 +488,7 @@ async function loadUsers(){
   const tbody=document.getElementById('users-tbody');
   tbody.innerHTML=`<tr><td colspan="6" style="text-align:center;color:var(--ink3);padding:20px">Cargando...</td></tr>`;
   try{
-    try{
-      _users=await sbGet('app_usuarios','?select=id,nombre,email,rol,departamento,modulos,tipo_usuario,rol_area&order=nombre');
-    }catch(e){
-      // Fallback si las columnas tipo_usuario/rol_area aún no existen
-      _users=await sbGet('app_usuarios','?select=id,nombre,email,rol,departamento,modulos&order=nombre');
-    }
-    _users.forEach(u=>{
-      u.tipo_usuario=inferirTipoUsuario(u);
-      u.rolArea=inferirRolArea(u);
-    });
+    _users=await sbGet('app_usuarios','?select=id,nombre,email,rol,departamento,modulos&order=nombre');
     renderUsersTable();
   }catch(e){
     tbody.innerHTML=`<tr><td colspan="6" style="color:var(--red);padding:20px;text-align:center">Error: ${e.message}</td></tr>`;
@@ -555,12 +501,13 @@ function renderUsersTable(){
     tbody.innerHTML=`<tr><td colspan="6" style="text-align:center;color:var(--ink3);padding:20px">No hay usuarios registrados</td></tr>`;
     return;
   }
+  const rolColors={superusuario:'rol-super',operador:'rol-operador',presupuesto:'rol-presupuesto',presupuesto_docente:'rol-presupuesto',presupuesto_rrhh:'rol-presupuesto',recaudaciones:'rol-operador'};
   tbody.innerHTML=_users.map(u=>`
     <tr>
       <td><strong>${u.nombre||'—'}</strong></td>
       <td style="font-size:12px;color:var(--ink3)">${u.email}</td>
-      <td><span class="tipo-pill ${u.tipo_usuario==='superusuario'?'tipo-super':'tipo-estandar'}">${u.tipo_usuario==='superusuario'?'Superusuario':'Estándar'}</span></td>
-      <td>${u.rolArea||'—'}</td>
+      <td><span class="rol-pill ${rolColors[u.rol]||'rol-operador'}">${u.rol||'—'}</span></td>
+      <td>${(u.departamento==='Tecnología'?'Informática':u.departamento)||'—'}</td>
       <td style="font-size:12px;color:var(--ink3)">${(u.modulos||[]).join(', ')||'—'}</td>
       <td>
         <div style="display:flex;gap:6px">
@@ -578,11 +525,9 @@ function openModalCrearUsuario(){
   document.getElementById('btn-guardar-usuario').textContent='Crear usuario';
   document.getElementById('btn-guardar-usuario').onclick=guardarUsuario;
   ['u-nombre','u-email','u-pass'].forEach(id=>document.getElementById(id).value='');
-  document.getElementById('u-tipo').value='estandar';
-  document.getElementById('u-departamento').value='';
+  document.getElementById('u-rol').value='presupuesto';
   document.getElementById('u-pass-field').style.display='';
   document.getElementById('modal-status').className='status-msg';
-  onTipoChange();
   openModal('modal-usuario');
 }
 
@@ -593,34 +538,24 @@ function openEditUsuario(id){
   document.getElementById('btn-guardar-usuario').onclick=()=>actualizarUsuario(id);
   document.getElementById('u-nombre').value=u.nombre||'';
   document.getElementById('u-email').value=u.email;
-  document.getElementById('u-tipo').value=u.tipo_usuario||'estandar';
-  document.getElementById('u-departamento').value=u.rolArea||'';
+  document.getElementById('u-rol').value=u.rol||'operador';
+  document.getElementById('u-departamento').value=(u.departamento==='Tecnología'?'Informática':u.departamento)||'';
   document.getElementById('u-pass-field').style.display='none';
   document.getElementById('modal-status').className='status-msg';
-  onTipoChange();
   openModal('modal-usuario');
 }
 
-// Si es Superusuario, el "Rol" (área) es opcional/informativo y no determina permisos
-function onTipoChange(){
-  const tipo=document.getElementById('u-tipo').value;
-  document.getElementById('u-rol-field').style.display=tipo==='superusuario'?'none':'';
-}
-
-// Módulos visibles según el rol técnico derivado
-function modulosParaRol(rolTecnico){
-  if(rolTecnico==='superusuario') return ['recaudaciones','presupuesto'];
-  if(rolTecnico==='recaudaciones') return ['recaudaciones'];
-  if(rolTecnico==='presupuesto'||rolTecnico==='presupuesto_docente'||rolTecnico==='presupuesto_rrhh') return ['presupuesto'];
-  return [];
+function onRolChange(){
+  const rol=document.getElementById('u-rol').value;
+  document.getElementById('u-depto-field').style.display=rol==='presupuesto'?'':'';
 }
 
 async function guardarUsuario(){
   const nombre=document.getElementById('u-nombre').value.trim();
   const email=document.getElementById('u-email').value.trim();
   const pass=document.getElementById('u-pass').value;
-  const tipoUsuario=document.getElementById('u-tipo').value;
-  const areaRol=tipoUsuario==='superusuario'?'':document.getElementById('u-departamento').value;
+  const rol=document.getElementById('u-rol').value;
+  const depto=document.getElementById('u-departamento').value;
   const st=document.getElementById('modal-status');
   if(!nombre||!email||!pass){st.textContent='Completa todos los campos obligatorios.';st.className='status-msg err';return;}
   if(pass.length<8){st.textContent='La contraseña debe tener al menos 8 caracteres.';st.className='status-msg err';return;}
@@ -639,16 +574,10 @@ async function guardarUsuario(){
     if(!authRes.ok) throw new Error(authData.message||authData.error||'Error al crear en Auth');
 
     // 2. Insertar en app_usuarios
-    const rolTecnico=derivarRolTecnico(tipoUsuario,areaRol);
-    const modulos=modulosParaRol(rolTecnico);
-    const payload={id:authData.id,nombre,email,rol:rolTecnico,departamento:areaRol,rol_area:areaRol,modulos,tipo_usuario:tipoUsuario};
-    try{
-      await sbPost('app_usuarios',payload);
-    }catch(e){
-      // Fallback si las columnas tipo_usuario/rol_area aún no existen en app_usuarios
-      const {tipo_usuario,rol_area,...legacy}=payload;
-      await sbPost('app_usuarios',legacy);
-    }
+    const modulos=rol==='superusuario'?['recaudaciones','presupuesto']:
+                  rol==='presupuesto'?['presupuesto']:
+                  rol==='recaudaciones'?['recaudaciones']:[];
+    await sbPost('app_usuarios',{id:authData.id,nombre,email,rol,departamento:depto,modulos});
 
     st.textContent=`✓ Usuario ${nombre} creado correctamente.`;
     await loadUsers();
@@ -661,20 +590,14 @@ async function guardarUsuario(){
 
 async function actualizarUsuario(id){
   const nombre=document.getElementById('u-nombre').value.trim();
-  const tipoUsuario=document.getElementById('u-tipo').value;
-  const areaRol=tipoUsuario==='superusuario'?'':document.getElementById('u-departamento').value;
+  const rol=document.getElementById('u-rol').value;
+  const depto=document.getElementById('u-departamento').value;
   const st=document.getElementById('modal-status');
-  const rolTecnico=derivarRolTecnico(tipoUsuario,areaRol);
-  const modulos=modulosParaRol(rolTecnico);
-  const payload={nombre,rol:rolTecnico,departamento:areaRol,rol_area:areaRol,modulos,tipo_usuario:tipoUsuario};
+  const modulos=rol==='superusuario'?['recaudaciones','presupuesto']:
+                rol==='presupuesto'?['presupuesto']:
+                rol==='recaudaciones'?['recaudaciones']:[];
   try{
-    try{
-      await sbPatch('app_usuarios',`?id=eq.${id}`,payload);
-    }catch(e){
-      // Fallback si las columnas tipo_usuario/rol_area aún no existen en app_usuarios
-      const {tipo_usuario,rol_area,...legacy}=payload;
-      await sbPatch('app_usuarios',`?id=eq.${id}`,legacy);
-    }
+    await sbPatch('app_usuarios',`?id=eq.${id}`,{nombre,rol,departamento:depto,modulos});
     st.textContent='✓ Usuario actualizado.';st.className='status-msg ok';
     await loadUsers();
     setTimeout(()=>closeModal('modal-usuario'),1200);

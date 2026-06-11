@@ -151,72 +151,33 @@ tbody td.num{text-align:right;font-family:'DM Mono',monospace;font-size:12px}
 .confirm-text strong{color:var(--ink)}
 .confirm-actions{display:flex;gap:10px;justify-content:center;margin-top:20px}
 
-/* CUENTAS CONTABLES — 3 PANELES */
-.cc-layout{display:grid;grid-template-columns:220px 1fr 320px;gap:16px;align-items:start}
-.cc-panel{background:var(--card);border:0.5px solid var(--border);border-radius:10px;padding:6px;max-height:78vh;overflow:auto}
-.cc-panel-title{padding:9px 12px;font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--ink3);background:var(--bg2);border-radius:6px;margin:6px 4px 10px}
-
-/* Panel 1: Docente / Administración */
-.cc-grupo-item{padding:12px 14px;font-size:14px;font-weight:600;border-radius:8px;cursor:pointer;display:flex;align-items:center;gap:10px;color:var(--ink2);transition:all .12s;margin:4px}
-.cc-grupo-item:hover{background:var(--bg2)}
-.cc-grupo-item.active{background:var(--blue-lt);color:var(--blue)}
-.cc-grupo-item .ico{font-size:18px}
-
-/* Panel 2: Tipos (accordion) + subtipos */
-.cc-main{padding:14px 16px;max-height:none;overflow:visible}
-.cc-tipo-block{border:0.5px solid var(--border);border-radius:8px;margin-bottom:8px;overflow:hidden}
-.cc-tipo-hdr{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:11px 14px;cursor:pointer;background:var(--card2);transition:background .12s}
-.cc-tipo-hdr:hover{background:var(--bg2)}
-.cc-tipo-hdr.active{background:var(--blue-lt)}
-.cc-tipo-hdr-left{display:flex;align-items:center;gap:8px;flex:1;min-width:0}
-.cc-tipo-nombre{font-size:13px;font-weight:600;color:var(--ink)}
-.cc-tipo-edit-input{font-size:13px;font-weight:600;padding:3px 6px;border:0.5px solid var(--blue-bd);border-radius:5px;background:var(--card);font-family:'DM Sans',sans-serif;width:100%}
-.cc-chevron{font-size:11px;color:var(--ink3);transition:transform .15s;flex-shrink:0}
-.cc-chevron.open{transform:rotate(90deg)}
-.cc-tipo-actions{display:flex;gap:4px;flex-shrink:0}
-.cc-icon-btn{width:24px;height:24px;display:flex;align-items:center;justify-content:center;border-radius:5px;border:0.5px solid var(--border2);background:var(--card);cursor:pointer;font-size:11px;transition:all .12s;color:var(--ink3)}
-.cc-icon-btn:hover{background:var(--bg3);color:var(--ink)}
-.cc-icon-btn.danger:hover{background:var(--red-lt);color:var(--red);border-color:var(--red-bd)}
-.cc-subtipo-list{display:none}
-.cc-subtipo-list.open{display:block}
-.cc-subtipo-row{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:9px 14px 9px 30px;border-top:0.5px solid var(--border);font-size:12.5px;cursor:pointer;transition:background .1s}
-.cc-subtipo-row:hover{background:var(--bg2)}
-.cc-subtipo-row.active{background:var(--blue-lt)}
-.cc-subtipo-info{display:flex;flex-direction:column;gap:1px;flex:1;min-width:0}
-.cc-subtipo-nombre{font-weight:500;color:var(--ink)}
-.cc-subtipo-code{font-size:10.5px;font-family:'DM Mono',monospace;color:var(--ink3)}
-.cc-subtipo-edit-input{font-size:12.5px;padding:3px 6px;border:0.5px solid var(--blue-bd);border-radius:5px;background:var(--card);font-family:'DM Sans',sans-serif;width:100%;margin-bottom:2px}
-
-/* Panel 3: Permisos */
-.cc-perm-panel{padding:14px 16px;position:sticky;top:0}
-.cc-perm-header{margin-bottom:14px}
-.cc-perm-header h3{font-family:'Playfair Display',serif;font-size:15px;font-weight:700;line-height:1.3}
-.cc-perm-header p{font-size:11px;color:var(--ink3);margin-top:3px;font-family:'DM Mono',monospace}
-.cc-perm-section-title{font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--ink3);margin:14px 0 8px;padding-bottom:5px;border-bottom:0.5px solid var(--border)}
-.cc-perm-row{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:7px 9px;border-radius:6px;font-size:12.5px;color:var(--ink2);transition:background .12s}
-.cc-perm-row:hover{background:var(--bg2)}
-.cc-perm-row.granted{color:var(--ink)}
-.cc-perm-row .lbl{display:flex;flex-direction:column;gap:1px;min-width:0}
-.cc-perm-row .lbl small{font-size:10px;color:var(--ink4);font-weight:400}
-.cc-switch{position:relative;display:inline-block;width:34px;height:19px;flex-shrink:0;cursor:pointer}
-.cc-switch input{opacity:0;width:0;height:0}
-.cc-switch .slider{position:absolute;inset:0;background:var(--border2);border-radius:20px;transition:.15s}
-.cc-switch .slider::before{content:'';position:absolute;width:14px;height:14px;left:2.5px;top:2.5px;background:#fff;border-radius:50%;transition:.15s;box-shadow:0 1px 2px rgba(0,0,0,0.2)}
-.cc-switch input:checked + .slider{background:var(--green)}
-.cc-switch input:checked + .slider::before{transform:translateX(15px)}
-.cc-switch input:disabled + .slider{opacity:.45;cursor:not-allowed}
-.cc-perm-save-bar{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:18px;padding-top:14px;border-top:0.5px solid var(--border)}
+/* CUENTAS CONTABLES TREE */
+.cc-layout{display:grid;grid-template-columns:280px 1fr;gap:16px;align-items:start}
+.cc-side{background:var(--card);border:0.5px solid var(--border);border-radius:10px;padding:6px;max-height:75vh;overflow:auto}
+.cc-grupo-hdr{padding:9px 12px;font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--ink3);background:var(--bg2);border-radius:6px;margin:6px 4px 2px}
+.cc-tipo-item{padding:8px 14px;font-size:13px;border-radius:6px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:6px;color:var(--ink2);transition:all .12s;margin:1px 4px}
+.cc-tipo-item:hover{background:var(--bg2)}
+.cc-tipo-item.active{background:var(--blue-lt);color:var(--blue);font-weight:600}
+.cc-tipo-item .cnt{font-size:10px;color:var(--ink4);font-family:'DM Mono',monospace}
+.cc-main{background:var(--card);border:0.5px solid var(--border);border-radius:10px;padding:18px}
+.cc-main-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px}
+.cc-main-hdr h3{font-family:'Playfair Display',serif;font-size:17px;font-weight:700}
+.cc-sub-row{border:0.5px solid var(--border);border-radius:8px;padding:10px 14px;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.cc-sub-info{display:flex;flex-direction:column;gap:2px}
+.cc-sub-name{font-size:13px;font-weight:500}
+.cc-sub-code{font-size:11px;font-family:'DM Mono',monospace;color:var(--ink3)}
+.cc-perm-grid{display:flex;gap:14px;flex-wrap:wrap}
+.cc-perm-chip{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--ink2);cursor:pointer;user-select:none;padding:3px 8px;border-radius:5px;border:0.5px solid var(--border2);background:var(--bg2);transition:all .15s}
+.cc-perm-chip input{width:12px;height:12px;cursor:pointer}
+.cc-perm-chip:has(input:checked){background:var(--green-lt);border-color:var(--green-bd);color:var(--green)}
 .cc-empty{text-align:center;padding:40px 20px;color:var(--ink3)}
 
-@media(max-width:1100px){
-  .cc-layout{grid-template-columns:1fr}
-  .cc-panel{max-height:none}
-}
 @media(max-width:700px){
   .hdr,.main{padding-left:14px;padding-right:14px}
   .tabs-bar{padding:0 14px}
   .kpi-row{grid-template-columns:1fr 1fr}
   .form-grid{grid-template-columns:1fr}
+  .cc-layout{grid-template-columns:1fr}
 }
 </style>
 </head>
@@ -384,24 +345,22 @@ tbody td.num{text-align:right;font-family:'DM Mono',monospace;font-size:12px}
     <div class="top-bar">
       <div class="top-bar-left">
         <h2>Mantenedor de Cuentas Contables</h2>
-        <p>Selecciona un grupo, luego un tipo y subtipo de gasto para configurar nombres y permisos de acceso</p>
+        <p>Configura tipos, subtipos y permisos de acceso por departamento y perfil</p>
+      </div>
+      <div class="btn-group">
+        <select class="fsel" id="cc-grupo-select" onchange="renderCuentasSidebar()">
+          <option value="docente">Docente</option>
+          <option value="admin">Administración</option>
+        </select>
+        <select class="fsel" id="cc-depto-select" onchange="renderCuentasMain()"></select>
       </div>
     </div>
+    <div class="info-hint" style="display:block;margin-bottom:14px">
+      ℹ Marca para qué departamento y qué perfiles está habilitado cada subtipo de gasto. Estos permisos controlan qué tipos/subtipos aparecen al cargar una fila de presupuesto.
+    </div>
     <div class="cc-layout">
-      <!-- PANEL 1: Docente / Administración -->
-      <div class="cc-panel" id="cc-panel-grupo">
-        <div class="cc-panel-title">Grupo</div>
-        <div class="cc-grupo-item active" data-grupo="docente" onclick="seleccionarGrupoCuenta('docente')">
-          <span class="ico">🎓</span><span>Docente</span>
-        </div>
-        <div class="cc-grupo-item" data-grupo="admin" onclick="seleccionarGrupoCuenta('admin')">
-          <span class="ico">🏢</span><span>Administración</span>
-        </div>
-      </div>
-      <!-- PANEL 2: Tipos (acordeón) + subtipos -->
-      <div class="cc-panel cc-main" id="cc-main"></div>
-      <!-- PANEL 3: Permisos del subtipo seleccionado -->
-      <div class="cc-panel cc-perm-panel" id="cc-perm"></div>
+      <div class="cc-side" id="cc-side"></div>
+      <div class="cc-main" id="cc-main"></div>
     </div>
   </div>
 </div>
@@ -512,15 +471,11 @@ async function sbGet(t,p=''){const r=await fetch(`${SB_URL}/rest/v1/${t}${p}`,{h
 async function sbPost(t,b){const r=await fetch(`${SB_URL}/rest/v1/${t}`,{method:'POST',headers:{...sbH(),'Prefer':'return=representation'},body:JSON.stringify(b)});if(!r.ok)throw new Error(await r.text());return r.json();}
 async function sbPatch(t,p,b){const r=await fetch(`${SB_URL}/rest/v1/${t}${p}`,{method:'PATCH',headers:{...sbH(),'Prefer':'return=representation'},body:JSON.stringify(b)});if(!r.ok)throw new Error(await r.text());return r.json();}
 async function sbDelete(t,p){const r=await fetch(`${SB_URL}/rest/v1/${t}${p}`,{method:'DELETE',headers:{...sbH(),'Prefer':'return=representation'}});if(!r.ok)throw new Error(await r.text());return r.json();}
-async function sbUpsert(t,b,conflictCol){const r=await fetch(`${SB_URL}/rest/v1/${t}?on_conflict=${conflictCol}`,{method:'POST',headers:{...sbH(),'Prefer':'resolution=merge-duplicates,return=representation'},body:JSON.stringify(b)});if(!r.ok)throw new Error(await r.text());return r.json();}
 
 // ═══════════════════════════════════════════════
 //  CONSTANTES
 // ═══════════════════════════════════════════════
-// "rol" ahora es el TIPO DE USUARIO: 'superusuario' | 'usuario_estandar'
-// El acceso al módulo de presupuesto depende de tener un "rol_area" asignado
-// (ver tabla app_usuarios.rol_area), salvo para superusuario que accede siempre.
-const TIPOS_USUARIO_PERMITIDOS=['superusuario','usuario_estandar','admin','directorio'];
+const ROLES_PERMITIDOS=['superusuario','presupuesto','presupuesto_docente','presupuesto_rrhh','admin','directorio'];
 
 // Departamentos: tipo ('docente'|'admin') + jefatura (responsable)
 // NOTA: "Tecnología" se estandariza como "Informática" en todo el sistema.
@@ -608,29 +563,7 @@ let _usingDB=false; // true si presupuesto_lineas existe en supabase
 
 // Matriz de permisos por tipo de gasto: _permisos[tipoKey] = {deptos:'todos'|[...], perfiles:[...]}
 // perfiles posibles: 'jefe_docente','jefe_admin','rrhh','superusuario'
-// Se usa solo como semilla por defecto para _permisosSub (granularidad por subtipo).
 let _permisos={};
-
-// Matriz de permisos por SUBTIPO (granularidad fina, configurable en pestaña Cuentas Contables):
-// _permisosSub['tipo|||subtipo'] = {tiposUsuario:['superusuario','usuario_estandar'], roles:[nombresDepartamento]}
-let _permisosSub={};
-
-// Estado editable de tipos/subtipos (copia profunda de las constantes; se puede
-// renombrar tipos/subtipos o eliminar subtipos desde la pestaña Cuentas Contables,
-// y esos cambios se reflejan en toda la app).
-let _gastosState={
-  docente:JSON.parse(JSON.stringify(GASTOS_DOCENTES)),
-  admin:JSON.parse(JSON.stringify(GASTOS_ADMIN)),
-};
-function poolDocente(){return _gastosState.docente;}
-function poolAdmin(){return _gastosState.admin;}
-function poolPara(depto){return esDocente(depto)?_gastosState.docente:_gastosState.admin;}
-// Devuelve el label vigente (editable) de un tipo de gasto, buscando en ambos pools
-function tipoLabel(tipoKey){
-  return _gastosState.docente[tipoKey]?.label||_gastosState.admin[tipoKey]?.label||tipoKey;
-}
-// Clave compuesta para permisos por subtipo
-function ccKey(tipo,subNombre){return `${tipo}|||${subNombre}`;}
 function defaultPermisos(){
   const p={};
   Object.keys(GASTOS_DOCENTES).forEach(k=>{
@@ -694,32 +627,14 @@ async function checkSession(){
     const data=await res.json();
     sessionStorage.setItem('sb_uid',data.id);
     sessionStorage.setItem('sb_email',data.email);
-    const rows=await sbGet('app_usuarios',`?id=eq.${data.id}&select=nombre,email,rol,rol_area,departamento`);
-    _currentUser=rows&&rows.length>0?rows[0]:{nombre:data.email.split('@')[0],email:data.email,rol:'usuario_estandar',rol_area:'',departamento:''};
+    const rows=await sbGet('app_usuarios',`?id=eq.${data.id}&select=nombre,email,rol,departamento`);
+    _currentUser=rows&&rows.length>0?rows[0]:{nombre:data.email.split('@')[0],email:data.email,rol:'operador',departamento:''};
   }catch(e){
-    _currentUser={nombre:'',email:'',rol:'usuario_estandar',rol_area:'',departamento:''};
+    _currentUser={nombre:'',email:'',rol:'operador',departamento:''};
   }
-  // ── Migración / retro-compatibilidad de roles antiguos ──
-  // Antes: rol = 'superusuario'|'presupuesto'|'presupuesto_docente'|'presupuesto_rrhh'|'operador'...
-  //        departamento = área responsable
-  // Ahora: rol (tipo de usuario) = 'superusuario'|'usuario_estandar'
-  //        rol_area = área/jefatura responsable (lista de DEPARTAMENTOS + RRHH + Recaudaciones)
-  if(!_currentUser.rol_area){
-    if(_currentUser.rol==='presupuesto_rrhh') _currentUser.rol_area='RRHH';
-    else if(_currentUser.departamento) _currentUser.rol_area=_currentUser.departamento;
-  }
-  if(_currentUser.rol!=='superusuario' && _currentUser.rol!=='usuario_estandar'){
-    _currentUser.rol = _currentUser.rol==='admin'||_currentUser.rol==='directorio' ? _currentUser.rol : 'usuario_estandar';
-  }
-  // Estandarizar nombre de área: "Tecnología" -> "Informática"
-  if(_currentUser.rol_area==='Tecnología') _currentUser.rol_area='Informática';
+  // Estandarizar nombre de departamento: "Tecnología" -> "Informática"
   if(_currentUser.departamento==='Tecnología') _currentUser.departamento='Informática';
-  if(!TIPOS_USUARIO_PERMITIDOS.includes(_currentUser.rol)){
-    document.getElementById('blocked-view').classList.add('show');
-    return;
-  }
-  // Acceso al módulo: superusuario siempre; usuario_estandar requiere un rol_area de presupuesto válido
-  if(_currentUser.rol!=='superusuario' && !deptoInfo(_currentUser.rol_area) && _currentUser.rol_area!=='RRHH'){
+  if(!ROLES_PERMITIDOS.includes(_currentUser.rol)){
     document.getElementById('blocked-view').classList.add('show');
     return;
   }
@@ -731,9 +646,9 @@ function doLogout(){SB_TOKEN=null;_currentUser=null;sessionStorage.clear();windo
 //  HELPERS DE ROL
 // ═══════════════════════════════════════════════
 // Departamento "activo" para efectos de filtros: el preview de jefatura, o el del usuario real
-function deptoActivo(){return _previewDepto||_currentUser.rol_area||'';}
+function deptoActivo(){return _previewDepto||_currentUser.departamento||'';}
 
-// Tipo de usuario "real" (sin preview) — usado para decidir qué puede ver/hacer de verdad
+// Rol "real" del usuario (sin preview) — usado para decidir qué puede ver/hacer de verdad
 function esSuper(){return _currentUser.rol==='superusuario';}
 
 // Perfil EFECTIVO para fines de visualización (considera preview de jefatura)
@@ -746,8 +661,8 @@ function perfilEfectivo(){
     return info.tipo==='docente'?'jefe_docente':'jefe_admin';
   }
   if(_currentUser.rol==='superusuario') return 'superusuario';
-  if(_currentUser.rol_area==='RRHH') return 'rrhh';
-  if(esDocente(_currentUser.rol_area)) return 'jefe_docente';
+  if(_currentUser.rol==='presupuesto_rrhh') return 'rrhh';
+  if(_currentUser.rol==='presupuesto_docente') return 'jefe_docente';
   return 'jefe_admin';
 }
 function esRRHH(){return perfilEfectivo()==='rrhh'||perfilEfectivo()==='superusuario';}
@@ -765,28 +680,10 @@ function puedeVerTipo(tipo,depto){
 // Retro-compat: usado en filtros de ejecución/consolidado (solo evalúa perfil, no depto)
 function puedeVerTipoRRHH(tipo){return puedeVerTipo(tipo,null);}
 
-// Tipo de usuario efectivo para permisos de subtipo: 'superusuario' | 'usuario_estandar'
-function tipoUsuarioEfectivo(){
-  if(_previewDepto) return 'usuario_estandar'; // el preview siempre simula un usuario estándar
-  return _currentUser.rol==='superusuario'?'superusuario':'usuario_estandar';
-}
-
-// ¿Puede ver/cargar este SUBTIPO de gasto específico, según _permisosSub?
-// 'rolArea' es el departamento/rol activo (deptoActivo() o el del propio registro).
-function puedeVerSubtipo(tipo,subNombre,rolArea){
-  const tu=tipoUsuarioEfectivo();
-  if(tu==='superusuario') return true;
-  const key=ccKey(tipo,subNombre);
-  const perm=_permisosSub[key]||getPermisoSub(tipo,subNombre);
-  if(!perm.tiposUsuario.includes(tu)) return false;
-  if(rolArea && !perm.roles.includes(rolArea)) return false;
-  return true;
-}
-
 function puedeEditarDepto(depto){
   if(_previewDepto) return false; // en modo preview siempre es solo lectura
   if(_currentUser.rol==='superusuario') return true;
-  return _currentUser.rol_area===depto;
+  return _currentUser.departamento===depto;
 }
 
 // ═══════════════════════════════════════════════
@@ -809,7 +706,6 @@ async function initApp(){
 
   _permisos=defaultPermisos();
   await cargarPermisos();
-  await cargarPermisosSub();
   await cargarFilas();
   Object.assign(_reales,_realesMock);
 
@@ -855,20 +751,6 @@ async function cargarPermisos(){
   }catch(e){ /* tabla aún no existe: se mantiene la matriz por defecto */ }
 }
 
-// Carga la matriz de permisos por SUBTIPO desde Supabase (tabla presupuesto_permisos_sub).
-// Si no existe, _permisosSub se completa "lazy" con valores por defecto vía getPermisoSub().
-async function cargarPermisosSub(){
-  try{
-    const rows=await sbGet('presupuesto_permisos_sub','?select=*');
-    rows.forEach(r=>{
-      _permisosSub[r.clave]={
-        tiposUsuario:r.tipos_usuario||['superusuario','usuario_estandar'],
-        roles:r.roles||[]
-      };
-    });
-  }catch(e){ /* tabla aún no existe: se generan permisos por defecto al vuelo */ }
-}
-
 async function guardarPermisoTipo(tipo){
   const perm=_permisos[tipo];
   try{
@@ -899,9 +781,9 @@ function poblarAreasSelects(){
   // Modal departamento
   const fsel=document.getElementById('f-departamento');
   fsel.innerHTML='<option value="">Seleccionar...</option>';
-  const areasModal=esSuper()?DEPTOS_TODOS:[u.rol_area].filter(Boolean);
+  const areasModal=esSuper()?DEPTOS_TODOS:[u.departamento].filter(Boolean);
   areasModal.forEach(a=>{const o=document.createElement('option');o.value=a;o.textContent=a;fsel.appendChild(o);});
-  if(u.rol_area) fsel.value=u.rol_area;
+  if(u.departamento) fsel.value=u.departamento;
 }
 
 function poblarPreviewSelect(){
@@ -937,10 +819,11 @@ function toggleCol(id,visible){
 function poblarFiltroTipos(){
   const sel=document.getElementById('filter-tipo-carga');
   sel.innerHTML='<option value="">Todos los tipos</option>';
-  const tipos=new Set([...Object.keys(_gastosState.docente),...Object.keys(_gastosState.admin)]);
+  const tipos=new Set([...Object.keys(GASTOS_DOCENTES),...Object.keys(GASTOS_ADMIN)]);
   tipos.forEach(t=>{
     if(!puedeVerTipo(t,deptoActivo())) return;
-    sel.innerHTML+=`<option value="${t}">${tipoLabel(t)}</option>`;
+    const label=(GASTOS_DOCENTES[t]||GASTOS_ADMIN[t]).label;
+    sel.innerHTML+=`<option value="${t}">${label}</option>`;
   });
 }
 
@@ -1000,8 +883,8 @@ function getFilasCarga(){
     const matchAnio=f.anio===_anio;
     const matchArea=!area||f.departamento===area;
     const matchTipo=!tipo||f.tipo===tipo;
-    // Filtrar tipos/subtipos según matriz de permisos (mantenedor de cuentas contables)
-    const matchPerm=puedeVerTipo(f.tipo,f.departamento)&&puedeVerSubtipo(f.tipo,f.subtipo,f.departamento);
+    // Filtrar tipos según matriz de permisos (mantenedor de cuentas contables)
+    const matchPerm=puedeVerTipo(f.tipo,f.departamento);
     // En modo preview por jefatura, solo se ve lo cargado en el departamento simulado
     const matchPreview=!_previewDepto||f.departamento===_previewDepto;
     return matchAnio&&matchArea&&matchTipo&&matchPerm&&matchPreview;
@@ -1043,7 +926,7 @@ function renderCarga(){
     const grupos={};
     filas.forEach(f=>{if(!grupos[f.tipo])grupos[f.tipo]=[];grupos[f.tipo].push(f);});
     Object.entries(grupos).forEach(([tipo,gf])=>{
-      const label=tipoLabel(tipo);
+      const label=(GASTOS_DOCENTES[tipo]||GASTOS_ADMIN[tipo])?.label||tipo;
       const sub=gf.filter(f=>f.moneda==='CLP').reduce((s,f)=>s+f.monto,0);
       html+=`<tr class="grupo-row"><td colspan="${colsRender.length}">📁 ${label} — ${fmtM(sub)}</td></tr>`;
       html+=gf.map(f=>filaHtmlCarga(f,colsRender,puedeEditar&&!_previewDepto)).join('');
@@ -1059,7 +942,7 @@ function renderCarga(){
 }
 
 function filaHtmlCarga(f,cols,puedeEditar){
-  const label=tipoLabel(f.tipo);
+  const label=(GASTOS_DOCENTES[f.tipo]||GASTOS_ADMIN[f.tipo])?.label||f.tipo;
   const cellMap={
     actividad:`<td><strong>${f.actividad}</strong></td>`,
     descripcion:`<td style="font-size:12px;color:var(--ink3)">${f.descripcion||'—'}</td>`,
@@ -1082,7 +965,7 @@ function getFilasExec(){
   return _filas.filter(f=>{
     const matchAnio=f.anio===_anio;
     const matchArea=!area||f.departamento===area;
-    const matchPerm=puedeVerTipo(f.tipo,f.departamento)&&puedeVerSubtipo(f.tipo,f.subtipo,f.departamento);
+    const matchPerm=puedeVerTipo(f.tipo,f.departamento);
     const matchPreview=!_previewDepto||f.departamento===_previewDepto;
     return matchAnio&&matchArea&&matchPerm&&matchPreview;
   });
@@ -1103,7 +986,7 @@ function renderEjecucion(){
   filas.forEach(f=>{if(!grupos[f.tipo])grupos[f.tipo]=[];grupos[f.tipo].push(f);});
   let html='';
   Object.entries(grupos).forEach(([tipo,gf])=>{
-    const label=tipoLabel(tipo);
+    const label=(GASTOS_DOCENTES[tipo]||GASTOS_ADMIN[tipo])?.label||tipo;
     const gP=gf.reduce((s,f)=>s+f.monto,0);
     const gR=gf.reduce((s,f)=>s+sumaReal(f.id),0);
     html+=`<tr class="grupo-hdr" style="background:var(--bg3)"><td colspan="18" style="padding:7px 12px;font-weight:700;font-size:11px;color:var(--ink2)">📁 ${label} — Pres: ${fmtM(gP)} · Real: ${fmtM(gR)}</td></tr>`;
@@ -1194,19 +1077,17 @@ function poblarTiposModal(){
   const depto=document.getElementById('f-departamento').value;
   const sel=document.getElementById('f-tipo');
   sel.innerHTML='<option value="">Seleccionar...</option>';
-  const pool=poolPara(depto);
+  const esDoc=esDocente(depto);
+  const pool=esDoc?GASTOS_DOCENTES:GASTOS_ADMIN;
   let huboOcultos=false;
   Object.entries(pool).forEach(([key,val])=>{
     if(!puedeVerTipo(key,depto)){huboOcultos=true;return;} // ocultar según matriz de permisos
-    // Ocultar el tipo si ningún subtipo es visible para este perfil/área
-    const algunSubtipoVisible=val.subtipos.some(s=>puedeVerSubtipo(key,s.nombre,depto));
-    if(!algunSubtipoVisible){huboOcultos=true;return;}
     sel.innerHTML+=`<option value="${key}">${val.label}</option>`;
   });
   // Hint
   const hint=document.getElementById('modal-hint');
   if(huboOcultos&&!esSuper()){
-    hint.textContent='ℹ Algunos tipos o subtipos de gasto (ej. Remuneraciones u Otros Gastos del Personal) están restringidos para tu perfil. Solo RRHH o Superusuario pueden cargarlos.';
+    hint.textContent='ℹ Algunos tipos de gasto (ej. Remuneraciones u Otros Gastos del Personal) están restringidos para tu perfil. Solo RRHH o Superusuario pueden cargarlos.';
     hint.style.display='';
   } else {
     hint.style.display='none';
@@ -1216,13 +1097,13 @@ function poblarTiposModal(){
 function onTipoChange(){
   const tipo=document.getElementById('f-tipo').value;
   const depto=document.getElementById('f-departamento').value;
-  const pool=poolPara(depto);
+  const esDoc=esDocente(depto);
+  const pool=esDoc?GASTOS_DOCENTES:GASTOS_ADMIN;
   const entry=pool[tipo];
   const sel=document.getElementById('f-subtipo');
   sel.innerHTML='<option value="">Seleccionar subtipo...</option>';
   if(entry){
     entry.subtipos.forEach(s=>{
-      if(!puedeVerSubtipo(tipo,s.nombre,depto)) return; // ocultar subtipo sin permiso
       sel.innerHTML+=`<option value="${s.nombre}" data-codigo="${s.codigo}">${s.codigo?s.codigo+' — ':''} ${s.nombre}</option>`;
     });
     document.getElementById('f-grupocuenta').value=entry.label;
@@ -1360,285 +1241,130 @@ async function confirmarEliminarFila(){
 // ═══════════════════════════════════════════════
 let _ccGrupoActivo='docente';
 let _ccTipoActivo=null;
-let _ccSubtipoActivo=null; // {tipo, idx}
-let _ccTipoEditando=null;  // key del tipo en edición de nombre
-let _ccSubtipoEditando=null; // idx del subtipo en edición de nombre
-let _ccTiposAbiertos=new Set(); // tipos con acordeón abierto
 
-// Roles agrupados igual que la vista previa por jefatura (ver presupuesto carga)
-const ROLES_DOCENTES_CC=DEPARTAMENTOS.filter(d=>d.tipo==='docente');
-const ROLES_AREAS_CC=DEPARTAMENTOS.filter(d=>d.tipo==='admin');
-
-function poolCuentas(){return _gastosState[_ccGrupoActivo];}
-
-// Devuelve (creando si hace falta) la entrada de permisos de un subtipo,
-// heredando por defecto del permiso a nivel de tipo (_permisos) si existe.
-function getPermisoSub(tipo,subNombre){
-  const key=ccKey(tipo,subNombre);
-  if(!_permisosSub[key]){
-    const base=_permisos[tipo]||{perfiles:['jefe_docente','jefe_admin','rrhh','superusuario']};
-    const roles=new Set();
-    DEPARTAMENTOS.forEach(d=>{
-      const perfilD=d.esRRHHDept?'rrhh':(d.tipo==='docente'?'jefe_docente':'jefe_admin');
-      if(base.perfiles.includes(perfilD)) roles.add(d.nombre);
-    });
-    _permisosSub[key]={
-      tiposUsuario:['superusuario','usuario_estandar'],
-      roles:[...roles]
-    };
-  }
-  return _permisosSub[key];
+function poblarCuentasSelectores(){
+  const grupoSel=document.getElementById('cc-grupo-select');
+  grupoSel.value=_ccGrupoActivo;
 }
 
-function poblarCuentasSelectores(){ /* no-op: selección por clic en panel 1 */ }
-
-function seleccionarGrupoCuenta(grupo){
-  _ccGrupoActivo=grupo;
-  _ccTipoActivo=null;
-  _ccSubtipoActivo=null;
-  _ccTiposAbiertos.clear();
-  document.querySelectorAll('.cc-grupo-item').forEach(el=>el.classList.toggle('active',el.dataset.grupo===grupo));
-  renderCuentasMain();
-  renderCuentasPerm();
-}
+function poolCuentas(){return _ccGrupoActivo==='docente'?GASTOS_DOCENTES:GASTOS_ADMIN;}
 
 function renderCuentasSidebar(){
-  // Punto de entrada al mostrar la pestaña
+  _ccGrupoActivo=document.getElementById('cc-grupo-select').value;
+  const pool=poolCuentas();
+  const side=document.getElementById('cc-side');
+  const keys=Object.keys(pool);
+  if(!_ccTipoActivo||!pool[_ccTipoActivo]) _ccTipoActivo=keys[0]||null;
+
+  let html=`<div class="cc-grupo-hdr">${_ccGrupoActivo==='docente'?'Tipos de Gasto Docente':'Tipos de Gasto Administración'}</div>`;
+  keys.forEach(k=>{
+    const v=pool[k];
+    const active=k===_ccTipoActivo?' active':'';
+    const lockIcon=v.soloRRHH?' 🔒':'';
+    html+=`<div class="cc-tipo-item${active}" onclick="seleccionarTipoCuenta('${k}')">
+      <span>${v.label}${lockIcon}</span>
+      <span class="cnt">${v.subtipos.length}</span>
+    </div>`;
+  });
+  side.innerHTML=html;
+
+  // Selector de departamento (depende del grupo)
+  const deptoSel=document.getElementById('cc-depto-select');
+  const deptos=DEPARTAMENTOS.filter(d=>_ccGrupoActivo==='docente'?d.tipo==='docente':true);
+  deptoSel.innerHTML='<option value="">— Aplicar a todos los departamentos del grupo —</option>'+
+    deptos.map(d=>`<option value="${d.nombre}">${d.nombre} (${d.jefatura})</option>`).join('');
+
   renderCuentasMain();
-  renderCuentasPerm();
 }
 
-// ─────────────────────────────────────────────
-//  PANEL 2: Tipos (acordeón) + subtipos
-// ─────────────────────────────────────────────
+function seleccionarTipoCuenta(key){
+  _ccTipoActivo=key;
+  renderCuentasSidebar();
+}
+
+const PERFIL_LABELS={
+  'jefe_docente':'Jefe Depto. Docente',
+  'jefe_admin':'Responsable de Área',
+  'rrhh':'RRHH',
+  'superusuario':'Superusuario',
+};
+
 function renderCuentasMain(){
   const main=document.getElementById('cc-main');
   const pool=poolCuentas();
-  const keys=Object.keys(pool);
-  if(!keys.length){main.innerHTML='<div class="cc-empty">Sin tipos de gasto en este grupo.</div>';return;}
+  const tipo=_ccTipoActivo;
+  if(!tipo||!pool[tipo]){main.innerHTML='<div class="cc-empty">Selecciona un tipo de gasto.</div>';return;}
+  const entry=pool[tipo];
+  const perm=_permisos[tipo]||{deptos:'todos',perfiles:[]};
+  const deptoSel=document.getElementById('cc-depto-select').value;
 
-  let html='';
-  keys.forEach(tipoKey=>{
-    const entry=pool[tipoKey];
-    const abierto=_ccTiposAbiertos.has(tipoKey);
-    const activeHdr=_ccTipoActivo===tipoKey&&!_ccSubtipoActivo?' active':'';
-    const lock=entry.soloRRHH?' 🔒':'';
+  let html=`<div class="cc-main-hdr">
+    <h3>${entry.label}</h3>
+    <span class="badge ${entry.soloRRHH?'badge-amber':'badge-blue'}">${entry.soloRRHH?'Restringido a RRHH/Superusuario':'Acceso general'}</span>
+  </div>`;
 
-    html+=`<div class="cc-tipo-block">`;
-    html+=`<div class="cc-tipo-hdr${activeHdr}" onclick="toggleTipoCuenta('${tipoKey}')">`;
-    html+=`<div class="cc-tipo-hdr-left">`;
-    html+=`<span class="cc-chevron${abierto?' open':''}">▶</span>`;
-    if(_ccTipoEditando===tipoKey){
-      html+=`<input type="text" class="cc-tipo-edit-input" id="cc-edit-tipo-${tipoKey}" value="${entry.label}" onclick="event.stopPropagation()" onkeydown="if(event.key==='Enter')guardarNombreTipo('${tipoKey}')">`;
-    } else {
-      html+=`<span class="cc-tipo-nombre">${entry.label}${lock}</span>`;
-    }
-    html+=`</div>`;
-    html+=`<div class="cc-tipo-actions">`;
-    if(_ccTipoEditando===tipoKey){
-      html+=`<div class="cc-icon-btn" title="Guardar" onclick="event.stopPropagation();guardarNombreTipo('${tipoKey}')">✓</div>`;
-      html+=`<div class="cc-icon-btn" title="Cancelar" onclick="event.stopPropagation();_ccTipoEditando=null;renderCuentasMain()">✕</div>`;
-    } else {
-      html+=`<div class="cc-icon-btn" title="Editar nombre" onclick="event.stopPropagation();editarNombreTipo('${tipoKey}')">✏</div>`;
-    }
-    html+=`</div></div>`;
+  html+=`<div class="info-hint" style="display:block">
+    <strong>Perfiles habilitados para este tipo de gasto</strong> (aplica a todos sus subtipos):
+    <div class="cc-perm-grid" style="margin-top:8px">`;
+  ['jefe_docente','jefe_admin','rrhh','superusuario'].forEach(perfil=>{
+    const checked=perm.perfiles.includes(perfil)?'checked':'';
+    const disabled=perfil==='superusuario'?'disabled':''; // superusuario siempre tiene acceso
+    html+=`<label class="cc-perm-chip"><input type="checkbox" ${checked} ${disabled} onchange="togglePermisoTipo('${tipo}','${perfil}',this.checked)"> ${PERFIL_LABELS[perfil]}</label>`;
+  });
+  html+=`</div></div>`;
 
-    html+=`<div class="cc-subtipo-list${abierto?' open':''}">`;
-    entry.subtipos.forEach((s,idx)=>{
-      const isActive=_ccSubtipoActivo&&_ccSubtipoActivo.tipo===tipoKey&&_ccSubtipoActivo.idx===idx;
-      html+=`<div class="cc-subtipo-row${isActive?' active':''}" onclick="seleccionarSubtipoCuenta('${tipoKey}',${idx})">`;
-      if(_ccSubtipoEditando&&_ccSubtipoEditando.tipo===tipoKey&&_ccSubtipoEditando.idx===idx){
-        html+=`<div class="cc-subtipo-info" onclick="event.stopPropagation()">
-          <input type="text" class="cc-subtipo-edit-input" id="cc-edit-sub-${tipoKey}-${idx}" value="${s.nombre}" onkeydown="if(event.key==='Enter')guardarNombreSubtipo('${tipoKey}',${idx})">
-          <span class="cc-subtipo-code">${s.codigo||'sin código asociado'}</span>
-        </div>`;
-        html+=`<div class="cc-tipo-actions">
-          <div class="cc-icon-btn" title="Guardar" onclick="event.stopPropagation();guardarNombreSubtipo('${tipoKey}',${idx})">✓</div>
-          <div class="cc-icon-btn" title="Cancelar" onclick="event.stopPropagation();_ccSubtipoEditando=null;renderCuentasMain()">✕</div>
-        </div>`;
-      } else {
-        html+=`<div class="cc-subtipo-info">
-          <span class="cc-subtipo-nombre">${s.nombre}</span>
-          <span class="cc-subtipo-code">${s.codigo||'sin código asociado'}</span>
-        </div>`;
-        html+=`<div class="cc-tipo-actions">
-          <div class="cc-icon-btn" title="Editar nombre" onclick="event.stopPropagation();editarNombreSubtipo('${tipoKey}',${idx})">✏</div>
-          <div class="cc-icon-btn danger" title="Eliminar subtipo" onclick="event.stopPropagation();eliminarSubtipoCuenta('${tipoKey}',${idx})">🗑</div>
-        </div>`;
-      }
-      html+=`</div>`;
-    });
-    if(!entry.subtipos.length){
-      html+=`<div class="cc-subtipo-row" style="cursor:default;color:var(--ink4)">Sin subtipos configurados</div>`;
-    }
-    html+=`</div></div>`;
+  if(deptoSel){
+    const aplicaTodos=perm.deptos==='todos';
+    const incluido=aplicaTodos||(Array.isArray(perm.deptos)&&perm.deptos.includes(deptoSel));
+    html+=`<div class="info-hint" style="display:block;margin-top:10px;background:var(--green-lt);border-color:var(--green-bd)">
+      <label class="cc-perm-chip" style="background:transparent;border:none;padding:0">
+        <input type="checkbox" ${incluido?'checked':''} onchange="toggleDeptoTipo('${tipo}','${deptoSel}',this.checked)">
+        Habilitar este tipo de gasto para <strong>${deptoSel}</strong>
+      </label>
+    </div>`;
+  }
+
+  html+=`<h4 style="margin:18px 0 8px;font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--ink3)">Subtipos / Cuentas Contables</h4>`;
+  entry.subtipos.forEach((s,i)=>{
+    html+=`<div class="cc-sub-row">
+      <div class="cc-sub-info">
+        <span class="cc-sub-name">${s.nombre}</span>
+        <span class="cc-sub-code">${s.codigo||'sin código asociado'}</span>
+      </div>
+      <span class="badge badge-blue" style="font-size:10px">${entry.label}</span>
+    </div>`;
   });
 
   main.innerHTML=html;
 }
 
-function toggleTipoCuenta(tipoKey){
-  if(_ccTiposAbiertos.has(tipoKey)) _ccTiposAbiertos.delete(tipoKey);
-  else _ccTiposAbiertos.add(tipoKey);
-  _ccTipoActivo=tipoKey;
-  _ccSubtipoActivo=null;
+async function togglePermisoTipo(tipo,perfil,checked){
+  const perm=_permisos[tipo]||{deptos:'todos',perfiles:[]};
+  const set=new Set(perm.perfiles);
+  if(checked) set.add(perfil); else set.delete(perfil);
+  perm.perfiles=[...set];
+  _permisos[tipo]=perm;
+  await guardarPermisoTipo(tipo);
   renderCuentasMain();
-  renderCuentasPerm();
-}
-
-function seleccionarSubtipoCuenta(tipoKey,idx){
-  _ccTipoActivo=tipoKey;
-  _ccSubtipoActivo={tipo:tipoKey,idx};
-  renderCuentasMain();
-  renderCuentasPerm();
-}
-
-function editarNombreTipo(tipoKey){
-  _ccTipoEditando=tipoKey;
-  renderCuentasMain();
-  setTimeout(()=>{const el=document.getElementById(`cc-edit-tipo-${tipoKey}`);if(el){el.focus();el.select();}},10);
-}
-function guardarNombreTipo(tipoKey){
-  const input=document.getElementById(`cc-edit-tipo-${tipoKey}`);
-  const val=(input?.value||'').trim();
-  if(val) poolCuentas()[tipoKey].label=val;
-  _ccTipoEditando=null;
-  renderCuentasMain();
-  renderCuentasPerm();
   renderCarga();renderEjecucion();
 }
 
-function editarNombreSubtipo(tipoKey,idx){
-  _ccSubtipoEditando={tipo:tipoKey,idx};
-  if(!_ccTiposAbiertos.has(tipoKey)) _ccTiposAbiertos.add(tipoKey);
-  renderCuentasMain();
-  setTimeout(()=>{const el=document.getElementById(`cc-edit-sub-${tipoKey}-${idx}`);if(el){el.focus();el.select();}},10);
-}
-function guardarNombreSubtipo(tipoKey,idx){
-  const input=document.getElementById(`cc-edit-sub-${tipoKey}-${idx}`);
-  const val=(input?.value||'').trim();
-  const entry=poolCuentas()[tipoKey];
-  if(val&&entry?.subtipos[idx]){
-    const oldNombre=entry.subtipos[idx].nombre;
-    // migrar clave de permisos si cambió el nombre
-    if(oldNombre!==val){
-      const oldKey=ccKey(tipoKey,oldNombre),newKey=ccKey(tipoKey,val);
-      if(_permisosSub[oldKey]){_permisosSub[newKey]=_permisosSub[oldKey];delete _permisosSub[oldKey];}
-      // actualizar filas de presupuesto que usaban el subtipo antiguo
-      _filas.forEach(f=>{if(f.tipo===tipoKey&&f.subtipo===oldNombre)f.subtipo=val;});
-    }
-    entry.subtipos[idx].nombre=val;
+async function toggleDeptoTipo(tipo,depto,checked){
+  const perm=_permisos[tipo]||{deptos:'todos',perfiles:[]};
+  if(perm.deptos==='todos'){
+    if(checked) return; // ya aplica a todos, no hay nada que hacer
+    // pasar de 'todos' a lista explícita sin este depto
+    perm.deptos=DEPTOS_TODOS.filter(d=>d!==depto);
+  } else {
+    const set=new Set(perm.deptos);
+    if(checked) set.add(depto); else set.delete(depto);
+    perm.deptos=[...set];
+    if(perm.deptos.length===DEPTOS_TODOS.length) perm.deptos='todos';
   }
-  _ccSubtipoEditando=null;
+  _permisos[tipo]=perm;
+  await guardarPermisoTipo(tipo);
   renderCuentasMain();
-  renderCuentasPerm();
   renderCarga();renderEjecucion();
-}
-
-function eliminarSubtipoCuenta(tipoKey,idx){
-  const entry=poolCuentas()[tipoKey];
-  const s=entry?.subtipos[idx];if(!s)return;
-  if(!confirm(`¿Eliminar el subtipo "${s.nombre}" (${s.codigo||'sin código'})? Esta acción no se puede deshacer.`))return;
-  const key=ccKey(tipoKey,s.nombre);
-  delete _permisosSub[key];
-  entry.subtipos.splice(idx,1);
-  if(_ccSubtipoActivo&&_ccSubtipoActivo.tipo===tipoKey&&_ccSubtipoActivo.idx===idx) _ccSubtipoActivo=null;
-  renderCuentasMain();
-  renderCuentasPerm();
-}
-
-// ─────────────────────────────────────────────
-//  PANEL 3: Permisos del subtipo seleccionado
-// ─────────────────────────────────────────────
-const TIPOS_USUARIO_LABELS={
-  'superusuario':'Superusuario',
-  'usuario_estandar':'Usuario Estándar',
-};
-
-function renderCuentasPerm(){
-  const panel=document.getElementById('cc-perm');
-  if(!_ccSubtipoActivo){
-    panel.innerHTML=`<div class="cc-empty">Selecciona un subtipo de gasto para configurar sus permisos.</div>`;
-    return;
-  }
-  const {tipo,idx}=_ccSubtipoActivo;
-  const entry=poolCuentas()[tipo];
-  const sub=entry?.subtipos[idx];
-  if(!sub){panel.innerHTML=`<div class="cc-empty">Subtipo no encontrado.</div>`;_ccSubtipoActivo=null;return;}
-  const perm=getPermisoSub(tipo,sub.nombre);
-
-  let html=`<div class="cc-perm-header">
-    <h3>${sub.nombre}</h3>
-    <p>${sub.codigo||'sin código asociado'} · ${entry.label}</p>
-  </div>`;
-
-  // Sección 1: Tipos de usuario
-  html+=`<div class="cc-perm-section-title">Tipos de Usuario</div>`;
-  ['superusuario','usuario_estandar'].forEach(tu=>{
-    const checked=perm.tiposUsuario.includes(tu);
-    const disabled=tu==='superusuario'?'disabled':'';
-    html+=`<div class="cc-perm-row${checked?' granted':''}">
-      <span class="lbl">${TIPOS_USUARIO_LABELS[tu]}${tu==='superusuario'?'<small>siempre tiene acceso</small>':''}</span>
-      <label class="cc-switch"><input type="checkbox" ${checked?'checked':''} ${disabled} onchange="toggleTipoUsuarioSub('${tipo}','${sub.nombre.replace(/'/g,"\\'")}','${tu}',this.checked)"><span class="slider"></span></label>
-    </div>`;
-  });
-
-  // Sección 2: Roles — Jefaturas Docentes
-  html+=`<div class="cc-perm-section-title">Jefaturas Docentes</div>`;
-  ROLES_DOCENTES_CC.forEach(d=>{
-    const checked=perm.roles.includes(d.nombre);
-    html+=`<div class="cc-perm-row${checked?' granted':''}">
-      <span class="lbl">${d.nombre}<small>${d.jefatura}</small></span>
-      <label class="cc-switch"><input type="checkbox" ${checked?'checked':''} onchange="toggleRolSub('${tipo}','${sub.nombre.replace(/'/g,"\\'")}','${d.nombre}',this.checked)"><span class="slider"></span></label>
-    </div>`;
-  });
-
-  // Sección 3: Roles — Responsables / Áreas
-  html+=`<div class="cc-perm-section-title">Responsables / Áreas</div>`;
-  ROLES_AREAS_CC.forEach(d=>{
-    const checked=perm.roles.includes(d.nombre);
-    html+=`<div class="cc-perm-row${checked?' granted':''}">
-      <span class="lbl">${d.nombre}<small>${d.jefatura}</small></span>
-      <label class="cc-switch"><input type="checkbox" ${checked?'checked':''} onchange="toggleRolSub('${tipo}','${sub.nombre.replace(/'/g,"\\'")}','${d.nombre}',this.checked)"><span class="slider"></span></label>
-    </div>`;
-  });
-
-  html+=`<div class="cc-perm-save-bar">
-    <span class="status-msg" id="cc-perm-status" style="margin:0"></span>
-    <button class="btn btn-primary btn-sm" onclick="guardarPermisosSub('${tipo}','${sub.nombre.replace(/'/g,"\\'")}')">💾 Guardar</button>
-  </div>`;
-
-  panel.innerHTML=html;
-}
-
-function toggleTipoUsuarioSub(tipo,subNombre,tu,checked){
-  const perm=getPermisoSub(tipo,subNombre);
-  const set=new Set(perm.tiposUsuario);
-  if(checked) set.add(tu); else set.delete(tu);
-  perm.tiposUsuario=[...set];
-  renderCuentasPerm();
-}
-function toggleRolSub(tipo,subNombre,rol,checked){
-  const perm=getPermisoSub(tipo,subNombre);
-  const set=new Set(perm.roles);
-  if(checked) set.add(rol); else set.delete(rol);
-  perm.roles=[...set];
-  renderCuentasPerm();
-}
-
-async function guardarPermisosSub(tipo,subNombre){
-  const st=document.getElementById('cc-perm-status');
-  const key=ccKey(tipo,subNombre);
-  const perm=_permisosSub[key];
-  st.textContent='Guardando...';st.className='status-msg ok';st.style.display='block';
-  try{
-    await sbUpsert('presupuesto_permisos_sub',{clave:key,tipo,subtipo:subNombre,tipos_usuario:perm.tiposUsuario,roles:perm.roles},'clave');
-    st.textContent='✓ Permisos guardados.';
-  }catch(e){
-    st.textContent='Guardado en sesión (sin BD: '+e.message+')';
-  }
-  renderCarga();renderEjecucion();
-  setTimeout(()=>{st.style.display='none';},1800);
 }
 
 
