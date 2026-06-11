@@ -143,41 +143,11 @@ tbody td.num{text-align:right;font-family:'DM Mono',monospace;font-size:12px}
 .progress-fill{height:100%;border-radius:10px;background:var(--blue)}
 .progress-fill.over{background:var(--red)}
 
-/* CONFIRM MODAL */
-.confirm-box{width:420px;text-align:center}
-.confirm-icon{width:52px;height:52px;border-radius:50%;background:var(--red-lt);border:0.5px solid var(--red-bd);display:flex;align-items:center;justify-content:center;font-size:24px;margin:0 auto 14px}
-.confirm-title{font-family:'Playfair Display',serif;font-size:18px;font-weight:700;margin-bottom:8px}
-.confirm-text{font-size:13px;color:var(--ink2);line-height:1.6;margin-bottom:6px}
-.confirm-text strong{color:var(--ink)}
-.confirm-actions{display:flex;gap:10px;justify-content:center;margin-top:20px}
-
-/* CUENTAS CONTABLES TREE */
-.cc-layout{display:grid;grid-template-columns:280px 1fr;gap:16px;align-items:start}
-.cc-side{background:var(--card);border:0.5px solid var(--border);border-radius:10px;padding:6px;max-height:75vh;overflow:auto}
-.cc-grupo-hdr{padding:9px 12px;font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--ink3);background:var(--bg2);border-radius:6px;margin:6px 4px 2px}
-.cc-tipo-item{padding:8px 14px;font-size:13px;border-radius:6px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:6px;color:var(--ink2);transition:all .12s;margin:1px 4px}
-.cc-tipo-item:hover{background:var(--bg2)}
-.cc-tipo-item.active{background:var(--blue-lt);color:var(--blue);font-weight:600}
-.cc-tipo-item .cnt{font-size:10px;color:var(--ink4);font-family:'DM Mono',monospace}
-.cc-main{background:var(--card);border:0.5px solid var(--border);border-radius:10px;padding:18px}
-.cc-main-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px}
-.cc-main-hdr h3{font-family:'Playfair Display',serif;font-size:17px;font-weight:700}
-.cc-sub-row{border:0.5px solid var(--border);border-radius:8px;padding:10px 14px;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
-.cc-sub-info{display:flex;flex-direction:column;gap:2px}
-.cc-sub-name{font-size:13px;font-weight:500}
-.cc-sub-code{font-size:11px;font-family:'DM Mono',monospace;color:var(--ink3)}
-.cc-perm-grid{display:flex;gap:14px;flex-wrap:wrap}
-.cc-perm-chip{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--ink2);cursor:pointer;user-select:none;padding:3px 8px;border-radius:5px;border:0.5px solid var(--border2);background:var(--bg2);transition:all .15s}
-.cc-perm-chip input{width:12px;height:12px;cursor:pointer}
-.cc-perm-chip:has(input:checked){background:var(--green-lt);border-color:var(--green-bd);color:var(--green)}
-.cc-empty{text-align:center;padding:40px 20px;color:var(--ink3)}
-
 @media(max-width:700px){
   .hdr,.main{padding-left:14px;padding-right:14px}
   .tabs-bar{padding:0 14px}
   .kpi-row{grid-template-columns:1fr 1fr}
   .form-grid{grid-template-columns:1fr}
-  .cc-layout{grid-template-columns:1fr}
 }
 </style>
 </head>
@@ -197,7 +167,10 @@ tbody td.num{text-align:right;font-family:'DM Mono',monospace;font-size:12px}
       <!-- Solo superusuarios -->
       <div id="preview-controls" style="display:none;align-items:center;gap:8px">
         <select class="fsel" id="preview-rol-select" onchange="activarPreview()" style="font-size:11px;padding:4px 8px">
-          <option value="">👁 Vista previa por jefatura...</option>
+          <option value="">👁 Vista previa por perfil...</option>
+          <option value="presupuesto_docente">Jefe Depto. Docente</option>
+          <option value="presupuesto_rrhh">RRHH</option>
+          <option value="presupuesto">Responsable Presupuesto</option>
         </select>
         <button class="btn-hdr" id="btn-exit-preview" onclick="salirPreview()" style="display:none;background:rgba(181,50,14,0.3);color:#ffb3a3">✕ Salir preview</button>
       </div>
@@ -213,7 +186,6 @@ tbody td.num{text-align:right;font-family:'DM Mono',monospace;font-size:12px}
     <button class="tab-btn active" onclick="showTab('carga',this)">📋 Carga de Presupuesto</button>
     <button class="tab-btn" onclick="showTab('ejecucion',this)">📈 Ejecución Presupuestaria</button>
     <button class="tab-btn super-tab" onclick="showTab('consolidado',this)" style="display:none">🏫 Consolidado</button>
-    <button class="tab-btn super-tab" onclick="showTab('cuentas',this)" style="display:none">🗂️ Cuentas Contables</button>
   </div>
 </div>
 
@@ -248,7 +220,7 @@ tbody td.num{text-align:right;font-family:'DM Mono',monospace;font-size:12px}
     <!-- Filtros -->
     <div class="filters-row">
       <span class="filter-label">Área:</span>
-      <select class="fsel" id="select-area-carga" onchange="poblarFiltroTipos();renderCarga()"></select>
+      <select class="fsel" id="select-area-carga" onchange="renderCarga()"></select>
       <span class="filter-label" style="margin-left:8px">Tipo:</span>
       <select class="fsel" id="filter-tipo-carga" onchange="renderCarga()">
         <option value="">Todos</option>
@@ -339,30 +311,6 @@ tbody td.num{text-align:right;font-family:'DM Mono',monospace;font-size:12px}
       </table>
     </div>
   </div>
-
-  <!-- ══ TAB CUENTAS CONTABLES ══ -->
-  <div class="tab-content" id="tab-cuentas">
-    <div class="top-bar">
-      <div class="top-bar-left">
-        <h2>Mantenedor de Cuentas Contables</h2>
-        <p>Configura tipos, subtipos y permisos de acceso por departamento y perfil</p>
-      </div>
-      <div class="btn-group">
-        <select class="fsel" id="cc-grupo-select" onchange="renderCuentasSidebar()">
-          <option value="docente">Docente</option>
-          <option value="admin">Administración</option>
-        </select>
-        <select class="fsel" id="cc-depto-select" onchange="renderCuentasMain()"></select>
-      </div>
-    </div>
-    <div class="info-hint" style="display:block;margin-bottom:14px">
-      ℹ Marca para qué departamento y qué perfiles está habilitado cada subtipo de gasto. Estos permisos controlan qué tipos/subtipos aparecen al cargar una fila de presupuesto.
-    </div>
-    <div class="cc-layout">
-      <div class="cc-side" id="cc-side"></div>
-      <div class="cc-main" id="cc-main"></div>
-    </div>
-  </div>
 </div>
 
 <!-- MODAL FILA -->
@@ -444,21 +392,6 @@ tbody td.num{text-align:right;font-family:'DM Mono',monospace;font-size:12px}
   </div>
 </div>
 
-<!-- MODAL CONFIRMAR ELIMINACIÓN -->
-<div class="modal-overlay" id="modal-confirm-delete">
-  <div class="modal-box confirm-box">
-    <div class="confirm-icon">🗑️</div>
-    <div class="confirm-title">Eliminar fila de presupuesto</div>
-    <div class="confirm-text">¿Seguro que deseas eliminar <strong id="confirm-delete-nombre">esta fila</strong>?</div>
-    <div class="confirm-text" style="color:var(--ink3);font-size:12px">Esta acción quitará el registro de la base de datos de forma permanente y no se puede deshacer.</div>
-    <div class="status-msg" id="delete-status"></div>
-    <div class="confirm-actions">
-      <button class="btn btn-secondary" onclick="closeModal('modal-confirm-delete')">Cancelar</button>
-      <button class="btn btn-danger" id="btn-confirm-delete" onclick="confirmarEliminarFila()">Sí, eliminar</button>
-    </div>
-  </div>
-</div>
-
 <script>
 // ═══════════════════════════════════════════════
 //  SUPABASE
@@ -468,71 +401,73 @@ const SB_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsIn
 let SB_TOKEN=null,_currentUser=null;
 function sbH(e={}){const h={'Content-Type':'application/json','apikey':SB_ANON,...e};if(SB_TOKEN)h['Authorization']='Bearer '+SB_TOKEN;return h;}
 async function sbGet(t,p=''){const r=await fetch(`${SB_URL}/rest/v1/${t}${p}`,{headers:sbH()});if(!r.ok)throw new Error(await r.text());return r.json();}
-async function sbPost(t,b){const r=await fetch(`${SB_URL}/rest/v1/${t}`,{method:'POST',headers:{...sbH(),'Prefer':'return=representation'},body:JSON.stringify(b)});if(!r.ok)throw new Error(await r.text());return r.json();}
-async function sbPatch(t,p,b){const r=await fetch(`${SB_URL}/rest/v1/${t}${p}`,{method:'PATCH',headers:{...sbH(),'Prefer':'return=representation'},body:JSON.stringify(b)});if(!r.ok)throw new Error(await r.text());return r.json();}
-async function sbDelete(t,p){const r=await fetch(`${SB_URL}/rest/v1/${t}${p}`,{method:'DELETE',headers:{...sbH(),'Prefer':'return=representation'}});if(!r.ok)throw new Error(await r.text());return r.json();}
 
 // ═══════════════════════════════════════════════
 //  CONSTANTES
 // ═══════════════════════════════════════════════
 const ROLES_PERMITIDOS=['superusuario','presupuesto','presupuesto_docente','presupuesto_rrhh','admin','directorio'];
 
-// Departamentos: tipo ('docente'|'admin') + jefatura (responsable)
-// NOTA: "Tecnología" se estandariza como "Informática" en todo el sistema.
-const DEPARTAMENTOS=[
-  {nombre:'Dirección',tipo:'admin',jefatura:'Dirección'},
-  {nombre:'Subdirección Académica',tipo:'docente',jefatura:'Subdirección Académica'},
-  {nombre:'Administración',tipo:'admin',jefatura:'Administración'},
-  {nombre:'Alemán',tipo:'docente',jefatura:'Jorge Álvarez'},
-  {nombre:'Inglés',tipo:'docente',jefatura:'Jefe Depto. Inglés'},
-  {nombre:'Lenguaje',tipo:'docente',jefatura:'Jefe Depto. Lenguaje'},
-  {nombre:'Educación Física',tipo:'docente',jefatura:'Jefe Depto. Ed. Física'},
-  {nombre:'ACLE',tipo:'docente',jefatura:'Jefe Depto. ACLE'},
-  {nombre:'Ciencias',tipo:'docente',jefatura:'Jefe Depto. Ciencias'},
-  {nombre:'Matemáticas',tipo:'docente',jefatura:'Jefe Depto. Matemáticas'},
-  {nombre:'Párvulos',tipo:'docente',jefatura:'Jefe Depto. Párvulos'},
-  {nombre:'Arte y Música',tipo:'docente',jefatura:'Jefe Depto. Arte y Música'},
-  {nombre:'Historia y Ciencias Sociales',tipo:'docente',jefatura:'Jefe Depto. Historia y Cs. Sociales'},
-  {nombre:'IB',tipo:'docente',jefatura:'Jefe Depto. IB'},
-  {nombre:'Informática',tipo:'admin',jefatura:'Responsable Informática'},
-  {nombre:'Biblioteca',tipo:'admin',jefatura:'Responsable Biblioteca'},
-  {nombre:'Mantenimiento',tipo:'admin',jefatura:'Responsable Mantenimiento'},
-  {nombre:'RRHH',tipo:'admin',jefatura:'RRHH',esRRHHDept:true},
-];
-const DEPTOS_TODOS=DEPARTAMENTOS.map(d=>d.nombre);
-const DEPTOS_DOCENTES=DEPARTAMENTOS.filter(d=>d.tipo==='docente').map(d=>d.nombre);
-function deptoInfo(nombre){return DEPARTAMENTOS.find(d=>d.nombre===nombre);}
-
+// Departamentos docentes — usan estructura de gastos docentes
+const DEPTOS_DOCENTES=['Subdirección Académica','Alemán','Inglés','Lenguaje','Educación Física','ACLE','Ciencias','Matemáticas','Párvulos','Arte y Música','Historia y Ciencias Sociales','IB'];
+const DEPTOS_TODOS=['Dirección','Subdirección Académica','Administración','Alemán','Inglés','Lenguaje','Educación Física','ACLE','Ciencias','Matemáticas','Párvulos','Arte y Música','Historia y Ciencias Sociales','IB','Informática','Biblioteca','Mantenimiento','RRHH'];
 const MESES=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
 
-// Estructura de tipos de gasto DOCENTES (con subtipos y cuentas, según mantenedor)
+// Estructura de tipos de gasto docente (con subtipos y cuentas)
 const GASTOS_DOCENTES={
-  'Actividades_Pedagogicas':{label:'Actividades Pedagógicas',subtipos:[{codigo:'4010100300',nombre:'Actividades Deportivas'},{codigo:'4010100400',nombre:'Giras Pedagógicas'},{codigo:'4010300200',nombre:'Licenciatura'},{codigo:'4010300400',nombre:'Gira Alemania Aporte Colegio'}]},
-  'Insumos_Academicos':{label:'Insumos Académicos',subtipos:[{codigo:'4010300100',nombre:'Eventos y Atención Alumnos'},{codigo:'4010300700',nombre:'Materiales Didácticos, Libros y Suscripciones'},{codigo:'4010300800',nombre:'Implementación Deportiva'},{codigo:'4010301000',nombre:'Materiales Escolares'},{codigo:'4010400700',nombre:'Fotocopias y Papel Fotocopias'},{codigo:'4010400400',nombre:'Insumos Computacionales'}]},
-  'Otros_Gastos_del_Personal_Docente':{label:'Otros Gastos del Personal Docente',soloRRHH:true,subtipos:[{codigo:'4010300500',nombre:'Bono Sala Cuna'},{codigo:'4010300900',nombre:'Hoteles y Viajes'},{codigo:'4010101100',nombre:'Atención Profesores'},{codigo:'4010100700',nombre:'Uniformes Docentes'},{codigo:'4010100800',nombre:'Material Of. Depto Docentes'},{codigo:'4010100900',nombre:'Viáticos'},{codigo:'4010100500',nombre:'Gastos Viajes Profesor'}]},
-  'Remuneracion_Docente':{label:'Remuneración Docente',soloRRHH:true,subtipos:[{codigo:'4010100100',nombre:'Remuneraciones Docentes'},{codigo:'4010100200',nombre:'Honorarios'},{codigo:'4010101000',nombre:'Finiquitos Docentes'},{codigo:'4010200100',nombre:'Capacitación Docente'}]},
+  'Actividades_Pedagógicas':{
+    label:'Actividades Pedagógicas',
+    subtipos:[
+      {codigo:'4010100300',nombre:'Actividades Deportivas'},
+      {codigo:'4010100400',nombre:'Giras Pedagógicas'},
+      {codigo:'4010300200',nombre:'Licenciatura'},
+      {codigo:'4010300400',nombre:'Gira Alemania Aporte Colegio'},
+    ]
+  },
+  'Insumos_Académicos':{
+    label:'Insumos Académicos',
+    subtipos:[
+      {codigo:'4010100100',nombre:'Fotocopias y Papel Fotocopias'},
+      {codigo:'4010300100',nombre:'Eventos y Atención Alumnos'},
+      {codigo:'4010300500',nombre:'Bono Sala Cuna'},
+      {codigo:'4010300700',nombre:'Materiales Didácticos, Libros y Suscripciones'},
+      {codigo:'4010300800',nombre:'Implementación Deportiva'},
+      {codigo:'4010300900',nombre:'Hoteles y Viajes'},
+      {codigo:'4010301000',nombre:'Materiales Escolares'},
+      {codigo:'4010400400',nombre:'Insumos Computacionales'},
+      {codigo:'4010100500',nombre:'Gastos Viajes Profesor'},
+      {codigo:'4010100800',nombre:'Material Of. Depto Docentes'},
+      {codigo:'4010100900',nombre:'Viáticos'},
+      {codigo:'4010101100',nombre:'Atención Profesores'},
+    ]
+  },
+  // Solo RRHH y superusuario
+  'Otros_Gastos_del_Personal_Docente':{
+    label:'Otros Gastos del Personal Docente',
+    soloRRHH:true,
+    subtipos:[
+      {codigo:'4010100700',nombre:'Uniformes Docentes'},
+    ]
+  },
+  'Remuneración_Docente':{
+    label:'Remuneración Docente',
+    soloRRHH:true,
+    subtipos:[
+      {codigo:'4010100100',nombre:'Remuneraciones Docentes'},
+      {codigo:'4010100200',nombre:'Honorarios'},
+      {codigo:'4010101000',nombre:'Finiquitos Docentes'},
+      {codigo:'4010101100',nombre:'Atención Profesores'},
+      {codigo:'4010200100',nombre:'Capacitación Docente'},
+    ]
+  }
 };
 
-// Estructura de tipos de gasto ADMINISTRACIÓN (con subtipos y cuentas, según mantenedor)
-const GASTOS_ADMIN={
-  'Remuneracion_Administrativos':{label:'Remuneración Administrativos',soloRRHH:true,subtipos:[{codigo:'4020100200',nombre:'Remuneración Administrativos'},{codigo:'4020100600',nombre:'Ropa Trabajo Auxiliares'},{codigo:'4020100800',nombre:'Alimentación Administrativos'},{codigo:'4020100400',nombre:'Indemnización Administrativos'},{codigo:'4020100900',nombre:'Gastos en Personal'}]},
-  'Servicios_Basicos':{label:'Servicios Básicos',subtipos:[{codigo:'4020200100',nombre:'Luz'},{codigo:'4020200200',nombre:'Agua'},{codigo:'4020200300',nombre:'Gas'},{codigo:'4020200400',nombre:'Télefonos'},{codigo:'4020200500',nombre:'Celulares'},{codigo:'4020200600',nombre:'Internet'},{codigo:'',nombre:'Alarma'}]},
-  'Arriendo':{label:'Arriendo',subtipos:[{codigo:'4020800100',nombre:'Arriendo Colegio'},{codigo:'4020800200',nombre:'Arriendo Gimnasio'},{codigo:'',nombre:'Arriendo Bodega'},{codigo:'4020800200',nombre:'Arriendo Quilamapu'}]},
-  'Asesorias_Profesionales':{label:'Asesorías Profesionales',subtipos:[{codigo:'4010100200',nombre:'Asesorías Profesionales'},{codigo:'4020100100',nombre:'Honorarios Administrativos'},{codigo:'4020700300',nombre:'Abogado'},{codigo:'4020700500',nombre:'Movilización Hotel Asesorías'}]},
-  'Gastos_Generales':{label:'Gastos Generales',subtipos:[{codigo:'4020400200',nombre:'Otros Gastos'},{codigo:'4010300600',nombre:'Gastos Dirección'},{codigo:'4020500100',nombre:'Gastos Directorio'},{codigo:'4020700200',nombre:'Convivencia Escolar'},{codigo:'4020700400',nombre:'Escuela para Padres'},{codigo:'4040100200',nombre:'Gastos Notariales y Conservador'},{codigo:'4020900100',nombre:'LBI'}]},
-  'Gastos_de_Oficina_y_Aseo':{label:'Gastos de Oficina y Aseo',subtipos:[{codigo:'4010400200',nombre:'Movilización y Fletes'},{codigo:'4010400600',nombre:'Gastos Materiales de Oficina y Librería'},{codigo:'4020300300',nombre:'Materiales Aseo'}]},
-  'Mantencion_y_Reparacion':{label:'Mantención y Reparación',subtipos:[{codigo:'4010400100',nombre:'Plantas y Jardines'},{codigo:'4020300100',nombre:'Mantención y Reparación'},{codigo:'4020300200',nombre:'Materiales Ferretería'},{codigo:'',nombre:'Mobiliario'},{codigo:'4020300400',nombre:'Servicio de Mantención'},{codigo:'4020400100',nombre:'Caja Chica'}]},
-  'Patentes_y_Gastos_Municipales':{label:'Patentes y Gastos Municipales',subtipos:[{codigo:'4050100100',nombre:'Patentes Municipales'}]},
-  'Publicidad':{label:'Publicidad',subtipos:[{codigo:'4010400500',nombre:'Impresos'},{codigo:'4020900200',nombre:'Diarios y Revistas'},{codigo:'4020900500',nombre:'Suscripción y Dominio'},{codigo:'4020900300',nombre:'Avisos'}]},
-  'Seguros_y_Seguridad':{label:'Seguros y Seguridad',subtipos:[{codigo:'4020600100',nombre:'Seguro Incendio'},{codigo:'4020600200',nombre:'Seguro Resp. Civil'}]},
-  'Soporte_e_Insumos_Computacionales':{label:'Soporte e Insumos Computacionales',subtipos:[{codigo:'4020700100',nombre:'Computación'},{codigo:'4020101000',nombre:'Sistema Contable'}]},
-  'Multas_Juicios':{label:'Multas y Juicios',subtipos:[{codigo:'4040100700',nombre:'Multas y Juicios'}]},
-  'Gastos_Financieros':{label:'Gastos Financieros',subtipos:[{codigo:'4030100100',nombre:'Comisiones Bancarias'},{codigo:'4030100200',nombre:'Comisión Ctas. Vista'},{codigo:'4030100500',nombre:'Comisión Transbank'},{codigo:'4030100400',nombre:'Otros Gastos Financieros'}]},
-  'Enfermeria':{label:'Enfermería',subtipos:[{codigo:'',nombre:'Enfermería'}]},
+// Para departamentos no docentes: tipos genéricos
+const GASTOS_GENERALES={
+  'Gasto corriente':{label:'Gasto corriente',subtipos:[{codigo:'',nombre:'Materiales y suministros'},{codigo:'',nombre:'Servicios básicos'},{codigo:'',nombre:'Otros gastos corrientes'}]},
+  'Inversión':{label:'Inversión',subtipos:[{codigo:'',nombre:'Equipamiento'},{codigo:'',nombre:'Infraestructura'},{codigo:'',nombre:'Tecnología'}]},
+  'Servicios':{label:'Servicios',subtipos:[{codigo:'',nombre:'Servicios profesionales'},{codigo:'',nombre:'Mantención'},{codigo:'',nombre:'Capacitación'}]},
+  'Personal':{label:'Personal',subtipos:[{codigo:'',nombre:'Remuneraciones'},{codigo:'',nombre:'Honorarios'},{codigo:'',nombre:'Horas extra'}]},
 };
-
-// (Las claves de tipo GASTOS_DOCENTES / GASTOS_ADMIN siguen exactamente la nomenclatura
-//  del mantenedor de Cuentas Contables, ver pestaña "Cuentas Contables")
 
 // Definición de columnas para tabla de carga
 const TODAS_COLUMNAS=[
@@ -555,64 +490,18 @@ let _filas=[];
 let _reales={};
 let _editingId=null;
 let _realEditing={filaId:null,mes:null};
-let _deleteEditing={id:null};
 let _nextId=200;
-let _previewDepto=null; // null = vista real. Si está activo, simula la jefatura de ese departamento
+let _previewRol=null; // null = vista real
 let _colsVisibles=new Set(TODAS_COLUMNAS.map(c=>c.id));
-let _usingDB=false; // true si presupuesto_lineas existe en supabase
 
-// Matriz de permisos por tipo de gasto: _permisos[tipoKey] = {deptos:'todos'|[...], perfiles:[...]}
-// perfiles posibles: 'jefe_docente','jefe_admin','rrhh','superusuario'
-let _permisos={};
-function defaultPermisos(){
-  const p={};
-  Object.keys(GASTOS_DOCENTES).forEach(k=>{
-    p[k]=GASTOS_DOCENTES[k].soloRRHH
-      ? {deptos:'todos',perfiles:['rrhh','superusuario']}
-      : {deptos:'todos',perfiles:['jefe_docente','rrhh','superusuario']};
-  });
-  Object.keys(GASTOS_ADMIN).forEach(k=>{
-    p[k]=GASTOS_ADMIN[k].soloRRHH
-      ? {deptos:'todos',perfiles:['rrhh','superusuario']}
-      : {deptos:'todos',perfiles:['jefe_admin','rrhh','superusuario']};
-  });
-  return p;
-}
-
-// Mapea un departamento a su(s) "perfil(es) efectivos" para fines de permisos del mantenedor
-function perfilesDeDepto(depto){
-  const info=deptoInfo(depto);
-  if(!info) return ['jefe_admin'];
-  if(info.esRRHHDept) return ['jefe_admin','rrhh'];
-  return info.tipo==='docente'?['jefe_docente']:['jefe_admin'];
-}
-
-// MOCK DATA (claves de tipo actualizadas a la nueva nomenclatura del mantenedor)
+// MOCK DATA
 const _mock=[
-  {id:1,actividad:'Gira Pedagógica 5°B',descripcion:'Visita museo regional',departamento:'Alemán',tipo:'Actividades_Pedagogicas',subtipo:'Giras Pedagógicas',cuenta:'4010100400',grupoCuenta:'Actividades Pedagógicas',moneda:'CLP',monto:350000,anio:2026},
-  {id:2,actividad:'Materiales didácticos',descripcion:'Libros y cuadernos alemán',departamento:'Alemán',tipo:'Insumos_Academicos',subtipo:'Materiales Didácticos, Libros y Suscripciones',cuenta:'4010300700',grupoCuenta:'Insumos Académicos',moneda:'CLP',monto:280000,anio:2026},
-  {id:3,actividad:'Licencias Office',descripcion:'Suite anual',departamento:'Informática',tipo:'Soporte_e_Insumos_Computacionales',subtipo:'Computación',cuenta:'4020700100',grupoCuenta:'Soporte e Insumos Computacionales',moneda:'CLP',monto:1200000,anio:2026},
-  {id:4,actividad:'Papel fotocopias',descripcion:'Resmas anuales',departamento:'Informática',tipo:'Gastos_de_Oficina_y_Aseo',subtipo:'Gastos Materiales de Oficina y Librería',cuenta:'4010400600',grupoCuenta:'Gastos de Oficina y Aseo',moneda:'CLP',monto:180000,anio:2026},
+  {id:1,actividad:'Gira Pedagógica 5°B',descripcion:'Visita museo regional',departamento:'Alemán',tipo:'Actividades_Pedagógicas',subtipo:'Giras Pedagógicas',cuenta:'4010100400',grupoCuenta:'Actividades Pedagógicas',moneda:'CLP',monto:350000,anio:2026},
+  {id:2,actividad:'Materiales didácticos',descripcion:'Libros y cuadernos alemán',departamento:'Alemán',tipo:'Insumos_Académicos',subtipo:'Materiales Didácticos, Libros y Suscripciones',cuenta:'4010300700',grupoCuenta:'Insumos Académicos',moneda:'CLP',monto:280000,anio:2026},
+  {id:3,actividad:'Licencias Office',descripcion:'Suite anual',departamento:'Informática',tipo:'Inversión',subtipo:'Tecnología',cuenta:'',grupoCuenta:'Inversión',moneda:'CLP',monto:1200000,anio:2026},
+  {id:4,actividad:'Papel fotocopias',descripcion:'Resmas anuales',departamento:'Informática',tipo:'Gasto corriente',subtipo:'Materiales y suministros',cuenta:'',grupoCuenta:'Gasto corriente',moneda:'CLP',monto:180000,anio:2026},
 ];
 const _realesMock={'1_3':180000,'1_4':170000,'2_3':140000,'2_4':140000,'3_1':1200000,'4_1':90000,'4_2':90000};
-
-// Migra filas con claves de tipo "legacy" (de versiones anteriores) a las nuevas claves del mantenedor
-function migrarFilaLegacy(f){
-  const MIGRACION={
-    'Actividades_Pedagógicas':'Actividades_Pedagogicas',
-    'Insumos_Académicos':'Insumos_Academicos',
-    'Remuneración_Docente':'Remuneracion_Docente',
-    'Remuneración_Administrativos':'Remuneracion_Administrativos',
-    'Mantención_y_Reparación':'Mantencion_y_Reparacion',
-    'Gasto corriente':'Gastos_Generales',
-    'Inversión':'Soporte_e_Insumos_Computacionales',
-    'Servicios':'Asesorias_Profesionales',
-    'Personal':'Remuneracion_Administrativos',
-  };
-  if(MIGRACION[f.tipo]) f.tipo=MIGRACION[f.tipo];
-  if(f.departamento==='Tecnología') f.departamento='Informática';
-  return f;
-}
 
 // ═══════════════════════════════════════════════
 //  AUTH
@@ -632,8 +521,6 @@ async function checkSession(){
   }catch(e){
     _currentUser={nombre:'',email:'',rol:'operador',departamento:''};
   }
-  // Estandarizar nombre de departamento: "Tecnología" -> "Informática"
-  if(_currentUser.departamento==='Tecnología') _currentUser.departamento='Informática';
   if(!ROLES_PERMITIDOS.includes(_currentUser.rol)){
     document.getElementById('blocked-view').classList.add('show');
     return;
@@ -645,51 +532,21 @@ function doLogout(){SB_TOKEN=null;_currentUser=null;sessionStorage.clear();windo
 // ═══════════════════════════════════════════════
 //  HELPERS DE ROL
 // ═══════════════════════════════════════════════
-// Departamento "activo" para efectos de filtros: el preview de jefatura, o el del usuario real
-function deptoActivo(){return _previewDepto||_currentUser.departamento||'';}
-
-// Rol "real" del usuario (sin preview) — usado para decidir qué puede ver/hacer de verdad
-function esSuper(){return _currentUser.rol==='superusuario';}
-
-// Perfil EFECTIVO para fines de visualización (considera preview de jefatura)
-// Devuelve uno de: 'superusuario','rrhh','jefe_docente','jefe_admin'
-function perfilEfectivo(){
-  if(_previewDepto){
-    const info=deptoInfo(_previewDepto);
-    if(!info) return 'jefe_admin';
-    if(info.esRRHHDept) return 'rrhh';
-    return info.tipo==='docente'?'jefe_docente':'jefe_admin';
-  }
-  if(_currentUser.rol==='superusuario') return 'superusuario';
-  if(_currentUser.rol==='presupuesto_rrhh') return 'rrhh';
-  if(_currentUser.rol==='presupuesto_docente') return 'jefe_docente';
-  return 'jefe_admin';
-}
-function esRRHH(){return perfilEfectivo()==='rrhh'||perfilEfectivo()==='superusuario';}
+function rolEfectivo(){return _previewRol||_currentUser.rol;}
+function esSuper(){return rolEfectivo()==='superusuario';}
+function esRRHH(){return rolEfectivo()==='presupuesto_rrhh'||rolEfectivo()==='superusuario';}
 function esDocente(depto){return DEPTOS_DOCENTES.includes(depto);}
-
-// ¿El perfil efectivo puede ver/cargar este tipo de gasto, según el mantenedor de cuentas contables?
-function puedeVerTipo(tipo,depto){
-  const perm=_permisos[tipo];
-  if(!perm) return true;
-  const perfil=perfilEfectivo();
-  if(perfil==='superusuario') return true;
-  if(perm.deptos!=='todos' && depto && !perm.deptos.includes(depto)) return false;
-  return perm.perfiles.includes(perfil);
-}
-// Retro-compat: usado en filtros de ejecución/consolidado (solo evalúa perfil, no depto)
-function puedeVerTipoRRHH(tipo){return puedeVerTipo(tipo,null);}
-
+function puedeVerTipoRRHH(tipo){return GASTOS_DOCENTES[tipo]?.soloRRHH ? esRRHH() : true;}
 function puedeEditarDepto(depto){
-  if(_previewDepto) return false; // en modo preview siempre es solo lectura
-  if(_currentUser.rol==='superusuario') return true;
-  return _currentUser.departamento===depto;
+  const u=_currentUser;
+  if(u.rol==='superusuario') return true;
+  return u.departamento===depto;
 }
 
 // ═══════════════════════════════════════════════
 //  INIT
 // ═══════════════════════════════════════════════
-async function initApp(){
+function initApp(){
   document.getElementById('main-hdr').style.display='';
   document.getElementById('main-content').style.display='';
   const u=_currentUser;
@@ -701,103 +558,39 @@ async function initApp(){
     document.getElementById('preview-controls').style.display='flex';
     document.querySelectorAll('.super-tab').forEach(t=>t.style.display='');
     document.getElementById('col-selector').style.display='flex';
-    poblarPreviewSelect();
   }
 
-  _permisos=defaultPermisos();
-  await cargarPermisos();
-  await cargarFilas();
+  _filas=[..._mock];
   Object.assign(_reales,_realesMock);
 
   poblarAreasSelects();
   construirColToggles();
   poblarFiltroTipos();
-  if(u.rol==='superusuario') poblarCuentasSelectores();
   renderCarga();
   renderEjecucion();
   document.getElementById('anio-carga').textContent=_anio;
   document.getElementById('anio-exec').textContent=_anio;
 }
 
-// Carga las líneas de presupuesto desde Supabase (tabla presupuesto_lineas).
-// Si la tabla no existe aún, usa los datos de ejemplo (_mock) como respaldo.
-async function cargarFilas(){
-  try{
-    const rows=await sbGet('presupuesto_lineas','?select=*&order=id.asc');
-    _filas=rows.map(r=>migrarFilaLegacy({
-      id:r.id,actividad:r.actividad,descripcion:r.descripcion,departamento:r.departamento,
-      tipo:r.tipo,subtipo:r.subtipo,cuenta:r.cuenta,grupoCuenta:r.grupo_cuenta,
-      moneda:r.moneda,monto:r.monto,anio:r.anio
-    }));
-    _usingDB=true;
-    if(_filas.length){_nextId=Math.max(..._filas.map(f=>f.id))+1;}
-  }catch(e){
-    _usingDB=false;
-    _filas=_mock.map(f=>migrarFilaLegacy({...f}));
-  }
-}
-
-// Carga la matriz de permisos desde Supabase (tabla presupuesto_permisos).
-// Si no existe, se usa la matriz por defecto generada por defaultPermisos().
-async function cargarPermisos(){
-  try{
-    const rows=await sbGet('presupuesto_permisos','?select=*');
-    rows.forEach(r=>{
-      _permisos[r.tipo]={
-        deptos:r.deptos==='todos'?'todos':(r.deptos||[]),
-        perfiles:r.perfiles||[]
-      };
-    });
-  }catch(e){ /* tabla aún no existe: se mantiene la matriz por defecto */ }
-}
-
-async function guardarPermisoTipo(tipo){
-  const perm=_permisos[tipo];
-  try{
-    // upsert manual: intenta patch, si no existe hace post
-    const existing=await sbGet('presupuesto_permisos',`?tipo=eq.${tipo}&select=tipo`);
-    if(existing&&existing.length){
-      await sbPatch('presupuesto_permisos',`?tipo=eq.${tipo}`,{deptos:perm.deptos,perfiles:perm.perfiles});
-    } else {
-      await sbPost('presupuesto_permisos',{tipo,deptos:perm.deptos,perfiles:perm.perfiles});
-    }
-  }catch(e){ /* tabla presupuesto_permisos no disponible: cambios solo en memoria de esta sesión */ }
-}
-
 function poblarAreasSelects(){
   const u=_currentUser;
-  const esSup=esSuper()&&!_previewDepto;
-  const areas=esSup?DEPTOS_TODOS:[deptoActivo()].filter(Boolean);
+  const rol=rolEfectivo();
+  const esSup=rol==='superusuario';
+  const areas=esSup?DEPTOS_TODOS:(u.departamento?[u.departamento]:[]);
 
   ['select-area-carga','select-area-exec'].forEach(id=>{
     const sel=document.getElementById(id);
     sel.innerHTML='';
     if(esSup) sel.innerHTML='<option value="">Todos los departamentos</option>';
     areas.forEach(a=>{const o=document.createElement('option');o.value=a;o.textContent=a;sel.appendChild(o);});
-    // Por defecto, mostrar el área de la cual el usuario es responsable
-    if(deptoActivo()) sel.value=deptoActivo();
+    if(u.departamento) sel.value=u.departamento;
   });
 
   // Modal departamento
   const fsel=document.getElementById('f-departamento');
   fsel.innerHTML='<option value="">Seleccionar...</option>';
-  const areasModal=esSuper()?DEPTOS_TODOS:[u.departamento].filter(Boolean);
-  areasModal.forEach(a=>{const o=document.createElement('option');o.value=a;o.textContent=a;fsel.appendChild(o);});
+  areas.forEach(a=>{const o=document.createElement('option');o.value=a;o.textContent=a;fsel.appendChild(o);});
   if(u.departamento) fsel.value=u.departamento;
-}
-
-function poblarPreviewSelect(){
-  const sel=document.getElementById('preview-rol-select');
-  sel.innerHTML='<option value="">👁 Vista previa por jefatura...</option>';
-  const grpDoc=document.createElement('optgroup');grpDoc.label='Jefaturas Docentes';
-  const grpAdm=document.createElement('optgroup');grpAdm.label='Responsables / Áreas';
-  DEPARTAMENTOS.forEach(d=>{
-    const o=document.createElement('option');
-    o.value=d.nombre;
-    o.textContent=`${d.nombre} — ${d.jefatura}`;
-    (d.tipo==='docente'?grpDoc:grpAdm).appendChild(o);
-  });
-  sel.appendChild(grpDoc);sel.appendChild(grpAdm);
 }
 
 function construirColToggles(){
@@ -819,40 +612,41 @@ function toggleCol(id,visible){
 function poblarFiltroTipos(){
   const sel=document.getElementById('filter-tipo-carga');
   sel.innerHTML='<option value="">Todos los tipos</option>';
-  const tipos=new Set([...Object.keys(GASTOS_DOCENTES),...Object.keys(GASTOS_ADMIN)]);
+  const tipos=new Set([...Object.keys(GASTOS_DOCENTES),...Object.keys(GASTOS_GENERALES)]);
   tipos.forEach(t=>{
-    if(!puedeVerTipo(t,deptoActivo())) return;
-    const label=(GASTOS_DOCENTES[t]||GASTOS_ADMIN[t]).label;
+    const label=(GASTOS_DOCENTES[t]||GASTOS_GENERALES[t]).label;
     sel.innerHTML+=`<option value="${t}">${label}</option>`;
   });
 }
 
 // ═══════════════════════════════════════════════
-//  PREVIEW POR JEFATURA
+//  PREVIEW
 // ═══════════════════════════════════════════════
+const PREVIEW_LABELS={
+  'presupuesto_docente':'Jefe de Departamento Docente',
+  'presupuesto_rrhh':'RRHH',
+  'presupuesto':'Responsable Presupuesto (no docente)',
+};
 function activarPreview(){
   const sel=document.getElementById('preview-rol-select');
-  _previewDepto=sel.value||null;
-  if(_previewDepto){
-    const info=deptoInfo(_previewDepto);
+  _previewRol=sel.value||null;
+  if(_previewRol){
     document.getElementById('preview-banner').style.display='flex';
-    document.getElementById('preview-label').textContent=`${info.jefatura} (${_previewDepto})`;
+    document.getElementById('preview-label').textContent=PREVIEW_LABELS[_previewRol]||_previewRol;
     document.getElementById('btn-exit-preview').style.display='';
   } else {
     salirPreview();return;
   }
   poblarAreasSelects();
   renderCarga();
-  renderEjecucion();
 }
 function salirPreview(){
-  _previewDepto=null;
+  _previewRol=null;
   document.getElementById('preview-rol-select').value='';
   document.getElementById('preview-banner').style.display='none';
   document.getElementById('btn-exit-preview').style.display='none';
   poblarAreasSelects();
   renderCarga();
-  renderEjecucion();
 }
 
 // ═══════════════════════════════════════════════
@@ -864,7 +658,6 @@ function showTab(id,btn){
   document.getElementById('tab-'+id).classList.add('active');
   btn.classList.add('active');
   if(id==='consolidado') renderConsolidado();
-  if(id==='cuentas') renderCuentasSidebar();
 }
 function cambiarAnio(d){
   _anio+=d;
@@ -883,11 +676,9 @@ function getFilasCarga(){
     const matchAnio=f.anio===_anio;
     const matchArea=!area||f.departamento===area;
     const matchTipo=!tipo||f.tipo===tipo;
-    // Filtrar tipos según matriz de permisos (mantenedor de cuentas contables)
-    const matchPerm=puedeVerTipo(f.tipo,f.departamento);
-    // En modo preview por jefatura, solo se ve lo cargado en el departamento simulado
-    const matchPreview=!_previewDepto||f.departamento===_previewDepto;
-    return matchAnio&&matchArea&&matchTipo&&matchPerm&&matchPreview;
+    // Filtrar tipos RRHH si no tiene permiso
+    const matchPerm=puedeVerTipoRRHH(f.tipo);
+    return matchAnio&&matchArea&&matchTipo&&matchPerm;
   });
 }
 
@@ -895,17 +686,19 @@ function renderCarga(){
   const filas=getFilasCarga();
   const agrupar=document.getElementById('chk-grupos').checked;
   const area=document.getElementById('select-area-carga').value;
-  const puedeEditar=puedeEditarDepto(area);
-  const esSup=esSuper()&&!_previewDepto;
+  const puedeEditar=_currentUser.rol==='superusuario'?true:puedeEditarDepto(area);
+  const rol=rolEfectivo();
+  const esSup=rol==='superusuario';
 
   // Mostrar/ocultar botón agregar
-  document.getElementById('btn-agregar').style.display=(puedeEditar&&!_previewDepto)?'':'none';
+  document.getElementById('btn-agregar').style.display=(puedeEditar&&!_previewRol)||(_previewRol&&false)?'':'none';
+  if(!_previewRol&&puedeEditar) document.getElementById('btn-agregar').style.display='';
+  else if(_previewRol) document.getElementById('btn-agregar').style.display='none';
 
-  // Columnas visibles según rol efectivo. Para no-superusuarios (y en modo preview)
-  // se ocultan moneda, cuenta y grupo cuenta (no relevante para jefes/responsables).
+  // Columnas visibles según rol efectivo
   const colsRender=TODAS_COLUMNAS.filter(c=>{
-    if(!esSup&&c.soloSuper) return false;
-    if(esSup&&!_colsVisibles.has(c.id)) return false;
+    if(!esSup&&c.soloSuper) return false; // no superusuario no ve cols marcadas soloSuper
+    if(esSup&&!_colsVisibles.has(c.id)) return false; // superusuario respeta toggle
     return true;
   });
 
@@ -915,7 +708,7 @@ function renderCarga(){
 
   const tbody=document.getElementById('carga-tbody');
   if(!filas.length){
-    tbody.innerHTML=`<tr><td colspan="${colsRender.length}"><div class="no-data"><div class="icon">📋</div><p>Sin filas.${puedeEditar&&!_previewDepto?' Usa "+ Agregar fila".':''}</p></div></td></tr>`;
+    tbody.innerHTML=`<tr><td colspan="${colsRender.length}"><div class="no-data"><div class="icon">📋</div><p>Sin filas.${puedeEditar&&!_previewRol?' Usa "+ Agregar fila".':''}</p></div></td></tr>`;
     document.getElementById('carga-info').textContent='0 filas';
     document.getElementById('carga-total').textContent='';
     return;
@@ -926,13 +719,13 @@ function renderCarga(){
     const grupos={};
     filas.forEach(f=>{if(!grupos[f.tipo])grupos[f.tipo]=[];grupos[f.tipo].push(f);});
     Object.entries(grupos).forEach(([tipo,gf])=>{
-      const label=(GASTOS_DOCENTES[tipo]||GASTOS_ADMIN[tipo])?.label||tipo;
+      const label=(GASTOS_DOCENTES[tipo]||GASTOS_GENERALES[tipo])?.label||tipo;
       const sub=gf.filter(f=>f.moneda==='CLP').reduce((s,f)=>s+f.monto,0);
       html+=`<tr class="grupo-row"><td colspan="${colsRender.length}">📁 ${label} — ${fmtM(sub)}</td></tr>`;
-      html+=gf.map(f=>filaHtmlCarga(f,colsRender,puedeEditar&&!_previewDepto)).join('');
+      html+=gf.map(f=>filaHtmlCarga(f,colsRender,puedeEditar&&!_previewRol)).join('');
     });
   } else {
-    html=filas.map(f=>filaHtmlCarga(f,colsRender,puedeEditar&&!_previewDepto)).join('');
+    html=filas.map(f=>filaHtmlCarga(f,colsRender,puedeEditar&&!_previewRol)).join('');
   }
   tbody.innerHTML=html;
 
@@ -942,7 +735,7 @@ function renderCarga(){
 }
 
 function filaHtmlCarga(f,cols,puedeEditar){
-  const label=(GASTOS_DOCENTES[f.tipo]||GASTOS_ADMIN[f.tipo])?.label||f.tipo;
+  const label=(GASTOS_DOCENTES[f.tipo]||GASTOS_GENERALES[f.tipo])?.label||f.tipo;
   const cellMap={
     actividad:`<td><strong>${f.actividad}</strong></td>`,
     descripcion:`<td style="font-size:12px;color:var(--ink3)">${f.descripcion||'—'}</td>`,
@@ -962,20 +755,14 @@ function filaHtmlCarga(f,cols,puedeEditar){
 // ═══════════════════════════════════════════════
 function getFilasExec(){
   const area=document.getElementById('select-area-exec').value;
-  return _filas.filter(f=>{
-    const matchAnio=f.anio===_anio;
-    const matchArea=!area||f.departamento===area;
-    const matchPerm=puedeVerTipo(f.tipo,f.departamento);
-    const matchPreview=!_previewDepto||f.departamento===_previewDepto;
-    return matchAnio&&matchArea&&matchPerm&&matchPreview;
-  });
+  return _filas.filter(f=>f.anio===_anio&&(!area||f.departamento===area)&&puedeVerTipoRRHH(f.tipo));
 }
 function sumaReal(id){return[1,2,3,4,5,6,7,8,9,10,11,12].reduce((s,m)=>s+(_reales[`${id}_${m}`]||0),0);}
 
 function renderEjecucion(){
   const filas=getFilasExec();
   const area=document.getElementById('select-area-exec').value;
-  const puedeEditar=puedeEditarDepto(area);
+  const puedeEditar=_currentUser.rol==='superusuario'?true:puedeEditarDepto(area);
   const tbody=document.getElementById('exec-tbody');
   let tPres=0,tReal=0;
   if(!filas.length){
@@ -986,7 +773,7 @@ function renderEjecucion(){
   filas.forEach(f=>{if(!grupos[f.tipo])grupos[f.tipo]=[];grupos[f.tipo].push(f);});
   let html='';
   Object.entries(grupos).forEach(([tipo,gf])=>{
-    const label=(GASTOS_DOCENTES[tipo]||GASTOS_ADMIN[tipo])?.label||tipo;
+    const label=(GASTOS_DOCENTES[tipo]||GASTOS_GENERALES[tipo])?.label||tipo;
     const gP=gf.reduce((s,f)=>s+f.monto,0);
     const gR=gf.reduce((s,f)=>s+sumaReal(f.id),0);
     html+=`<tr class="grupo-hdr" style="background:var(--bg3)"><td colspan="18" style="padding:7px 12px;font-weight:700;font-size:11px;color:var(--ink2)">📁 ${label} — Pres: ${fmtM(gP)} · Real: ${fmtM(gR)}</td></tr>`;
@@ -1078,16 +865,15 @@ function poblarTiposModal(){
   const sel=document.getElementById('f-tipo');
   sel.innerHTML='<option value="">Seleccionar...</option>';
   const esDoc=esDocente(depto);
-  const pool=esDoc?GASTOS_DOCENTES:GASTOS_ADMIN;
-  let huboOcultos=false;
+  const pool=esDoc?GASTOS_DOCENTES:GASTOS_GENERALES;
   Object.entries(pool).forEach(([key,val])=>{
-    if(!puedeVerTipo(key,depto)){huboOcultos=true;return;} // ocultar según matriz de permisos
+    if(val.soloRRHH&&!esRRHH()) return; // ocultar si no tiene permiso
     sel.innerHTML+=`<option value="${key}">${val.label}</option>`;
   });
   // Hint
   const hint=document.getElementById('modal-hint');
-  if(huboOcultos&&!esSuper()){
-    hint.textContent='ℹ Algunos tipos de gasto (ej. Remuneraciones u Otros Gastos del Personal) están restringidos para tu perfil. Solo RRHH o Superusuario pueden cargarlos.';
+  if(esDoc&&!esRRHH()){
+    hint.textContent='ℹ Los tipos "Otros Gastos del Personal Docente" y "Remuneración Docente" solo pueden ser cargados por RRHH o Superusuario.';
     hint.style.display='';
   } else {
     hint.style.display='none';
@@ -1098,7 +884,7 @@ function onTipoChange(){
   const tipo=document.getElementById('f-tipo').value;
   const depto=document.getElementById('f-departamento').value;
   const esDoc=esDocente(depto);
-  const pool=esDoc?GASTOS_DOCENTES:GASTOS_ADMIN;
+  const pool=esDoc?GASTOS_DOCENTES:GASTOS_GENERALES;
   const entry=pool[tipo];
   const sel=document.getElementById('f-subtipo');
   sel.innerHTML='<option value="">Seleccionar subtipo...</option>';
@@ -1165,209 +951,29 @@ async function guardarFila(){
   const st=document.getElementById('fila-status');
   if(!actividad||!depto||!tipo||!subtipo||monto<=0){st.textContent='Completa todos los campos obligatorios.';st.className='status-msg err';return;}
   const fila={actividad,descripcion:document.getElementById('f-descripcion').value,departamento:depto,tipo,subtipo,cuenta,grupoCuenta,moneda,monto,anio:_anio};
-
-  try{
-    if(_editingId){
-      if(_usingDB){
-        await sbPatch('presupuesto_lineas',`?id=eq.${_editingId}`,{
-          actividad:fila.actividad,descripcion:fila.descripcion,departamento:fila.departamento,
-          tipo:fila.tipo,subtipo:fila.subtipo,cuenta:fila.cuenta,grupo_cuenta:fila.grupoCuenta,
-          moneda:fila.moneda,monto:fila.monto,anio:fila.anio
-        });
-      }
-      const idx=_filas.findIndex(x=>x.id===_editingId);
-      if(idx>=0)_filas[idx]={..._filas[idx],...fila};
-      const idxM=_mock.findIndex(x=>x.id===_editingId);
-      if(idxM>=0)_mock[idxM]={..._mock[idxM],...fila};
-    } else {
-      if(_usingDB){
-        const inserted=await sbPost('presupuesto_lineas',{
-          actividad:fila.actividad,descripcion:fila.descripcion,departamento:fila.departamento,
-          tipo:fila.tipo,subtipo:fila.subtipo,cuenta:fila.cuenta,grupo_cuenta:fila.grupoCuenta,
-          moneda:fila.moneda,monto:fila.monto,anio:fila.anio
-        });
-        const newRow=inserted[0];
-        _filas.push({...fila,id:newRow.id});
-      } else {
-        const newId=_nextId++;
-        _filas.push({id:newId,...fila});
-        _mock.push({id:newId,...fila});
-      }
-    }
-    st.textContent='✓ Guardado.';st.className='status-msg ok';
-    renderCarga();renderEjecucion();
-    setTimeout(()=>closeModal('modal-fila'),800);
-  }catch(e){
-    st.textContent='Error al guardar: '+e.message;st.className='status-msg err';
-  }
-}
-
-// ═══════════════════════════════════════════════
-//  ELIMINAR FILA (con confirmación modal)
-// ═══════════════════════════════════════════════
-function eliminarFila(id){
-  const f=_filas.find(x=>x.id===id);if(!f)return;
-  _deleteEditing.id=id;
-  document.getElementById('confirm-delete-nombre').textContent=`"${f.actividad}"`;
-  document.getElementById('delete-status').className='status-msg';
-  document.getElementById('btn-confirm-delete').disabled=false;
-  document.getElementById('btn-confirm-delete').textContent='Sí, eliminar';
-  openModal('modal-confirm-delete');
-}
-
-async function confirmarEliminarFila(){
-  const id=_deleteEditing.id;if(id==null)return;
-  const st=document.getElementById('delete-status');
-  const btn=document.getElementById('btn-confirm-delete');
-  btn.disabled=true;btn.textContent='Eliminando...';
-  try{
-    if(_usingDB){
-      await sbDelete('presupuesto_lineas',`?id=eq.${id}`);
-    }
-    const idx=_filas.findIndex(f=>f.id===id);
-    if(idx>=0)_filas.splice(idx,1);
-    const idxM=_mock.findIndex(f=>f.id===id);
-    if(idxM>=0)_mock.splice(idxM,1);
-    renderCarga();renderEjecucion();
-    closeModal('modal-confirm-delete');
-  }catch(e){
-    st.textContent='Error al eliminar: '+e.message;st.className='status-msg err';
-    btn.disabled=false;btn.textContent='Sí, eliminar';
-  }
-}
-
-// ═══════════════════════════════════════════════
-//  CUENTAS CONTABLES (Mantenedor de tipos/subtipos y permisos)
-// ═══════════════════════════════════════════════
-let _ccGrupoActivo='docente';
-let _ccTipoActivo=null;
-
-function poblarCuentasSelectores(){
-  const grupoSel=document.getElementById('cc-grupo-select');
-  grupoSel.value=_ccGrupoActivo;
-}
-
-function poolCuentas(){return _ccGrupoActivo==='docente'?GASTOS_DOCENTES:GASTOS_ADMIN;}
-
-function renderCuentasSidebar(){
-  _ccGrupoActivo=document.getElementById('cc-grupo-select').value;
-  const pool=poolCuentas();
-  const side=document.getElementById('cc-side');
-  const keys=Object.keys(pool);
-  if(!_ccTipoActivo||!pool[_ccTipoActivo]) _ccTipoActivo=keys[0]||null;
-
-  let html=`<div class="cc-grupo-hdr">${_ccGrupoActivo==='docente'?'Tipos de Gasto Docente':'Tipos de Gasto Administración'}</div>`;
-  keys.forEach(k=>{
-    const v=pool[k];
-    const active=k===_ccTipoActivo?' active':'';
-    const lockIcon=v.soloRRHH?' 🔒':'';
-    html+=`<div class="cc-tipo-item${active}" onclick="seleccionarTipoCuenta('${k}')">
-      <span>${v.label}${lockIcon}</span>
-      <span class="cnt">${v.subtipos.length}</span>
-    </div>`;
-  });
-  side.innerHTML=html;
-
-  // Selector de departamento (depende del grupo)
-  const deptoSel=document.getElementById('cc-depto-select');
-  const deptos=DEPARTAMENTOS.filter(d=>_ccGrupoActivo==='docente'?d.tipo==='docente':true);
-  deptoSel.innerHTML='<option value="">— Aplicar a todos los departamentos del grupo —</option>'+
-    deptos.map(d=>`<option value="${d.nombre}">${d.nombre} (${d.jefatura})</option>`).join('');
-
-  renderCuentasMain();
-}
-
-function seleccionarTipoCuenta(key){
-  _ccTipoActivo=key;
-  renderCuentasSidebar();
-}
-
-const PERFIL_LABELS={
-  'jefe_docente':'Jefe Depto. Docente',
-  'jefe_admin':'Responsable de Área',
-  'rrhh':'RRHH',
-  'superusuario':'Superusuario',
-};
-
-function renderCuentasMain(){
-  const main=document.getElementById('cc-main');
-  const pool=poolCuentas();
-  const tipo=_ccTipoActivo;
-  if(!tipo||!pool[tipo]){main.innerHTML='<div class="cc-empty">Selecciona un tipo de gasto.</div>';return;}
-  const entry=pool[tipo];
-  const perm=_permisos[tipo]||{deptos:'todos',perfiles:[]};
-  const deptoSel=document.getElementById('cc-depto-select').value;
-
-  let html=`<div class="cc-main-hdr">
-    <h3>${entry.label}</h3>
-    <span class="badge ${entry.soloRRHH?'badge-amber':'badge-blue'}">${entry.soloRRHH?'Restringido a RRHH/Superusuario':'Acceso general'}</span>
-  </div>`;
-
-  html+=`<div class="info-hint" style="display:block">
-    <strong>Perfiles habilitados para este tipo de gasto</strong> (aplica a todos sus subtipos):
-    <div class="cc-perm-grid" style="margin-top:8px">`;
-  ['jefe_docente','jefe_admin','rrhh','superusuario'].forEach(perfil=>{
-    const checked=perm.perfiles.includes(perfil)?'checked':'';
-    const disabled=perfil==='superusuario'?'disabled':''; // superusuario siempre tiene acceso
-    html+=`<label class="cc-perm-chip"><input type="checkbox" ${checked} ${disabled} onchange="togglePermisoTipo('${tipo}','${perfil}',this.checked)"> ${PERFIL_LABELS[perfil]}</label>`;
-  });
-  html+=`</div></div>`;
-
-  if(deptoSel){
-    const aplicaTodos=perm.deptos==='todos';
-    const incluido=aplicaTodos||(Array.isArray(perm.deptos)&&perm.deptos.includes(deptoSel));
-    html+=`<div class="info-hint" style="display:block;margin-top:10px;background:var(--green-lt);border-color:var(--green-bd)">
-      <label class="cc-perm-chip" style="background:transparent;border:none;padding:0">
-        <input type="checkbox" ${incluido?'checked':''} onchange="toggleDeptoTipo('${tipo}','${deptoSel}',this.checked)">
-        Habilitar este tipo de gasto para <strong>${deptoSel}</strong>
-      </label>
-    </div>`;
-  }
-
-  html+=`<h4 style="margin:18px 0 8px;font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--ink3)">Subtipos / Cuentas Contables</h4>`;
-  entry.subtipos.forEach((s,i)=>{
-    html+=`<div class="cc-sub-row">
-      <div class="cc-sub-info">
-        <span class="cc-sub-name">${s.nombre}</span>
-        <span class="cc-sub-code">${s.codigo||'sin código asociado'}</span>
-      </div>
-      <span class="badge badge-blue" style="font-size:10px">${entry.label}</span>
-    </div>`;
-  });
-
-  main.innerHTML=html;
-}
-
-async function togglePermisoTipo(tipo,perfil,checked){
-  const perm=_permisos[tipo]||{deptos:'todos',perfiles:[]};
-  const set=new Set(perm.perfiles);
-  if(checked) set.add(perfil); else set.delete(perfil);
-  perm.perfiles=[...set];
-  _permisos[tipo]=perm;
-  await guardarPermisoTipo(tipo);
-  renderCuentasMain();
-  renderCarga();renderEjecucion();
-}
-
-async function toggleDeptoTipo(tipo,depto,checked){
-  const perm=_permisos[tipo]||{deptos:'todos',perfiles:[]};
-  if(perm.deptos==='todos'){
-    if(checked) return; // ya aplica a todos, no hay nada que hacer
-    // pasar de 'todos' a lista explícita sin este depto
-    perm.deptos=DEPTOS_TODOS.filter(d=>d!==depto);
+  if(_editingId){
+    const idx=_mock.findIndex(x=>x.id===_editingId);
+    if(idx>=0)_mock[idx]={..._mock[idx],...fila};
   } else {
-    const set=new Set(perm.deptos);
-    if(checked) set.add(depto); else set.delete(depto);
-    perm.deptos=[...set];
-    if(perm.deptos.length===DEPTOS_TODOS.length) perm.deptos='todos';
+    _mock.push({id:_nextId++,...fila});
   }
-  _permisos[tipo]=perm;
-  await guardarPermisoTipo(tipo);
-  renderCuentasMain();
+  _filas=[..._mock];
+  st.textContent='✓ Guardado.';st.className='status-msg ok';
+  renderCarga();renderEjecucion();
+  setTimeout(()=>closeModal('modal-fila'),800);
+}
+
+function eliminarFila(id){
+  if(!confirm('¿Eliminar esta fila?'))return;
+  const idx=_mock.findIndex(f=>f.id===id);
+  if(idx>=0)_mock.splice(idx,1);
+  _filas=[..._mock];
   renderCarga();renderEjecucion();
 }
 
-
+// ═══════════════════════════════════════════════
+//  EXPORTS
+// ═══════════════════════════════════════════════
 function exportarExcel(){
   const filas=getFilasCarga();
   if(!filas.length){alert('Sin datos.');return;}

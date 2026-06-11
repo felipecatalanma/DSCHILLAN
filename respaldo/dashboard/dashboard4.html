@@ -233,8 +233,6 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--ink);font
       <select id="u-rol" onchange="onRolChange()">
         <option value="operador">Operador (solo lectura general)</option>
         <option value="presupuesto">Responsable de Presupuesto</option>
-        <option value="presupuesto_docente">Jefe de Departamento Docente (Presupuesto)</option>
-        <option value="presupuesto_rrhh">RRHH (Presupuesto)</option>
         <option value="recaudaciones">Responsable de Recaudaciones</option>
         <option value="superusuario">Superusuario (acceso total)</option>
       </select>
@@ -244,23 +242,17 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--ink);font
       <select id="u-departamento">
         <option value="">Sin departamento</option>
         <option value="Dirección">Dirección</option>
-        <option value="Subdirección Académica">Subdirección Académica</option>
         <option value="Administración">Administración</option>
         <option value="Alemán">Alemán</option>
-        <option value="Inglés">Inglés</option>
         <option value="Matemáticas">Matemáticas</option>
         <option value="Lenguaje">Lenguaje</option>
         <option value="Ciencias">Ciencias</option>
-        <option value="Historia y Ciencias Sociales">Historia y Ciencias Sociales</option>
-        <option value="Arte y Música">Arte y Música</option>
+        <option value="Historia">Historia</option>
+        <option value="Arte">Arte</option>
         <option value="Educación Física">Educación Física</option>
-        <option value="ACLE">ACLE</option>
-        <option value="Párvulos">Párvulos</option>
-        <option value="IB">IB</option>
-        <option value="Informática">Informática</option>
+        <option value="Tecnología">Tecnología</option>
         <option value="Biblioteca">Biblioteca</option>
         <option value="Mantenimiento">Mantenimiento</option>
-        <option value="RRHH">RRHH</option>
       </select>
     </div>
     <div class="modal-actions">
@@ -380,8 +372,6 @@ async function loadProfile(uid,email){
   }catch(e){
     _currentUser={nombre:email.split('@')[0],email,rol:'operador',departamento:''};
   }
-  // Estandarizar nombre de departamento: "Tecnología" -> "Informática"
-  if(_currentUser.departamento==='Tecnología') _currentUser.departamento='Informática';
 }
 
 function startApp(){
@@ -501,13 +491,13 @@ function renderUsersTable(){
     tbody.innerHTML=`<tr><td colspan="6" style="text-align:center;color:var(--ink3);padding:20px">No hay usuarios registrados</td></tr>`;
     return;
   }
-  const rolColors={superusuario:'rol-super',operador:'rol-operador',presupuesto:'rol-presupuesto',presupuesto_docente:'rol-presupuesto',presupuesto_rrhh:'rol-presupuesto',recaudaciones:'rol-operador'};
+  const rolColors={superusuario:'rol-super',operador:'rol-operador',presupuesto:'rol-presupuesto',recaudaciones:'rol-operador'};
   tbody.innerHTML=_users.map(u=>`
     <tr>
       <td><strong>${u.nombre||'—'}</strong></td>
       <td style="font-size:12px;color:var(--ink3)">${u.email}</td>
       <td><span class="rol-pill ${rolColors[u.rol]||'rol-operador'}">${u.rol||'—'}</span></td>
-      <td>${(u.departamento==='Tecnología'?'Informática':u.departamento)||'—'}</td>
+      <td>${u.departamento||'—'}</td>
       <td style="font-size:12px;color:var(--ink3)">${(u.modulos||[]).join(', ')||'—'}</td>
       <td>
         <div style="display:flex;gap:6px">
@@ -539,7 +529,7 @@ function openEditUsuario(id){
   document.getElementById('u-nombre').value=u.nombre||'';
   document.getElementById('u-email').value=u.email;
   document.getElementById('u-rol').value=u.rol||'operador';
-  document.getElementById('u-departamento').value=(u.departamento==='Tecnología'?'Informática':u.departamento)||'';
+  document.getElementById('u-departamento').value=u.departamento||'';
   document.getElementById('u-pass-field').style.display='none';
   document.getElementById('modal-status').className='status-msg';
   openModal('modal-usuario');
