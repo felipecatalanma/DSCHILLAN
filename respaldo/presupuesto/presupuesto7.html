@@ -747,12 +747,6 @@ function migrarFilaLegacy(f){
   };
   if(MIGRACION[f.tipo]) f.tipo=MIGRACION[f.tipo];
   if(f.departamento==='Tecnología') f.departamento='Informática';
-  // Normalizar tipos: año como número y campos de texto sin espacios extra
-  // (filas cargadas manualmente por SQL pueden traer "anio" como texto o con espacios)
-  if(typeof f.anio==='string') f.anio=parseInt(f.anio,10);
-  ['departamento','tipo','subtipo','cuenta','grupoCuenta','moneda','actividad'].forEach(campo=>{
-    if(typeof f[campo]==='string') f[campo]=f[campo].trim();
-  });
   // Campos nuevos: cantidad y meses de ejecución (filas antiguas no los traían)
   if(!f.cantidad||f.cantidad<1) f.cantidad=1;
   if(!Array.isArray(f.meses)||f.meses.length!==12) f.meses=Array(12).fill(false);
@@ -857,10 +851,6 @@ function tipoUsuarioEfectivo(){
 function puedeVerSubtipo(tipo,subNombre,rolArea){
   const tu=tipoUsuarioEfectivo();
   if(tu==='superusuario') return true;
-  // Si el tipo de gasto no existe en el mantenedor de Cuentas Contables (p.ej. una fila
-  // cargada manualmente por SQL con un "tipo" que no coincide con ninguna clave conocida),
-  // no aplicar restricciones: no hay configuración de permisos que tenga sentido para él.
-  if(!_gastosState.docente[tipo]&&!_gastosState.admin[tipo]) return true;
   const key=ccKey(tipo,subNombre);
   const perm=_permisosSub[key]||getPermisoSub(tipo,subNombre);
   if(!perm.tiposUsuario.includes(tu)) return false;
