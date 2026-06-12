@@ -184,7 +184,7 @@ td.col-mes.mes-on{background:var(--green-lt)}
 #carga-table tfoot .col-acciones-sticky{background:var(--bg2)}
 #carga-table .grupo-row .col-acciones-sticky{background:var(--bg3)}
 #carga-table .fila-edit-row .col-acciones-sticky{background:var(--blue-lt)}
-.locked-banner{background:var(--amber-lt);border:0.5px solid var(--amber-bd);color:var(--amber);border-radius:9px;padding:11px 14px;font-size:12.5px;margin-bottom:14px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.confirm-box{width:420px;text-align:center}
 .confirm-icon{width:52px;height:52px;border-radius:50%;background:var(--red-lt);border:0.5px solid var(--red-bd);display:flex;align-items:center;justify-content:center;font-size:24px;margin:0 auto 14px}
 .confirm-title{font-family:'Playfair Display',serif;font-size:18px;font-weight:700;margin-bottom:8px}
 .confirm-text{font-size:13px;color:var(--ink2);line-height:1.6;margin-bottom:6px}
@@ -226,7 +226,6 @@ td.col-mes.mes-on{background:var(--green-lt)}
 .cc-subtipo-nombre{font-weight:500;color:var(--ink)}
 .cc-subtipo-code{font-size:10.5px;font-family:'DM Mono',monospace;color:var(--ink3)}
 .cc-subtipo-edit-input{font-size:12.5px;padding:3px 6px;border:0.5px solid var(--blue-bd);border-radius:5px;background:var(--card);font-family:'DM Sans',sans-serif;width:100%;margin-bottom:2px}
-.cc-subtipo-edit-code{font-size:11px;padding:3px 6px;border:0.5px solid var(--blue-bd);border-radius:5px;background:var(--card);font-family:'DM Mono',monospace;width:140px}
 
 /* Panel 3: Permisos */
 .cc-perm-panel{padding:14px 16px;position:sticky;top:0}
@@ -272,9 +271,7 @@ td.col-mes.mes-on{background:var(--green-lt)}
 
 <div id="main-hdr" style="display:none">
   <div class="hdr">
-    <h1>Presupuesto <span>CAC</span>
-      <button class="btn-hdr" id="btn-config" onclick="openConfigPanel()" title="Configuración" style="display:none;margin-left:10px;font-size:15px;padding:3px 8px">⚙</button>
-    </h1>
+    <h1>Presupuesto <span>CAC</span></h1>
     <div class="hdr-meta">
       <!-- Solo superusuarios -->
       <div id="preview-controls" style="display:none;align-items:center;gap:8px">
@@ -326,14 +323,8 @@ td.col-mes.mes-on{background:var(--green-lt)}
       <button class="btn btn-sm btn-secondary" onclick="salirPreview()">✕ Salir</button>
     </div>
 
-    <!-- Bloqueo por rango de fechas de carga -->
-    <div class="locked-banner" id="carga-locked-banner" style="display:none">
-      🔒 La carga de presupuesto está fuera del período habilitado por el superusuario.
-      <span id="carga-locked-rango"></span>
-    </div>
-
     <!-- Filtros -->
-    <div class="filters-row" id="carga-filters-row">
+    <div class="filters-row">
       <span class="filter-label">Área:</span>
       <select class="fsel" id="select-area-carga" onchange="poblarFiltroTipos();renderCarga()"></select>
       <span class="filter-label" style="margin-left:8px">Tipo:</span>
@@ -350,7 +341,8 @@ td.col-mes.mes-on{background:var(--green-lt)}
       </div>
     </div>
 
-    <div class="table-wrap" id="carga-table-wrap">
+    <div class="table-wrap">
+      <table id="carga-table">
         <thead id="carga-thead"></thead>
         <tbody id="carga-tbody"></tbody>
         <tfoot id="carga-tfoot"></tfoot>
@@ -492,42 +484,7 @@ td.col-mes.mes-on{background:var(--green-lt)}
   </div>
 </div>
 
-<!-- MODAL CONFIGURACIÓN DEL MÓDULO -->
-<div class="modal-overlay" id="modal-config">
-  <div class="modal-box" style="width:480px">
-    <div class="modal-title">⚙ Configuración del módulo</div>
-    <div class="modal-sub">Parámetros generales de Presupuesto, visibles solo para superusuarios.</div>
-    <div class="status-msg" id="config-status"></div>
-    <div class="form-grid">
-      <div class="form-group full">
-        <label>Año activo del módulo <span class="req">*</span></label>
-        <select id="cfg-anio-activo"></select>
-        <div style="font-size:11px;color:var(--ink3);margin-top:4px">
-          Define el año presupuestario que verán por defecto todos los usuarios al entrar al módulo.
-        </div>
-      </div>
-      <div class="form-group full" style="border-top:0.5px solid var(--border);padding-top:14px;margin-top:4px">
-        <label>Rango habilitado para Carga de Presupuesto</label>
-        <div style="font-size:11px;color:var(--ink3);margin-bottom:8px">
-          Fuera de este rango de fechas, los responsables de área (no superusuarios) verán la pestaña
-          "Carga de Presupuesto" bloqueada. Déjalo vacío para no aplicar restricción.
-        </div>
-      </div>
-      <div class="form-group">
-        <label>Desde</label>
-        <input type="date" id="cfg-carga-inicio">
-      </div>
-      <div class="form-group">
-        <label>Hasta</label>
-        <input type="date" id="cfg-carga-fin">
-      </div>
-    </div>
-    <div class="modal-actions">
-      <button class="btn btn-secondary" onclick="closeModal('modal-config')">Cancelar</button>
-      <button class="btn btn-primary" onclick="guardarConfigModulo()">Guardar</button>
-    </div>
-  </div>
-</div>
+<!-- MODAL NUEVA CUENTA CONTABLE -->
 <div class="modal-overlay" id="modal-cuenta-nueva">
   <div class="modal-box" style="width:460px">
     <div class="modal-title">Agregar cuenta contable</div>
@@ -664,8 +621,6 @@ const TODAS_COLUMNAS=[
 //  STATE
 // ═══════════════════════════════════════════════
 let _anio=new Date().getFullYear();
-// Configuración global del módulo (tabla `configuracion`, compartida entre todos los usuarios)
-let _config={anioActivo:null,cargaInicio:'',cargaFin:''};
 let _filas=[];
 let _reales={};
 let _realEditing={filaId:null,mes:null};
@@ -879,12 +834,8 @@ async function initApp(){
     document.getElementById('preview-controls').style.display='flex';
     document.querySelectorAll('.super-tab').forEach(t=>t.style.display='');
     document.getElementById('col-selector').style.display='flex';
-    document.getElementById('btn-config').style.display='';
     poblarPreviewSelect();
   }
-
-  await cargarConfigModulo();
-  if(_config.anioActivo) _anio=_config.anioActivo;
 
   _permisos=defaultPermisos();
   await cargarPermisos();
@@ -946,90 +897,6 @@ async function cargarPermisosSub(){
       };
     });
   }catch(e){ /* tabla aún no existe: se generan permisos por defecto al vuelo */ }
-}
-
-// ═══════════════════════════════════════════════
-//  CONFIGURACIÓN GLOBAL DEL MÓDULO (tabla `configuracion`, clave/valor)
-// ═══════════════════════════════════════════════
-// Claves usadas: presupuesto_anio_activo, presupuesto_carga_inicio, presupuesto_carga_fin
-async function cargarConfigModulo(){
-  try{
-    const rows=await sbGet('configuracion','?clave=in.(presupuesto_anio_activo,presupuesto_carga_inicio,presupuesto_carga_fin)');
-    const map={};(rows||[]).forEach(r=>{map[r.clave]=r.valor;});
-    if(map.presupuesto_anio_activo) _config.anioActivo=parseInt(map.presupuesto_anio_activo)||null;
-    if(map.presupuesto_carga_inicio) _config.cargaInicio=map.presupuesto_carga_inicio;
-    if(map.presupuesto_carga_fin) _config.cargaFin=map.presupuesto_carga_fin;
-  }catch(e){ /* tabla configuracion aún no existe o no accesible: se usan valores por defecto */ }
-}
-
-async function guardarClaveConfig(clave,valor){
-  try{
-    const existing=await sbGet('configuracion',`?clave=eq.${clave}&select=clave`);
-    if(existing&&existing.length){
-      await sbPatch('configuracion',`?clave=eq.${clave}`,{valor:String(valor)});
-    } else {
-      await sbPost('configuracion',{clave,valor:String(valor)});
-    }
-  }catch(e){ /* tabla configuracion no disponible: cambios solo en memoria de esta sesión */ }
-}
-
-// ¿La Carga de Presupuesto está bloqueada hoy para los responsables de área (no superusuarios)?
-// Solo aplica si el superusuario definió un rango (cargaInicio/cargaFin); si no hay rango, nunca bloquea.
-function cargaBloqueadaPorFecha(){
-  if(esSuper()) return false; // los superusuarios nunca quedan bloqueados
-  if(!_config.cargaInicio||!_config.cargaFin) return false;
-  const hoy=new Date();hoy.setHours(0,0,0,0);
-  const ini=new Date(_config.cargaInicio+'T00:00:00');
-  const fin=new Date(_config.cargaFin+'T00:00:00');
-  return hoy<ini||hoy>fin;
-}
-
-function openConfigPanel(){
-  document.getElementById('config-status').className='status-msg';
-  // Poblar selector de año activo (rango: año actual -1 .. +3)
-  const sel=document.getElementById('cfg-anio-activo');
-  const base=new Date().getFullYear();
-  const actual=_config.anioActivo||_anio||base;
-  sel.innerHTML='';
-  for(let y=base-1;y<=base+3;y++){
-    sel.innerHTML+=`<option value="${y}"${y===actual?' selected':''}>${y}</option>`;
-  }
-  // Si el año activo configurado está fuera del rango por defecto, agregarlo igual
-  if(actual<base-1||actual>base+3){
-    sel.innerHTML+=`<option value="${actual}" selected>${actual}</option>`;
-  }
-  document.getElementById('cfg-carga-inicio').value=_config.cargaInicio||'';
-  document.getElementById('cfg-carga-fin').value=_config.cargaFin||'';
-  openModal('modal-config');
-}
-function closeConfigPanel(){closeModal('modal-config');}
-
-async function guardarConfigModulo(){
-  const st=document.getElementById('config-status');
-  const anio=parseInt(document.getElementById('cfg-anio-activo').value);
-  const inicio=document.getElementById('cfg-carga-inicio').value;
-  const fin=document.getElementById('cfg-carga-fin').value;
-  if(inicio&&fin&&inicio>fin){
-    st.textContent='La fecha "Desde" no puede ser posterior a "Hasta".';st.className='status-msg err';return;
-  }
-  st.textContent='Guardando...';st.className='status-msg ok';
-  try{
-    await guardarClaveConfig('presupuesto_anio_activo',anio);
-    await guardarClaveConfig('presupuesto_carga_inicio',inicio||'');
-    await guardarClaveConfig('presupuesto_carga_fin',fin||'');
-    _config.anioActivo=anio;
-    _config.cargaInicio=inicio;
-    _config.cargaFin=fin;
-    // Aplicar el nuevo año activo a la vista actual
-    _anio=anio;
-    document.getElementById('anio-carga').textContent=_anio;
-    document.getElementById('anio-exec').textContent=_anio;
-    st.textContent='✓ Configuración guardada para todo el módulo.';st.className='status-msg ok';
-    renderCarga();renderEjecucion();
-    setTimeout(()=>closeConfigPanel(),1000);
-  }catch(e){
-    st.textContent='Error al guardar: '+e.message;st.className='status-msg err';
-  }
 }
 
 async function guardarPermisoTipo(tipo){
@@ -1168,21 +1035,8 @@ function renderCarga(){
   const filas=getFilasCarga();
   const agrupar=document.getElementById('chk-grupos').checked;
   const area=document.getElementById('select-area-carga').value;
-  const bloqueado=cargaBloqueadaPorFecha();
-  const puedeEditar=puedeEditarDepto(area)&&!bloqueado;
+  const puedeEditar=puedeEditarDepto(area);
   const esSup=esSuper()&&!_previewDepto;
-
-  // Banner de bloqueo por rango de fechas (solo afecta a no-superusuarios)
-  const banner=document.getElementById('carga-locked-banner');
-  if(bloqueado){
-    banner.style.display='flex';
-    const fmtFecha=s=>{const[y,m,d]=s.split('-');return `${d}-${m}-${y}`;};
-    document.getElementById('carga-locked-rango').textContent=
-      `Periodo habilitado: ${fmtFecha(_config.cargaInicio)} al ${fmtFecha(_config.cargaFin)}.`;
-    if(_filaEnEdicion!==null){_filaEnEdicion=null;_filaDraft=null;}
-  } else {
-    banner.style.display='none';
-  }
 
   // Columnas visibles según rol efectivo. Para no-superusuarios (y en modo preview)
   // se ocultan moneda, cuenta y grupo cuenta (no relevante para jefes/responsables).
@@ -1573,7 +1427,8 @@ function opcionesSubtipoDraft(){
   if(entry){
     entry.subtipos.forEach(s=>{
       if(!puedeVerSubtipo(_filaDraft.tipo,s.nombre,depto)) return;
-      html+=`<option value="${s.nombre}"${_filaDraft.subtipo===s.nombre?' selected':''}>${s.nombre}</option>`;
+      const prefijo=(esSuper()&&s.codigo)?s.codigo+' — ':'';
+      html+=`<option value="${s.nombre}"${_filaDraft.subtipo===s.nombre?' selected':''}>${prefijo}${s.nombre}</option>`;
     });
   }
   return html;
@@ -1763,8 +1618,8 @@ function renderCuentasMain(){
       html+=`<div class="cc-subtipo-row${isActive?' active':''}" onclick="seleccionarSubtipoCuenta('${tipoKey}',${idx})">`;
       if(_ccSubtipoEditando&&_ccSubtipoEditando.tipo===tipoKey&&_ccSubtipoEditando.idx===idx){
         html+=`<div class="cc-subtipo-info" onclick="event.stopPropagation()">
-          <input type="text" class="cc-subtipo-edit-input" id="cc-edit-sub-${tipoKey}-${idx}" value="${s.nombre}" placeholder="Nombre del subtipo" onkeydown="if(event.key==='Enter')guardarNombreSubtipo('${tipoKey}',${idx})">
-          <input type="text" class="cc-subtipo-edit-code" id="cc-edit-subcod-${tipoKey}-${idx}" value="${s.codigo||''}" placeholder="Código de cuenta (ej: 4010300100)" onkeydown="if(event.key==='Enter')guardarNombreSubtipo('${tipoKey}',${idx})">
+          <input type="text" class="cc-subtipo-edit-input" id="cc-edit-sub-${tipoKey}-${idx}" value="${s.nombre}" onkeydown="if(event.key==='Enter')guardarNombreSubtipo('${tipoKey}',${idx})">
+          <span class="cc-subtipo-code">${s.codigo||'sin código asociado'}</span>
         </div>`;
         html+=`<div class="cc-tipo-actions">
           <div class="cc-icon-btn" title="Guardar" onclick="event.stopPropagation();guardarNombreSubtipo('${tipoKey}',${idx})">✓</div>
@@ -1830,9 +1685,7 @@ function editarNombreSubtipo(tipoKey,idx){
 }
 function guardarNombreSubtipo(tipoKey,idx){
   const input=document.getElementById(`cc-edit-sub-${tipoKey}-${idx}`);
-  const inputCod=document.getElementById(`cc-edit-subcod-${tipoKey}-${idx}`);
   const val=(input?.value||'').trim();
-  const codVal=(inputCod?.value||'').trim();
   const entry=poolCuentas()[tipoKey];
   if(val&&entry?.subtipos[idx]){
     const oldNombre=entry.subtipos[idx].nombre;
@@ -1844,15 +1697,6 @@ function guardarNombreSubtipo(tipoKey,idx){
       _filas.forEach(f=>{if(f.tipo===tipoKey&&f.subtipo===oldNombre)f.subtipo=val;});
     }
     entry.subtipos[idx].nombre=val;
-    // Actualizar código de cuenta contable y propagarlo a las filas que ya usan este subtipo
-    if(entry.subtipos[idx].codigo!==codVal){
-      entry.subtipos[idx].codigo=codVal;
-      const afectadas=_filas.filter(f=>f.tipo===tipoKey&&f.subtipo===val);
-      afectadas.forEach(f=>{
-        f.cuenta=codVal;
-        if(_usingDB) sbPatch('presupuesto_lineas',`?id=eq.${f.id}`,{cuenta:codVal}).catch(()=>{});
-      });
-    }
   }
   _ccSubtipoEditando=null;
   renderCuentasMain();
