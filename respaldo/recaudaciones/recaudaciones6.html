@@ -794,7 +794,7 @@ Deutsche Schule Chillán / Colegio Alemán de Chillán</textarea>
 
   <div class="app-footer">
     <span>Colegio Alemán de Chillán · Sistema Morosidad · Uso interno</span>
-    <span>Supabase · v5.9 · 2026</span>
+    <span>Supabase · v6.0 · 2026</span>
   </div>
 </div><!-- /app-wrap -->
 
@@ -920,25 +920,31 @@ const PERIODO_LECTIVO=[3,4,5,6,7,8,9,10,11,12]; // marzo a diciembre
 // mes + el anterior, etc). Expandimos retrocediendo desde f.mes pero SOLO
 // dentro del periodo lectivo (marzo-diciembre); no envolvemos a meses fuera
 // de ese rango (enero/febrero/años distintos).
+// ── expandirMesesFila ────────────────────────────────────────
+// Nuevo formato: cada fila ya es 1 mes → devuelve directamente ese mes
+// Viejo formato: expande hacia atrás desde mes_vence según cantidad
 function expandirMesesFila(f){
-  // El mes de FechaVence es la cuota MÁS RECIENTE vencida
-  // Cantidad = total de cuotas sin pagar (retrocediendo desde ese mes)
-  // Solo se cuentan los meses dentro del período lectivo (3-12)
+  const cantidad=f.cantidad||1;
+  // Si cantidad=1 (nuevo formato o ya individual): solo ese mes
+  if(cantidad===1){
+    return (PERIODO_LECTIVO.includes(f.mes)) ? [f.mes] : [];
+  }
+  // Viejo formato: expandir hacia atrás
   const meses=[];
-  const mesFin=f.mes;
-  const cant=f.cantidad||1;
-  for(let i=0;i<cant;i++){
-    const m=mesFin-i;
-    if(m<3) break;          // no retroceder antes de marzo
-    if(m>12) continue;      // no contar meses fuera del período
+  for(let i=0;i<cantidad;i++){
+    const m=f.mes-i;
+    if(m<3) break;
     if(PERIODO_LECTIVO.includes(m)) meses.push(m);
   }
   return meses.sort((a,b)=>a-b);
 }
-// Conjunto de meses únicos (1-12) que adeuda un alumno
+
+// Meses únicos que adeuda un alumno (solo período lectivo 3-12)
 function mesesAdeudadosAlumno(alumno){
   const set=new Set();
-  (alumno.filas||[]).forEach(f=>expandirMesesFila(f).forEach(m=>set.add(m)));
+  (alumno.filas||[]).forEach(f=>{
+    if(PERIODO_LECTIVO.includes(f.mes)) set.add(f.mes);
+  });
   return [...set].sort((a,b)=>a-b);
 }
 // Conjunto de meses únicos que adeuda un sostenedor (unión de todos sus alumnos)
@@ -1017,38 +1023,49 @@ async function loadSnapshot(fechaDato){
   try{
     const [sostRows,aluRaw]=await Promise.all([
       sbGet('v_evolucion_sostenedor_diaria',`?fecha_dato=eq.${fechaDato}&order=saldo_total.desc`),
-      sbGet('snapshots_diarios',`?fecha_dato=eq.${fechaDato}&order=valor_pendiente.desc&limit=1000`)
+      sbGet('snapshots_diarios',`?fecha_dato=eq.${fechaDato}&order=valor_pendiente.desc&limit=2000`)
     ]);
-    // Agrupar alumnos: cada fila del CSV = un alumno con X cuotas (columna Cantidad)
-    // ValorPendiente ya viene calculado como precio_cuota × Cantidad
+
+    // ── Detectar formato de los datos ────────────────────────
+    // Nuevo formato: cuota_vence está presente → cada fila = 1 cuota individual
+    // Viejo formato: cuota_vence es null → filas acumuladas con cantidad_cuotas > 1
+    const raw = aluRaw||[];
+    const isNuevo = raw.length>0 && raw[0].cuota_vence != null;
+
+    // ── Agrupar por alumno ───────────────────────────────────
     const aluMap={};
-    (aluRaw||[]).forEach(r=>{
+    raw.forEach(r=>{
       if(!aluMap[r.rut_alumno]) aluMap[r.rut_alumno]={
-        rut_alumno:r.rut_alumno,nombre_alumno:r.nombre_alumno,
-        nc_curso:r.nc_curso,n_curso:r.n_curso,beca:r.beca,
-        saldo_total:0,saldo_uf:0,valor_pagado:0,n_cuotas:0,filas:[],
-        ultimo_pago:r.ultimo_pago,rut_sostenedor:r.rut_sostenedor,
-        nombre_sostenedor:r.nombre_sostenedor,email_sostenedor:r.email_sostenedor,
+        rut_alumno:r.rut_alumno, nombre_alumno:r.nombre_alumno,
+        nc_curso:r.nc_curso, n_curso:r.n_curso, beca:r.beca,
+        saldo_total:0, saldo_uf:0, valor_pagado:0, n_cuotas:0,
+        filas:[], // cada entrada = 1 cuota individual con su mes
+        ultimo_pago:r.ultimo_pago, rut_sostenedor:r.rut_sostenedor,
+        nombre_sostenedor:r.nombre_sostenedor,
+        email_sostenedor:r.email_sostenedor,
         movil_sostenedor:r.movil_sostenedor
       };
       const a=aluMap[r.rut_alumno];
-      // saldo_total = suma de ValorPendiente (ya incluye todas las cuotas de esa fila)
       a.saldo_total += r.valor_pendiente;
       a.saldo_uf    += (r.pendiente_uf||0);
       a.valor_pagado+= r.valor_pagado;
-      // n_cuotas = suma de Cantidad (cuotas que debe ese alumno en esa fila)
-      a.n_cuotas   += (r.cantidad_cuotas||1);
-      // Guardar fila completa para el detalle
+      a.n_cuotas    += 1; // siempre 1 en nuevo formato; cantidad_cuotas en viejo
+
+      // Guardar fila con el MES CORRECTO de esta cuota
+      // Nuevo: mes viene de cuota_vence (mes exacto de la colegiatura)
+      // Viejo: mes viene de mes_colegiatura (mes de FechaVence)
+      const mesCuota = r.mes_colegiatura; // ya está correcto en BD (se grabó desde CuotaVence)
       a.filas.push({
-        mes:       r.mes_colegiatura,
-        anio:      r.anio_colegiatura,
-        fecha_vence: r.fecha_vence,
-        saldo:     r.valor_pendiente,
-        cantidad:  r.cantidad_cuotas||1
+        mes:      mesCuota,
+        anio:     r.anio_colegiatura,
+        saldo:    r.valor_pendiente,
+        cantidad: 1, // en nuevo formato siempre 1
+        cuota_item: r.cuota_item||'COLEGIATURA'
       });
       if(r.ultimo_pago>a.ultimo_pago) a.ultimo_pago=r.ultimo_pago;
     });
-    const snap={sost:sostRows||[],alu:Object.values(aluMap),raw:aluRaw||[]};
+
+    const snap={sost:sostRows||[], alu:Object.values(aluMap), raw, isNuevo};
     _snapCache[fechaDato]=snap; _currentSnap=snap;
     renderDashboard(snap,fechaDato); hideStatus();
   }catch(e){showStatus('Error: '+e.message,'error');}
@@ -1695,33 +1712,88 @@ async function confirmImport(){
 
 async function doImport(rows,fd,usr){
   await sbDelete('snapshots_diarios',`?fecha_dato=eq.${fd}`);
+
+  // ── Detectar formato del CSV ───────────────────────────────
+  // NUEVO formato: tiene columna CuotaVence → cada fila = 1 cuota individual
+  // VIEJO formato: tiene columna PendienteOriginal → filas acumuladas
+  const isNuevoFormato = rows.length>0 && rows[0].CuotaVence !== undefined;
+
   const snapRows=rows.map(r=>{
-    const saldo=parseInt(r.ValorPendiente||0)||0;if(saldo===0)return null;
-    // CANTIDAD: usar columna Cantidad del CSV directamente
+    const saldo=parseInt(r.ValorPendiente||0)||0;
+    if(saldo===0) return null;
+
+    // ── NUEVO FORMATO (con CuotaVence) ────────────────────────
+    if(isNuevoFormato){
+      // mes_colegiatura viene de CuotaVence (mes exacto de esa cuota)
+      const cv=String(r.CuotaVence||'');
+      const cvp=cv.split('/');
+      let mesCol=6, anioCol=2026;
+      if(cvp.length===3){ anioCol=parseInt(cvp[2]); mesCol=parseInt(cvp[1]); }
+
+      // Filtrar meses fuera del período lectivo (solo 3-12)
+      // y tipos que no son colegiatura (seguros, etc.) también los importamos
+      // para no perder información, pero los filtramos en las vistas
+      const cuotaItem = String(r.CuotaItem||'COLEGIATURA').trim();
+
+      // UF del día (desde el servicio mindicador.cl ya cargado)
+      const ufDiaActual = window._ufDiaOficial || window._ufDia || 0;
+      const pendUF = ufDiaActual > 0
+        ? Math.round((saldo / ufDiaActual) * 10000) / 10000
+        : 0;
+
+      return {
+        fecha_dato:        fd,
+        importado_por:     usr,
+        syscol_id_alumno:  parseInt(r.id)||null,
+        rut_alumno:        String(r.Rut||'').trim(),
+        nombre_alumno:     String(r.Nombre||'—'),
+        nc_curso:          r.NCCurso||null,
+        n_curso:           r.NCurso||null,
+        beca:              r.Beca||null,
+        forma_pago:        r.SosteFormaPago||r.FormaPago||null,
+        comuna:            r.Comuna||null,
+        fecha_vence:       pdm(String(r.FechaVence||'')),
+        cuota_vence:       pdm(cv),          // ← CuotaVence: mes exacto de esta cuota
+        cuota_item:        cuotaItem,         // ← COLEGIATURA / SEGURO ESCOLARIDAD
+        mes_colegiatura:   mesCol,            // ← mes de CuotaVence (CORRECTO)
+        anio_colegiatura:  anioCol,
+        num_cuota:         MES_CUOTA[mesCol]||1,
+        cantidad_cuotas:   1,                 // ← siempre 1 (cada fila = 1 cuota)
+        pendiente_uf:      pendUF,
+        valor_pendiente:   saldo,
+        valor_pagado:      parseInt(r.ValorPagado||0)||0,
+        ultimo_pago:       pdm(r.UltimoPago),
+        rut_sostenedor:    String(r.SosteRut||'').trim(),
+        nombre_sostenedor: String(r.SosteNombre||'—'),
+        email_sostenedor:  r.SosteEmail||null,
+        movil_sostenedor:  r.SosteMovil?String(r.SosteMovil):null,
+        forma_pago_soste:  r.SosteFormaPago||null,
+        direccion_soste:   r.SosteDireccion||null
+      };
+    }
+
+    // ── VIEJO FORMATO (con PendienteOriginal, Cantidad acumulada) ──
     const cantidad=parseInt(r.Cantidad||1)||1;
-    const fv=String(r.FechaVence||'');const fvp=fv.split('/');
+    const fv=String(r.FechaVence||'');
+    const fvp=fv.split('/');
     let mesCol=5,anioCol=2026;
     if(fvp.length===3){anioCol=parseInt(fvp[2]);mesCol=parseInt(fvp[1]);}
     const numC=MES_CUOTA[mesCol]||1;
+    const pendUFraw=String(r.PendienteOriginal||'0').replace(',','.');
+    const pendUFval=parseFloat(pendUFraw)||0;
     return{
-      fecha_dato:fd,importado_por:usr,
+      fecha_dato:fd, importado_por:usr,
       syscol_id_alumno:parseInt(r.id)||null,
       rut_alumno:String(r.Rut||'').trim(),
       nombre_alumno:String(r.Nombre||'—'),
-      nc_curso:r.NCCurso||null,n_curso:r.NCurso||null,
-      beca:r.Beca||null,forma_pago:r.SosteFormaPago||r.FormaPago||null,
-      comuna:r.Comuna||null,fecha_vence:pdm(fv),
-      mes_colegiatura:mesCol,anio_colegiatura:anioCol,num_cuota:numC,
-      // AQUÍ: cantidad_cuotas toma el valor de la columna Cantidad
+      nc_curso:r.NCCurso||null, n_curso:r.NCurso||null,
+      beca:r.Beca||null, forma_pago:r.SosteFormaPago||r.FormaPago||null,
+      comuna:r.Comuna||null, fecha_vence:pdm(fv),
+      cuota_vence:null, cuota_item:'COLEGIATURA',
+      mes_colegiatura:mesCol, anio_colegiatura:anioCol, num_cuota:numC,
       cantidad_cuotas:cantidad,
-      // PendienteOriginal: UF con coma decimal (ej: "7,8795") → convertir a float
-      pendiente_uf: (()=>{
-        const raw=String(r.PendienteOriginal||'0').replace(',','.');
-        const val=parseFloat(raw)||0;
-        // Si el valor es > 200 no es UF (caso residual como 113000 CLP) → calcular
-        return val > 200 ? 0 : Math.round(val*10000)/10000;
-      })(),
-      valor_pendiente:saldo,valor_pagado:parseInt(r.ValorPagado||0)||0,
+      pendiente_uf: pendUFval>200?0:Math.round(pendUFval*10000)/10000,
+      valor_pendiente:saldo, valor_pagado:parseInt(r.ValorPagado||0)||0,
       ultimo_pago:pdm(r.UltimoPago),
       rut_sostenedor:String(r.SosteRut||'').trim(),
       nombre_sostenedor:String(r.SosteNombre||'—'),
@@ -1731,14 +1803,26 @@ async function doImport(rows,fd,usr){
       direccion_soste:r.SosteDireccion||null
     };
   }).filter(Boolean);
-  if(!snapRows.length)throw new Error('No hay filas con saldo > 0');
-  for(let i=0;i<snapRows.length;i+=100)await sbPost('snapshots_diarios',snapRows.slice(i,i+100),'return=minimal');
-  const mora=snapRows.reduce((s,r)=>s+r.valor_pendiente,0);
-  const nSost=new Set(snapRows.map(r=>r.rut_sostenedor)).size;
-  const nAlu=new Set(snapRows.map(r=>r.rut_alumno)).size;
-  const moraUF=snapRows.reduce((s,r)=>s+(r.pendiente_uf||0),0);
-  const ufDia = moraUF > 0 ? Math.round((mora/moraUF)*100)/100 : 0;
-  if(!window._ufDiaOficial && ufDia>0){ window._ufDia=ufDia; const el=document.getElementById('uf-dia-val'); if(el) el.textContent='$'+fmt(ufDia)+' (estimado)'; }
+
+  if(!snapRows.length) throw new Error('No hay filas con saldo > 0');
+
+  // Insertar en lotes de 100
+  for(let i=0;i<snapRows.length;i+=100)
+    await sbPost('snapshots_diarios',snapRows.slice(i,i+100),'return=minimal');
+
+  // Log importación
+  const mora    = snapRows.reduce((s,r)=>s+r.valor_pendiente,0);
+  const moraUF  = snapRows.reduce((s,r)=>s+(r.pendiente_uf||0),0);
+  const nSost   = new Set(snapRows.map(r=>r.rut_sostenedor)).size;
+  const nAlu    = new Set(snapRows.map(r=>r.rut_alumno)).size;
+  const nCuotas = snapRows.length; // en nuevo formato cada fila = 1 cuota
+  const ufDia   = moraUF>0 ? Math.round((mora/moraUF)*100)/100 : 0;
+  if(!window._ufDiaOficial && ufDia>0){
+    window._ufDia=ufDia;
+    const ev=document.getElementById('uf-dia-val');
+    if(ev) ev.textContent='$'+fmt(ufDia)+' (estimado)';
+  }
+  showStatus(`Formato: ${isNuevoFormato?'nuevo (cuotas individuales)':'anterior (acumulado)'} · ${nCuotas} cuotas · ${nAlu} alumnos`,'info');
   const log={fecha_dato:fd,importado_por:usr,n_filas_csv:rows.length,n_alumnos:nAlu,n_sostenedores:nSost,mora_total_clp:mora,fecha_importacion:new Date().toISOString()};
   await fetch(`${SB_URL}/rest/v1/log_importaciones`,{method:'POST',headers:{...sbH(),'Prefer':'resolution=merge-duplicates,return=minimal'},body:JSON.stringify(log)});
 }
